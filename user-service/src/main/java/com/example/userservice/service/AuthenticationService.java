@@ -25,12 +25,14 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.StringJoiner;
 
 @Service
 @CommonsLog
@@ -87,6 +89,7 @@ public class AuthenticationService {
                 .issuer("Thang long")
                 .issueTime(issueTime)
                 .expirationTime(expirationTime)
+                .claim("scope", buildScope(users))
                 .build();
 
         Payload payload = new Payload(jwtClaimNames.toJSONObject());
@@ -98,5 +101,13 @@ public class AuthenticationService {
         }catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private String buildScope(Users users)
+    {
+        StringJoiner stringJoiner = new StringJoiner(" ");
+        if(users.getRole() != null)
+            stringJoiner.add(users.getRole().getName());
+        return stringJoiner.toString();
     }
 }

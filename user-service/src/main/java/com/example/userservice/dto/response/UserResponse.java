@@ -1,5 +1,6 @@
 package com.example.userservice.dto.response;
 
+import com.example.userservice.model.Role;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,8 +12,8 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserResponse {
     String username;
-    String password;
     String firstName;
     String lastName;
     String phone;
+    Role role;
 }
