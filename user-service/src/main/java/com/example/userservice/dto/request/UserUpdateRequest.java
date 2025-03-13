@@ -1,5 +1,6 @@
 package com.example.userservice.dto.request;
 
+import com.example.userservice.model.Role;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -15,4 +16,5 @@ public class UserUpdateRequest {
     String lastName;
     String email;
     String phone;
+    Role role;
 }
