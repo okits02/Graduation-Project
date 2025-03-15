@@ -64,18 +64,16 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void updatePassword(UserUpdateRequest request, String oldPassword, String newPassword) {
-        if(passwordEncoder.matches(oldPassword, request.getPassword()))
+        Users users = userRepository.findById(request.getId()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXITS));
+
+        if(!passwordEncoder.matches(oldPassword,users.getPassword()))
         {
-            request.setPassword(passwordEncoder.encode(request.getPassword()));
-            userRepository.save(userMapper.toUser(request));
-            return;
+            throw new AppException(ErrorCode.PASSWORD_NOT_MATCH);
         }
-        throw new AppException(ErrorCode.PASSWORD_NOT_MATCH);
-    }
 
-    @Override
-    public void forgotPassword(UserUpdateRequest request, String newPassword) {
-
+        users.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(users);
+        return;
     }
 
     @Override

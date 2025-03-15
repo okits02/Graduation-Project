@@ -31,7 +31,6 @@ public interface UserService {
     public UserResponse updateUser(String userId, UserUpdateRequest request);
     public UserResponse updateMyInfo(UserUpdateRequest request);
     public void updatePassword(UserUpdateRequest request, String oldPassword, String newPassword);
-    public void forgotPassword(UserUpdateRequest request, String newPassword);
     public UserResponse getMyInfo();
     public Page<UserResponse> getAllUsers(int page, int size);
     public void deleteUser(String userId);
