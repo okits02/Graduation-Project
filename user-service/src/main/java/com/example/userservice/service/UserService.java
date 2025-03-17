@@ -1,6 +1,7 @@
 package com.example.userservice.service;
 
 import com.example.userservice.constant.PredefinedRole;
+import com.example.userservice.dto.request.AdminCreateUserRequest;
 import com.example.userservice.dto.request.UserCreationRequest;
 import com.example.userservice.dto.request.UserUpdateRequest;
 import com.example.userservice.dto.response.UserResponse;
@@ -32,8 +33,8 @@ public interface UserService {
     public UserResponse updateMyInfo(UserUpdateRequest request);
     public void updatePassword(UserUpdateRequest request, String oldPassword, String newPassword);
     public UserResponse getMyInfo();
+    public UserResponse getUserById(String userId);
+    public void toggleUserStatus(String userId, boolean isActive);
     public Page<UserResponse> getAllUsers(int page, int size);
     public void deleteUser(String userId);
-    public UserResponse adminUpdateUser(String userId, UserCreationRequest request);
-
 }

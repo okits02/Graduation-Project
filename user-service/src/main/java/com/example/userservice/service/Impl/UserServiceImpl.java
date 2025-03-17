@@ -1,6 +1,7 @@
 package com.example.userservice.service.Impl;
 
 import com.example.userservice.constant.PredefinedRole;
+import com.example.userservice.dto.request.AdminCreateUserRequest;
 import com.example.userservice.dto.request.UserCreationRequest;
 import com.example.userservice.dto.request.UserUpdateRequest;
 import com.example.userservice.dto.response.UserResponse;
@@ -19,6 +20,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +42,7 @@ public class UserServiceImpl implements UserService {
         Role roles = roleRepository.findById(PredefinedRole.USER_ROLE).orElseThrow(()
                 ->new AppException(ErrorCode.ROLE_NOT_EXISTS));
         user.setRole(roles);
+        user.setActive(true);
         return userRepository.save(user);
     }
 
@@ -85,6 +89,23 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public UserResponse getUserById(String userId) {
+        Optional<Users> user = userRepository.findById(userId);
+        if(user.isEmpty())
+        {
+            throw new AppException(ErrorCode.USER_NOT_EXITS);
+        }
+        return userMapper.toUserResponse(user);
+    }
+
+    @Override
+    public void toggleUserStatus(String userId, boolean isActive) {
+        Users users = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXITS));
+        users.setActive(isActive);
+        userRepository.save(users);
+    }
+
+    @Override
     public Page<UserResponse> getAllUsers(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         return userRepository.findAll(pageable).map(userMapper::toUserResponse);
@@ -92,11 +113,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUser(String userId) {
-
+        userRepository.deleteById(userId);
     }
 
-    @Override
-    public UserResponse adminUpdateUser(String userId, UserCreationRequest request) {
-        return null;
-    }
 }
