@@ -8,8 +8,6 @@ import lombok.experimental.FieldDefaults;
 
 import java.util.Set;
 
-@Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -18,7 +16,4 @@ import java.util.Set;
 public class Role {
     @Id
     String name;
-    String description;
-    @ManyToMany
-    Set<Permission> permissions;
 }
