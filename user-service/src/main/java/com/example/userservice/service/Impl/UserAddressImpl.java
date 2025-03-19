@@ -74,7 +74,7 @@ public class UserAddressImpl implements UserAddressService {
     @Override
     public Page<UserAddressResponse> getAllUserAddresses(String userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Users users = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXITS)));
+        Users users = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXITS));
         if(users.getAddressList().isEmpty())
         {
             throw new AppException(ErrorCode.ADDRESS_NOT_EXISTS);

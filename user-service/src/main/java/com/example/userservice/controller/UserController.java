@@ -14,6 +14,7 @@ import org.apache.catalina.User;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
@@ -41,7 +42,7 @@ public class UserController {
         }
     }
 
-    @PutMapping("/resetpassword}")
+    @PutMapping("/reset-password")
     ResponseEntity<ApiResponse<?>> updatePassword(@RequestBody changePasswordRequest request) {
         try {
         userService.updatePassword(request.getOldPassword(), request.getNewPassword());
@@ -65,6 +66,7 @@ public class UserController {
     }
 
     @PutMapping("/{userid}")
+    @PreAuthorize("hasRole('ADMIN')")
     public UserResponse updateUser(@PathVariable("userid") String userId,
                                    @RequestBody @Valid UserUpdateRequest request) {
         return userService.updateUser(userId, request);
@@ -92,6 +94,7 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<UserResponse> getUserById(@PathVariable("userId") String userId) {
         try {
             return ApiResponse.<UserResponse>builder()
@@ -108,6 +111,7 @@ public class UserController {
     }
 
     @PutMapping("/{userId}/status")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<?>> toggleUserStatus(@PathVariable String userId,
                                                            @RequestParam boolean isActive) {
         try {
@@ -133,6 +137,7 @@ public class UserController {
     }
 
     @GetMapping("/allUsers")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Page<UserResponse>>> getAllUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -153,6 +158,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<?>> deleteUser(@PathVariable String userId) {
         try {
             userService.deleteUser(userId);
