@@ -1,7 +1,6 @@
 package com.example.userservice.service.Impl;
 
 import com.example.userservice.constant.PredefinedRole;
-import com.example.userservice.dto.request.AdminCreateUserRequest;
 import com.example.userservice.dto.request.UserCreationRequest;
 import com.example.userservice.dto.request.UserUpdateRequest;
 import com.example.userservice.dto.response.UserResponse;
@@ -58,8 +57,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse updateMyInfo(UserUpdateRequest request) {
-        var contex = SecurityContextHolder.getContext();
-        String currentUsername = contex.getAuthentication().getName();
+        var context = SecurityContextHolder.getContext();
+        String currentUsername = context.getAuthentication().getName();
         Users users = userRepository.findByUsername(currentUsername).orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXISTS));
         userMapper.updateUser(users, request);
         users.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -67,23 +66,23 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updatePassword(UserUpdateRequest request, String oldPassword, String newPassword) {
-        Users users = userRepository.findById(request.getId()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXITS));
+    public void updatePassword(String oldPassword, String newPassword) {
+        var context = SecurityContextHolder.getContext();
+        String currentUsername = context.getAuthentication().getName();
+        Users users = userRepository.findByUsername(currentUsername).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXITS));
 
         if(!passwordEncoder.matches(oldPassword,users.getPassword()))
         {
             throw new AppException(ErrorCode.PASSWORD_NOT_MATCH);
         }
-
         users.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(users);
-        return;
     }
 
     @Override
     public UserResponse getMyInfo() {
-        var contex = SecurityContextHolder.getContext();
-        String currentUsername = contex.getAuthentication().getName();
+        var context = SecurityContextHolder.getContext();
+        String currentUsername = context.getAuthentication().getName();
         Users users = userRepository.findByUsername(currentUsername).orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXISTS));
         return userMapper.toUserResponse(users);
     }

@@ -5,17 +5,16 @@ import com.example.userservice.dto.request.UserUpdateRequest;
 import com.example.userservice.dto.request.changePasswordRequest;
 import com.example.userservice.dto.response.ApiResponse;
 import com.example.userservice.dto.response.UserResponse;
+import com.example.userservice.exception.AppException;
 import com.example.userservice.model.Users;
 import com.example.userservice.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.User;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.validation.annotation.Validated;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,65 +23,148 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @Controller
 public class UserController {
-    private UserService userService;
+    private final UserService userService;
 
     @PostMapping
     ApiResponse<Users> creationUser(@RequestBody @Valid UserCreationRequest request) {
-        ApiResponse<Users> apiResponse = new ApiResponse<>();
-        apiResponse.setCode(1000);
-        apiResponse.setMessage("success");
-        apiResponse.setResult(userService.createUser(request));
-        return apiResponse;
+        try {
+            return ApiResponse.<Users>builder()
+                    .code(200)
+                    .message("User Created")
+                    .result(userService.createUser(request))
+                    .build();
+        }catch (AppException e) {
+            return ApiResponse.<Users>builder()
+                    .code(e.getErrorCode().getCode())
+                    .message(e.getMessage())
+                    .build();
+        }
     }
 
-    @PutMapping("/{id}/password}")
-    ResponseEntity<ApiResponse> updatePassword(@PathVariable String id, @RequestBody changePasswordRequest request) {
-        UserUpdateRequest userUpdateRequest = new UserUpdateRequest();
-        userUpdateRequest.setId(id);
-        ApiResponse<?> apiResponse = new ApiResponse<>();
-        apiResponse.setCode(1000);
-        apiResponse.setMessage("success");
-        userService.updatePassword(userUpdateRequest, request.getOldPassword(), request.getNewPassword());
-        return ResponseEntity.ok(apiResponse);
-    }
+    @PutMapping("/resetpassword}")
+    ResponseEntity<ApiResponse<?>> updatePassword(@RequestBody changePasswordRequest request) {
+        try {
+        userService.updatePassword(request.getOldPassword(), request.getNewPassword());
+        return ResponseEntity.ok(ApiResponse.builder()
+                .code(200)
+                .message("Password updated successfully")
+                .build());
 
-    @GetMapping("/Info")
-    ApiResponse<UserResponse> getMyInfo() {
-        ApiResponse<UserResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setCode(1000);
-        apiResponse.setMessage("success");
-        apiResponse.setResult(userService.getMyInfo());
-        return apiResponse;
-    }
+    } catch (AppException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.builder()
+                .code(e.getErrorCode().getCode())
+                .message(e.getMessage())
+                .build());
 
-    @GetMapping("/allUser")
-    public ResponseEntity<ApiResponse<Page<UserResponse>>> getAllUsers(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        Page<UserResponse> users = userService.getAllUsers(page, size);
-        ApiResponse<Page<UserResponse>> apiResponse = new ApiResponse<>();
-        apiResponse.setCode(1000);
-        apiResponse.setMessage("success");
-        apiResponse.setResult(users);
-        return ResponseEntity.ok(apiResponse);
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.builder()
+                .code(500)
+                .message("Internal server error")
+                .build());
+    }
     }
 
     @PutMapping("/{userid}")
-    public UserResponse updateUser(@PathVariable("userid") String userId, @RequestBody @Valid UserUpdateRequest request) {
+    public UserResponse updateUser(@PathVariable("userid") String userId,
+                                   @RequestBody @Valid UserUpdateRequest request) {
         return userService.updateUser(userId, request);
     }
 
-    @PutMapping("/{updateMyinfo}")
+    @PutMapping("/updateMyInfo")
     public UserResponse updateMyInfo(@RequestBody @Valid UserUpdateRequest request) {
         return userService.updateMyInfo(request);
     }
 
-    @DeleteMapping("/{userid}/delete")
-    public ResponseEntity<ApiResponse> deleteUser(@PathVariable("userid") String userId) {
-        ApiResponse<?> apiResponse = new ApiResponse<>();
-        apiResponse.setCode(1000);
-        apiResponse.setMessage("success");
-        userService.deleteUser(userId);
-        return ResponseEntity.ok(apiResponse);
+    @GetMapping("/Info")
+    ApiResponse<UserResponse> getMyInfo() {
+        try {
+            return ApiResponse.<UserResponse>builder()
+                    .code(200)
+                    .message("OK")
+                    .result(userService.getMyInfo())
+                    .build();
+        }catch (AppException e) {
+            return ApiResponse.<UserResponse>builder()
+                    .code(e.getErrorCode().getCode())
+                    .message(e.getMessage())
+                    .build();
+        }
+    }
+
+    @GetMapping("/{userId}")
+    public ApiResponse<UserResponse> getUserById(@PathVariable("userId") String userId) {
+        try {
+            return ApiResponse.<UserResponse>builder()
+                    .code(200)
+                    .message("OK")
+                    .result(userService.getUserById(userId))
+                    .build();
+        }catch (AppException e) {
+            return ApiResponse.<UserResponse>builder()
+                    .code(e.getErrorCode().getCode())
+                    .message(e.getMessage())
+                    .build();
+        }
+    }
+
+    @PutMapping("/{userId}/status")
+    public ResponseEntity<ApiResponse<?>> toggleUserStatus(@PathVariable String userId,
+                                                           @RequestParam boolean isActive) {
+        try {
+            userService.toggleUserStatus(userId, isActive);
+
+            return ResponseEntity.ok(ApiResponse.builder()
+                    .code(200)
+                    .message("User status updated successfully")
+                    .build());
+
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.builder()
+                    .code(e.getErrorCode().getCode())
+                    .message(e.getMessage())
+                    .build());
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.builder()
+                    .code(500)
+                    .message("Internal server error")
+                    .build());
+        }
+    }
+
+    @GetMapping("/allUsers")
+    public ResponseEntity<ApiResponse<Page<UserResponse>>> getAllUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        if (page < 0 || size <= 0) {
+            return ResponseEntity.badRequest().body(ApiResponse.<Page<UserResponse>>builder()
+                    .code(400)
+                    .message("Page index must be non-negative and size must be greater than zero")
+                    .build());
+        }
+
+        Page<UserResponse> users = userService.getAllUsers(page, size);
+
+        return ResponseEntity.ok(ApiResponse.<Page<UserResponse>>builder()
+                .code(1000)
+                .message("success")
+                .result(users)
+                .build());
+    }
+
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<ApiResponse<?>> deleteUser(@PathVariable String userId) {
+        try {
+            userService.deleteUser(userId);
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResponse.builder()
+                    .code(204)
+                    .message("User deleted successfully")
+                    .build());
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.builder()
+                    .code(e.getErrorCode().getCode())
+                    .message(e.getMessage())
+                    .build());
+        }
     }
 }
