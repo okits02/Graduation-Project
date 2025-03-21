@@ -65,7 +65,7 @@ public class AuthenticationService {
     {
         var users = userRepository.findByUsername(request.getUsername()).orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXISTS));
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
-        boolean authenticate = passwordEncoder.matches(request.getPassword(), passwordEncoder.encode(request.getPassword()));
+        boolean authenticate = passwordEncoder.matches(request.getPassword(), users.getPassword());
         boolean active = users.isActive();
         if(!authenticate && !active)
         {

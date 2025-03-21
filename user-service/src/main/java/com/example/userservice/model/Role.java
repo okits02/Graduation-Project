@@ -1,8 +1,6 @@
 package com.example.userservice.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
+import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -15,5 +13,7 @@ import java.util.Set;
 @Entity
 public class Role {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    String Id;
     String name;
 }

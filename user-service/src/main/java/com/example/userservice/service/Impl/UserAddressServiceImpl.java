@@ -23,11 +23,11 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class UserAddressImpl implements UserAddressService {
-    UserRepository userRepository;
-    UserAddressRepository userAddressRepository;
-    UserAddressMapper userAddressMapper;
+public class UserAddressServiceImpl implements UserAddressService {
+    private final UserRepository userRepository;
+    private final UserAddressRepository userAddressRepository;
+    private final UserAddressMapper userAddressMapper;
+
     @Override
     public void addUserAddressToUser(String userId, UserAddressCreateRequest userAddress) {
         Users users = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXITS));

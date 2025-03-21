@@ -2,6 +2,7 @@ package com.example.userservice.configuration;
 
 
 import com.example.userservice.enums.Roles;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,6 +25,7 @@ import javax.crypto.spec.SecretKeySpec;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@Slf4j
 public class SecurityConfig {
     private final String[] END_POINTS = {"/users", "/auth/introspect", "/auth/login"};
     private final String[] ADMIN_ENDPOINTS = {"/users"};

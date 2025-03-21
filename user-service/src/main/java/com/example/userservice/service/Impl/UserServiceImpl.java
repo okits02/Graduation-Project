@@ -12,7 +12,10 @@ import com.example.userservice.model.Users;
 import com.example.userservice.repository.RoleRepository;
 import com.example.userservice.repository.UserRepository;
 import com.example.userservice.service.UserService;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -24,11 +27,13 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserServiceImpl implements UserService {
-    UserRepository userRepository;
-    RoleRepository roleRepository;
-    UserMapper userMapper;
-    PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
+
 
     @Override
     public Users createUser(UserCreationRequest request) {
@@ -38,6 +43,7 @@ public class UserServiceImpl implements UserService {
         }
         Users user = userMapper.toUser(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+        log.info("createUser: {}", user);
         Role roles = roleRepository.findById(PredefinedRole.USER_ROLE).orElseThrow(()
                 ->new AppException(ErrorCode.ROLE_NOT_EXISTS));
         user.setRole(roles);
@@ -51,7 +57,7 @@ public class UserServiceImpl implements UserService {
         userMapper.updateUser(users, request);
         users.setPassword(passwordEncoder.encode(request.getPassword()));
         var role = roleRepository.findAllById(request.getRole());
-        users.setRole(new Role(role.toString()));
+        users.setRole(role);
         return userMapper.toUserResponse(userRepository.save(users));
     }
 
