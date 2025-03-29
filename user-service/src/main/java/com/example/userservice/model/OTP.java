@@ -1,11 +1,11 @@
 package com.example.userservice.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
+import java.util.Date;
 
 @Data
 @NoArgsConstructor
@@ -17,8 +17,9 @@ public class OTP {
     @Id
     String id;
     String otp_code;
-    @OneToOne
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @ManyToOne
+    @JoinColumn(name = "user_id", referencedColumnName = "user")
     Users user;
-    String verification_type;
+    static final long OTP_VALID_TIME = 5 * 60 * 1000;
+    Date otp_request_time;
 }

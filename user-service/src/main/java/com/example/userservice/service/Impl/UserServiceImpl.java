@@ -7,15 +7,18 @@ import com.example.userservice.dto.response.UserResponse;
 import com.example.userservice.exception.AppException;
 import com.example.userservice.exception.ErrorCode;
 import com.example.userservice.mapper.UserMapper;
+import com.example.userservice.model.OTP;
 import com.example.userservice.model.Role;
 import com.example.userservice.model.Users;
 import com.example.userservice.repository.RoleRepository;
 import com.example.userservice.repository.UserRepository;
 import com.example.userservice.service.UserService;
+import com.example.userservice.service.VerificationService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -33,6 +36,7 @@ public class UserServiceImpl implements UserService {
     private final RoleRepository roleRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final VerificationService verificationService;
 
 
     @Override
@@ -41,6 +45,10 @@ public class UserServiceImpl implements UserService {
         {
             throw new AppException(ErrorCode.USER_EXISTS);
         }
+        if(userRepository.existsByEmail(request.getEmail()))
+        {
+            throw new AppException(ErrorCode.EMAIL_EXISTS);
+        }
         Users user = userMapper.toUser(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         log.info("createUser: {}", user);
@@ -48,12 +56,29 @@ public class UserServiceImpl implements UserService {
                 ->new AppException(ErrorCode.ROLE_NOT_EXISTS));
         user.setRole(roles);
         user.setActive(true);
+        user.setVerified(false);
+        verificationService.sendverifyOtp(user);
         return userRepository.save(user);
     }
 
     @Override
+    public void registerVerify(Users users, String otp_code) {
+        Optional<OTP> optional = verificationService.getOtpByUserId(users.getId());
+        OTP otp = optional.orElseThrow(() -> new AppException(ErrorCode.OTP_NOT_EXISTS));
+        if(!otp.getOtp_code().equals(otp_code))
+        {
+            throw new AppException(ErrorCode.OTP_INVALID);
+        }
+        users.setVerified(true);
+        userRepository.save(users);
+        verificationService.deleteOtpById(otp);
+    }
+
+
+    @Override
     public UserResponse updateUser(String userId, UserUpdateRequest request) {
-        Users users = userRepository.findById(String.valueOf(userId)).orElseThrow(()-> new AppException(ErrorCode.USER_NOT_EXITS));
+        Users users = userRepository.findById(String.valueOf(userId)).orElseThrow(()->
+                new AppException(ErrorCode.USER_NOT_EXITS));
         userMapper.updateUser(users, request);
         users.setPassword(passwordEncoder.encode(request.getPassword()));
         var role = roleRepository.findAllById(request.getRole());

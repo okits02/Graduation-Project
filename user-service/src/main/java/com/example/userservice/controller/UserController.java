@@ -6,7 +6,9 @@ import com.example.userservice.dto.request.changePasswordRequest;
 import com.example.userservice.dto.response.ApiResponse;
 import com.example.userservice.dto.response.UserResponse;
 import com.example.userservice.exception.AppException;
+import com.example.userservice.exception.ErrorCode;
 import com.example.userservice.model.Users;
+import com.example.userservice.repository.UserRepository;
 import com.example.userservice.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 @Controller
 public class UserController {
     private final UserService userService;
+    private final UserRepository userRepository;
 
     @PostMapping
     ApiResponse<Users> creationUser(@RequestBody @Valid UserCreationRequest request) {
@@ -40,6 +43,17 @@ public class UserController {
                     .message(e.getMessage())
                     .build();
         }
+    }
+
+    @PostMapping("/verify/{otp_code}")
+    ResponseEntity<ApiResponse<?>> registerVerify(@PathVariable @Valid String otp_code, @RequestParam UserCreationRequest request)
+    {
+        Users user = userRepository.findById(request.getId()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXITS));
+        userService.registerVerify(user, otp_code);
+        return ResponseEntity.ok(ApiResponse.builder()
+                        .code(200)
+                        .message("User is verify")
+                        .build());
     }
 
     @PutMapping("/reset-password")
