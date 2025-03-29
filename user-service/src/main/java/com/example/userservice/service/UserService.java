@@ -9,7 +9,7 @@ import org.springframework.data.domain.Page;
 
 public interface UserService {
     public Users createUser(UserCreationRequest request);
-    public void registerVerify(Users users, String otp_code);
+    public void registerVerify(String userId, String otp_code);
     public UserResponse updateUser(String userId, UserUpdateRequest request);
     public UserResponse updateMyInfo(UserUpdateRequest request);
     public void updatePassword(String oldPassword, String newPassword);

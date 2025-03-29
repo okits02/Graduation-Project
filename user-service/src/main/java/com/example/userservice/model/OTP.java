@@ -20,6 +20,5 @@ public class OTP {
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "user")
     Users user;
-    static final long OTP_VALID_TIME = 5 * 60 * 1000;
     Date otp_request_time;
 }

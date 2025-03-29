@@ -13,6 +13,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.util.Date;
 import java.util.Optional;
 
 @Service
@@ -25,6 +26,7 @@ public class VerificationServiceImpl implements VerificationService {
         otpRepository.findByUserId(users.getId()).ifPresent(otpRepository::delete);
         OTP otp = OTP.builder()
                 .otp_code(OtpUtils.generateOtp())
+                .otp_request_time(new Date())
                 .user(users)
                 .build();
         otpRepository.save(otp);

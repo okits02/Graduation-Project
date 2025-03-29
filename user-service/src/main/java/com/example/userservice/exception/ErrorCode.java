@@ -16,7 +16,8 @@ public enum ErrorCode {
     ADDRESS_NOT_EXISTS(2006, "Address Not Exist", HttpStatus.BAD_REQUEST),
     OTP_NOT_EXISTS(2007, "OTP Not Exist", HttpStatus.BAD_REQUEST),
     EMAIL_EXISTS(2008, " Email Exist" , HttpStatus.BAD_REQUEST),
-    OTP_INVALID(2009, "OTP is no valid!", HttpStatus.BAD_REQUEST),;
+    OTP_INVALID(2009, "OTP is no valid!", HttpStatus.BAD_REQUEST),
+    OTP_EXPIRED(2010, "OTP has expried!", HttpStatus.BAD_REQUEST);
 
     ErrorCode(int code, String message, HttpStatusCode httpStatusCode) {
         this.code = code;

@@ -46,10 +46,10 @@ public class UserController {
     }
 
     @PostMapping("/verify/{otp_code}")
-    ResponseEntity<ApiResponse<?>> registerVerify(@PathVariable @Valid String otp_code, @RequestParam UserCreationRequest request)
+    ResponseEntity<ApiResponse<?>> registerVerify(@PathVariable @Valid String otp_code, @RequestParam String userId)
     {
-        Users user = userRepository.findById(request.getId()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXITS));
-        userService.registerVerify(user, otp_code);
+        Users user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXITS));
+        userService.registerVerify(userId, otp_code);
         return ResponseEntity.ok(ApiResponse.builder()
                         .code(200)
                         .message("User is verify")

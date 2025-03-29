@@ -37,6 +37,7 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final VerificationService verificationService;
+    static final long OTP_VALID_TIME = 5 * 60 * 1000;
 
 
     @Override
@@ -62,9 +63,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void registerVerify(Users users, String otp_code) {
-        Optional<OTP> optional = verificationService.getOtpByUserId(users.getId());
+    public void registerVerify(String userId, String otp_code) {
+        Users users = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXITS));
+        Optional<OTP> optional = verificationService.getOtpByUserId(userId);
         OTP otp = optional.orElseThrow(() -> new AppException(ErrorCode.OTP_NOT_EXISTS));
+        long currentTimeInMillis = System.currentTimeMillis();
+        long otpRequestTimeInMillis = otp.getOtp_request_time().getTime();
+        if(otpRequestTimeInMillis + OTP_VALID_TIME < currentTimeInMillis)
+        {
+            throw new AppException(ErrorCode.OTP_EXPIRED);
+        }
         if(!otp.getOtp_code().equals(otp_code))
         {
             throw new AppException(ErrorCode.OTP_INVALID);
