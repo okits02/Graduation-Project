@@ -18,7 +18,7 @@ public class OTP {
     String id;
     String otp_code;
     @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "user")
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
     Users user;
     Date otp_request_time;
 }

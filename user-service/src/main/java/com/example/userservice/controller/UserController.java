@@ -7,19 +7,26 @@ import com.example.userservice.dto.response.ApiResponse;
 import com.example.userservice.dto.response.UserResponse;
 import com.example.userservice.exception.AppException;
 import com.example.userservice.exception.ErrorCode;
+import com.example.userservice.kafka.NotificationEvent;
+import com.example.userservice.model.OTP;
 import com.example.userservice.model.Users;
 import com.example.userservice.repository.UserRepository;
 import com.example.userservice.service.UserService;
+import com.example.userservice.service.VerificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.User;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
 
 @Slf4j
 @RequestMapping("/users")
@@ -28,6 +35,10 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
     private final UserService userService;
     private final UserRepository userRepository;
+    private final VerificationService verificationService;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final NewTopic topic;
+
 
     @PostMapping
     ApiResponse<Users> creationUser(@RequestBody @Valid UserCreationRequest request) {
@@ -43,6 +54,27 @@ public class UserController {
                     .message(e.getMessage())
                     .build();
         }
+    }
+
+    @PostMapping("/verifyEmail/send-otp")
+    ApiResponse<?> endVerificationOTP(@RequestBody @Valid String userId)
+    {
+        Optional<Users> users = userRepository.findById(userId);
+        Optional<OTP> otp = verificationService.getOtpByUserId(userId);
+        if(otp.isEmpty())
+        {
+            throw new AppException(ErrorCode.OTP_NOT_EXISTS);
+        }
+        NotificationEvent notificationEvent = NotificationEvent.builder()
+                .channel("EMAIL")
+                .recipient(users.get().getEmail())
+                .content(otp.get().getOtp_code())
+                .build();
+        kafkaTemplate.send(topic.name(), notificationEvent);
+        return ApiResponse.builder()
+                .code(200)
+                .message("OTP has been sent to your email!")
+                .build();
     }
 
     @PostMapping("/verify/{otp_code}")
