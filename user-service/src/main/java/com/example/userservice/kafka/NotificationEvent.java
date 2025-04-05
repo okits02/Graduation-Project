@@ -15,6 +15,6 @@ public class NotificationEvent {
     private String channel;
     private String recipient;
     private String subject;
-    private Map<String, Object> param;
+    private Map<String, String> param;
     private String content;
 }

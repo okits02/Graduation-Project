@@ -15,6 +15,7 @@ import java.util.Date;
 @Entity
 public class OTP {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     String id;
     String otp_code;
     @ManyToOne

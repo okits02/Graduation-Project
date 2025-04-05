@@ -52,7 +52,7 @@ public class EmailService {
 
         String subject = "Coming soon " + eventName;
         String content = "<p> Hello" + lastName + firstName + "<p>" +
-                "<h2 style='color: #333;'>Sự kiện sắp diễn ra!</h2>" +
+                "<h2 style='color: #333;'>san pham sap ra mat!</h2>" +
                 "<h3 style='color: #4CAF50;'>" + eventName + "</h3>" +
                 "<p>Hãy theo dõi để không bỏ lỡ nhé!</p>" +
                 "</div>";

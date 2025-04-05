@@ -27,7 +27,7 @@ import javax.crypto.spec.SecretKeySpec;
 @EnableMethodSecurity
 @Slf4j
 public class SecurityConfig {
-    private final String[] END_POINTS = {"/users", "/auth/introspect", "/auth/login"};
+    private final String[] END_POINTS = {"/users", "/auth/introspect", "/auth/login", "/users/verifyEmail/send-otp"};
     private final String[] ADMIN_ENDPOINTS = {"/users"};
     @Value("${jwt.signerKey}")
     protected String SIGNER_KEY;

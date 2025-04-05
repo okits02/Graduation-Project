@@ -15,6 +15,6 @@ public class EmailValidator implements ConstraintValidator<EmailConstraint, Stri
         {
             return false;
         }
-        return s.matches("^[A-Za-z0-9._%+-]+@[A-za-z0-9.-]+\\.[A-za-z]{2,6}$]");
+        return s.matches("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$");
     }
 }

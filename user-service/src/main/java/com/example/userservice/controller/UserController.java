@@ -31,7 +31,7 @@ import java.util.Optional;
 @Slf4j
 @RequestMapping("/users")
 @RequiredArgsConstructor
-@Controller
+@RestController
 public class UserController {
     private final UserService userService;
     private final UserRepository userRepository;
@@ -57,10 +57,10 @@ public class UserController {
     }
 
     @PostMapping("/verifyEmail/send-otp")
-    ApiResponse<?> endVerificationOTP(@RequestBody @Valid String userId)
+    ApiResponse<?> endVerificationOTP(@RequestBody @Valid UserUpdateRequest request)
     {
-        Optional<Users> users = userRepository.findById(userId);
-        Optional<OTP> otp = verificationService.getOtpByUserId(userId);
+        Optional<Users> users = userRepository.findById(request.getId());
+        Optional<OTP> otp = verificationService.getOtpByUserId(request.getId());
         if(otp.isEmpty())
         {
             throw new AppException(ErrorCode.OTP_NOT_EXISTS);

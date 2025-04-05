@@ -53,13 +53,18 @@ public class UserServiceImpl implements UserService {
         Users user = userMapper.toUser(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         log.info("createUser: {}", user);
-        Role roles = roleRepository.findById(PredefinedRole.USER_ROLE).orElseThrow(()
-                ->new AppException(ErrorCode.ROLE_NOT_EXISTS));
+        Role roles = roleRepository.findById(PredefinedRole.USER_ROLE)
+                .orElseGet(() -> {
+                    Role newRole = new Role();
+                    newRole.setName(PredefinedRole.USER_ROLE);
+                    return roleRepository.save(newRole);
+                });
         user.setRole(roles);
         user.setActive(true);
         user.setVerified(false);
+        userRepository.save(user);
         verificationService.sendverifyOtp(user);
-        return userRepository.save(user);
+        return user;
     }
 
     @Override

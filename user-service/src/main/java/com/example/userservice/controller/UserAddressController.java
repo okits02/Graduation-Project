@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RequiredArgsConstructor
 @RequestMapping("/address")
-@Controller
+@RestController
 public class UserAddressController {
     private final UserAddressService userAddressService;
 
