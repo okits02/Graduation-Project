@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -17,12 +18,14 @@ import java.util.List;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@EnableKafka
 public class NotificationConsumer {
     private final NotificationRepository repository;
     private final EmailService emailService;
 
-    @KafkaListener(topics = "send-to")
+    @KafkaListener(topics = "send-otp")
     public void consumerRegisterNotification(String notificationEvent) throws MessagingException, UnsupportedEncodingException {
+        log.info("🔔 [send-to] Received raw event: {}", notificationEvent);
         ObjectMapper objectMapper = new ObjectMapper();
         Notification notification = null;
         try {
@@ -32,7 +35,7 @@ public class NotificationConsumer {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-        emailService.sendVerificationOtpEmail(notification.getFirstName(), notification.getRecipient(), notification.getContent());
+        emailService.sendVerificationOtpEmail(notification.getRecipient(), notification.getContent());
         repository.save(notification);
     }
 
@@ -47,7 +50,7 @@ public class NotificationConsumer {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-        emailService.sendUpcomingEventEmail(notification.getFirstName(), notification.getLastName(), notification.getRecipient(), notification.getContent());
+        emailService.sendUpcomingEventEmail(notification.getRecipient(), notification.getContent());
         repository.save(notification);
     }
 

@@ -70,7 +70,14 @@ public class UserController {
                 .recipient(users.get().getEmail())
                 .content(otp.get().getOtp_code())
                 .build();
-        kafkaTemplate.send(topic.name(), notificationEvent);
+        kafkaTemplate.send(topic.name(), notificationEvent).whenComplete((result, ex) -> {
+            if (ex != null)
+            {
+                System.err.println("Failed to send message" + ex.getMessage());
+            } else {
+              System.err.println("send message successfully" + result.getProducerRecord());
+            }
+        });
         return ApiResponse.builder()
                 .code(200)
                 .message("OTP has been sent to your email!")

@@ -18,8 +18,6 @@ public class Notification {
     String id;
     String channel;
     String recipient;
-    String firstName;
-    String lastName;
     String subject;
     @ElementCollection
     @CollectionTable(name = "notification_metadata", joinColumns = @JoinColumn(name = "notification_id"))

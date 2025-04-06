@@ -18,15 +18,14 @@ public class EmailService {
     private final NotificationRepository notificationRepository;
     private final JavaMailSender mailSender;
 
-    public void sendVerificationOtpEmail(String firstName, String email, String otp)
+    public void sendVerificationOtpEmail( String email, String otp)
             throws UnsupportedEncodingException, MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper messageHelper = new MimeMessageHelper(message);
 
 
         String subject = "Here's your One Time Password (OTP) - Expire in 5 minutes";
-        String content = "<p>Hello " + firstName + "<p>"
-                +"<p> For security reason, you're required to use to following"
+        String content = "<p> For security reason, you're required to use to following"
                 +"One Time Password to register:</p>"
                 +"<p><b>" + otp + "</b></p>"
                 +"<br>"
@@ -45,14 +44,14 @@ public class EmailService {
         }
     }
 
-    public void sendUpcomingEventEmail(String firstName, String lastName, String email, String eventName)
+    public void sendUpcomingEventEmail( String email, String eventName)
             throws MessagingException, UnsupportedEncodingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper messageHelper = new MimeMessageHelper(message);
 
         String subject = "Coming soon " + eventName;
-        String content = "<p> Hello" + lastName + firstName + "<p>" +
-                "<h2 style='color: #333;'>san pham sap ra mat!</h2>" +
+        String content =
+                "<p style='color: #333;'>san pham sap ra mat!</p>" +
                 "<h3 style='color: #4CAF50;'>" + eventName + "</h3>" +
                 "<p>Hãy theo dõi để không bỏ lỡ nhé!</p>" +
                 "</div>";
