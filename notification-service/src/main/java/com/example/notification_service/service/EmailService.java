@@ -25,11 +25,19 @@ public class EmailService {
 
 
         String subject = "Here's your One Time Password (OTP) - Expire in 5 minutes";
-        String content = "<p> For security reason, you're required to use to following"
-                +"One Time Password to register:</p>"
-                +"<p><b>" + otp + "</b></p>"
-                +"<br>"
-                +"<p>Note: This OTP is set to expire in 5 minutes.</p>";
+        String content = """
+            <div style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px; border-radius: 10px;">
+            <h2 style="color: #2c3e50;">Your OTP Verification Code</h2>
+            <p>For security reasons, please use the following One-Time Password (OTP) to complete your verification:</p>
+            <div style="font-size: 24px; font-weight: bold; color: #e74c3c; background-color: #fff; border: 2px dashed #e74c3c; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0;">
+            """ + otp + """
+            </div>
+            <p style="color: #555;">Note: This OTP will expire in <strong>5 minutes</strong>.</p>
+            <br>
+            <p style="font-size: 14px; color: #999;">If you did not request this code, please ignore this email.</p>
+            <p style="font-size: 14px; color: #999;">Thank you,<br><strong>Shop Support Team</strong></p>
+            </div>
+            """;
         try {
             messageHelper.setFrom("AnhTu13@gmail.com", "Shop Support");
             messageHelper.setTo(email);

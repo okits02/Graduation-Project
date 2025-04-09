@@ -9,7 +9,7 @@ import lombok.experimental.FieldDefaults;
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class changePasswordRequest {
+public class ResetPasswordRequest {
     @Size(min = 8, message = "USER_PASSWORD_INVALID")
     String oldPassword;
     @Size(min = 8, message = "USER_PASSWORD_INVALID")

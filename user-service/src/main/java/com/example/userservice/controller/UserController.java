@@ -1,28 +1,28 @@
 package com.example.userservice.controller;
 
-import com.example.userservice.dto.request.UserCreationRequest;
-import com.example.userservice.dto.request.UserUpdateRequest;
-import com.example.userservice.dto.request.changePasswordRequest;
+import com.example.userservice.dto.request.*;
 import com.example.userservice.dto.response.ApiResponse;
 import com.example.userservice.dto.response.UserResponse;
 import com.example.userservice.exception.AppException;
 import com.example.userservice.exception.ErrorCode;
 import com.example.userservice.kafka.NotificationEvent;
+import com.example.userservice.model.ForgotPassword;
 import com.example.userservice.model.OTP;
 import com.example.userservice.model.Users;
 import com.example.userservice.repository.UserRepository;
+import com.example.userservice.service.ForgotPasswordService;
 import com.example.userservice.service.UserService;
 import com.example.userservice.service.VerificationService;
+import com.example.userservice.utils.OtpUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.catalina.User;
 import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.shaded.com.google.protobuf.Api;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Controller;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,6 +36,7 @@ public class UserController {
     private final UserService userService;
     private final UserRepository userRepository;
     private final VerificationService verificationService;
+    private final ForgotPasswordService forgotPasswordService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final NewTopic topic;
 
@@ -84,19 +85,66 @@ public class UserController {
                 .build();
     }
 
-    @PostMapping("/verify/{otp_code}")
-    ResponseEntity<ApiResponse<?>> registerVerify(@PathVariable @Valid String otp_code, @RequestParam String userId)
+    @PostMapping("/forgot-password/send-otp")
+    ApiResponse<?> sendForgotPasswordOTP(@RequestBody @Valid ForgotPasswordVerifyRequest request)
     {
-        Users user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXITS));
-        userService.registerVerify(userId, otp_code);
-        return ResponseEntity.ok(ApiResponse.builder()
-                        .code(200)
-                        .message("User is verify")
-                        .build());
+        Optional<Users> users = userRepository.findByEmail(request.getEmail());
+        forgotPasswordService.createOTP(users.get(), OtpUtils.generateOtp(), request.getEmail());
+        Optional<ForgotPassword> forgotPassword = forgotPasswordService.findByUserId(users.get().getId());
+        if(users.isEmpty())
+        {
+            throw new AppException(ErrorCode.USER_NOT_EXITS);
+        }
+        if(forgotPassword.isEmpty())
+        {
+            throw new AppException(ErrorCode.OTP_NOT_EXISTS);
+        }
+        NotificationEvent notificationEvent = NotificationEvent.builder()
+                .channel("Email")
+                .recipient(request.getEmail())
+                .content(forgotPassword.get().getOtp_code())
+                .build();
+        kafkaTemplate.send(topic.name(), notificationEvent).whenComplete((result, ex)->{
+            if(ex!=null)
+            {
+                System.err.println("Failed to send event " +ex.getMessage());
+            }else
+            {
+                System.err.println("send message successfully " + result.getProducerRecord());
+            }
+        });
+        return ApiResponse.builder()
+                .code(200)
+                .message("OTP has been sent to your email")
+                .build();
+    }
+
+    @PutMapping("/forgot-password")
+    ResponseEntity<ApiResponse<?>> forgotPassword(@RequestBody ChangePasswordRequest request)
+    {
+        try{
+            userService.forgotPassword(request.getNewPassword());
+            return ResponseEntity.ok(ApiResponse.builder()
+                    .code(200)
+                    .message("Password update successfully")
+                    .build());
+        } catch (AppException e)
+        {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.builder()
+                    .code(e.getErrorCode().getCode())
+                    .message(e.getMessage())
+                    .build());
+        } catch (Exception e)
+        {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.builder()
+                    .code(500)
+                    .message("Internal server error")
+                    .build());
+        }
     }
 
     @PutMapping("/reset-password")
-    ResponseEntity<ApiResponse<?>> updatePassword(@RequestBody changePasswordRequest request) {
+    ResponseEntity<ApiResponse<?>> updatePassword(@RequestBody ResetPasswordRequest request) {
         try {
         userService.updatePassword(request.getOldPassword(), request.getNewPassword());
         return ResponseEntity.ok(ApiResponse.builder()

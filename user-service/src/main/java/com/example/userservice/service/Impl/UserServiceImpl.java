@@ -7,11 +7,13 @@ import com.example.userservice.dto.response.UserResponse;
 import com.example.userservice.exception.AppException;
 import com.example.userservice.exception.ErrorCode;
 import com.example.userservice.mapper.UserMapper;
+import com.example.userservice.model.ForgotPassword;
 import com.example.userservice.model.OTP;
 import com.example.userservice.model.Role;
 import com.example.userservice.model.Users;
 import com.example.userservice.repository.RoleRepository;
 import com.example.userservice.repository.UserRepository;
+import com.example.userservice.service.ForgotPasswordService;
 import com.example.userservice.service.UserService;
 import com.example.userservice.service.VerificationService;
 import lombok.AccessLevel;
@@ -37,6 +39,7 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final VerificationService verificationService;
+    private final ForgotPasswordService forgotPasswordService;
     static final long OTP_VALID_TIME = 5 * 60 * 1000;
 
 
@@ -85,6 +88,34 @@ public class UserServiceImpl implements UserService {
         users.setVerified(true);
         userRepository.save(users);
         verificationService.deleteOtpById(otp);
+    }
+
+    @Override
+    public void forgotPasswordVerify(String userId, String otp_code) {
+        Users users = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXITS));
+        Optional<ForgotPassword> forgotPassword = forgotPasswordService.findByUserId(userId);
+        ForgotPassword forgotPassword1 = forgotPassword.get();
+        long currentTImeInMillis = System.currentTimeMillis();
+        long otpRequestTimeInMillis = forgotPassword1.getOtp_request_time().getTime();
+        if(otpRequestTimeInMillis + OTP_VALID_TIME < currentTImeInMillis)
+        {
+            throw new AppException(ErrorCode.OTP_EXPIRED);
+        }
+        if(!forgotPassword1.getOtp_code().equals(otp_code))
+        {
+            throw new AppException(ErrorCode.OTP_INVALID);
+        }
+        forgotPasswordService.deleteOTP(forgotPassword1.getId());
+    }
+
+    @Override
+    public void forgotPassword(String newPassword) {
+        var context = SecurityContextHolder.getContext();
+        String currentUserName = context.getAuthentication().getName();
+        Users users = userRepository.findByUsername(currentUserName).orElseThrow(() ->
+                new AppException(ErrorCode.USER_NOT_EXITS));
+        users.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(users);
     }
 
 
