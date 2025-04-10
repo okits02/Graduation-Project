@@ -66,7 +66,6 @@ public class UserServiceImpl implements UserService {
         user.setActive(true);
         user.setVerified(false);
         userRepository.save(user);
-        verificationService.sendverifyOtp(user);
         return user;
     }
 

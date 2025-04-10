@@ -7,13 +7,11 @@ import com.example.userservice.model.Users;
 import com.example.userservice.repository.ForgotPasswordRepository;
 import com.example.userservice.repository.UserRepository;
 import com.example.userservice.service.ForgotPasswordService;
-import com.example.userservice.utils.OtpUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
-import javax.swing.text.html.Option;
 import java.util.Date;
 import java.util.Optional;
 
@@ -42,12 +40,12 @@ public class ForgotPasswordServiceImpl implements ForgotPasswordService {
     }
 
     @Override
-    public ForgotPassword findByUserId(String userId) {
+    public Optional<ForgotPassword> findByUserId(String userId) {
         return forgotPasswordRepository.findByUserId(userId);
     }
 
     @Override
     public void deleteOTP(String id) {
-        forgotPasswordRepository.delete(id);
+        forgotPasswordRepository.deleteById(id);
     }
 }

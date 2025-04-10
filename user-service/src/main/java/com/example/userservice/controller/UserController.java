@@ -62,6 +62,7 @@ public class UserController {
     {
         Optional<Users> users = userRepository.findById(request.getId());
         Optional<OTP> otp = verificationService.getOtpByUserId(request.getId());
+        verificationService.sendverifyOtp(users.get());
         if(otp.isEmpty())
         {
             throw new AppException(ErrorCode.OTP_NOT_EXISTS);

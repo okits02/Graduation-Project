@@ -2,6 +2,8 @@ package com.example.userservice.controller;
 
 import com.example.userservice.dto.request.AuthenticationRequest;
 import com.example.userservice.dto.request.IntrospectRequest;
+import com.example.userservice.dto.request.UserCreationRequest;
+import com.example.userservice.dto.request.UserUpdateRequest;
 import com.example.userservice.dto.response.ApiResponse;
 import com.example.userservice.dto.response.AuthenticationResponse;
 import com.example.userservice.dto.response.IntrospectResponse;
@@ -51,10 +53,10 @@ public class AuthenticationController {
     }
 
     @PostMapping("/verify/{otp_code}")
-    ResponseEntity<ApiResponse<?>> registerVerify(@PathVariable @Valid String otp_code, @RequestParam String userId)
+    ResponseEntity<ApiResponse<?>> registerVerify(@PathVariable @Valid String otp_code, @RequestBody UserUpdateRequest request)
     {
-        Users user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXITS));
-        userService.registerVerify(userId, otp_code);
+        Users user = userRepository.findById(request.getId()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXITS));
+        userService.registerVerify(request.getId(), otp_code);
         return ResponseEntity.ok(ApiResponse.builder()
                 .code(200)
                 .message("User is verify")

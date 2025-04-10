@@ -3,8 +3,10 @@ package com.example.userservice.repository;
 import com.example.userservice.model.ForgotPassword;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface ForgotPasswordRepository extends JpaRepository<ForgotPassword, String> {
-    ForgotPassword findByUserId(String userId);
+import java.util.Optional;
 
-    void delete(String id);
+public interface ForgotPasswordRepository extends JpaRepository<ForgotPassword, String> {
+    Optional<ForgotPassword> findByUserId(String userId);
+
+    void deleteById(String id);
 }
