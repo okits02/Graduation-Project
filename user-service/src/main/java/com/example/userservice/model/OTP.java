@@ -18,8 +18,7 @@ public class OTP {
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
     String otp_code;
-    @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @OneToOne
     Users user;
     Date otp_request_time;
 }

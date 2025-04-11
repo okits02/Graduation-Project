@@ -29,8 +29,10 @@ public class UserAddressServiceImpl implements UserAddressService {
     private final UserAddressMapper userAddressMapper;
 
     @Override
-    public void addUserAddressToUser(String userId, UserAddressCreateRequest userAddress) {
-        Users users = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXITS));
+    public void addUserAddressToUser(UserAddressCreateRequest userAddress) {
+        var context = SecurityContextHolder.getContext();
+        String currentName = context.getAuthentication().getName();
+        Users users = userRepository.findByUsername(currentName).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXITS));
         userAddress.setUser(users);
         userAddressRepository.save(userAddressMapper.toUserAddress(userAddress));
     }

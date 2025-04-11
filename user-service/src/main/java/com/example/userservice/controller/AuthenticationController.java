@@ -1,11 +1,9 @@
 package com.example.userservice.controller;
 
-import com.example.userservice.dto.request.AuthenticationRequest;
-import com.example.userservice.dto.request.IntrospectRequest;
-import com.example.userservice.dto.request.UserCreationRequest;
-import com.example.userservice.dto.request.UserUpdateRequest;
+import com.example.userservice.dto.request.*;
 import com.example.userservice.dto.response.ApiResponse;
 import com.example.userservice.dto.response.AuthenticationResponse;
+import com.example.userservice.dto.response.ForgotPasswordResponse;
 import com.example.userservice.dto.response.IntrospectResponse;
 import com.example.userservice.exception.AppException;
 import com.example.userservice.exception.ErrorCode;
@@ -63,14 +61,15 @@ public class AuthenticationController {
                 .build());
     }
 
-    @PostMapping("/Forgot/{otp_code}")
-    ResponseEntity<ApiResponse<?>> ForgotPasswordVerify(@PathVariable @Valid String otp_code, @RequestParam String userId)
+    @PostMapping("/forgot-password/{otp_code}")
+    ApiResponse<ForgotPasswordResponse> forgotPasswordVerify(@PathVariable @Valid String otp_code,
+                                                             @RequestBody ForgotPasswordRequest request)
     {
-        Users users = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXITS));
-        userService.forgotPasswordVerify(userId, otp_code);
-        return ResponseEntity.ok(ApiResponse.builder()
-                .code(200)
-                .message("Otp is verify")
-                .build());
+        Users users = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXITS));
+        var result = authenticationService.forgotPassword(request);
+        return ApiResponse.<ForgotPasswordResponse>builder()
+                .result(result)
+                .build();
     }
+
 }

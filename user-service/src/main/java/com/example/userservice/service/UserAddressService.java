@@ -8,7 +8,7 @@ import org.springframework.data.domain.Page;
 
 
 public interface UserAddressService {
-    void addUserAddressToUser(String userId, UserAddressCreateRequest userAddress);
+    void addUserAddressToUser(UserAddressCreateRequest userAddress);
     void deleteAddressFromUser(String userId, String addressId);
     void deleteMyAddress(String addressId);
     void updateMyAddress(UserAddressUpdateRequest userAddress);

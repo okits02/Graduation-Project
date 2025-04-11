@@ -26,8 +26,6 @@ public class Users {
     String phone;
     boolean isActive;
     boolean isVerified;
-    @OneToMany(mappedBy = "user")
-    List<OTP> otps;
     @ManyToOne
     @JoinColumn(name = "role_name", referencedColumnName = "name")
     Role role;

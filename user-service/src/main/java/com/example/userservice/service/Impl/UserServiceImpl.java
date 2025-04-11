@@ -56,7 +56,7 @@ public class UserServiceImpl implements UserService {
         Users user = userMapper.toUser(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         log.info("createUser: {}", user);
-        Role roles = roleRepository.findById(PredefinedRole.USER_ROLE)
+        Role roles = roleRepository.findByName(PredefinedRole.USER_ROLE)
                 .orElseGet(() -> {
                     Role newRole = new Role();
                     newRole.setName(PredefinedRole.USER_ROLE);
@@ -90,29 +90,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void forgotPasswordVerify(String userId, String otp_code) {
+    public void forgotPassword(String userId, String newPassword) {
         Users users = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXITS));
-        Optional<ForgotPassword> forgotPassword = forgotPasswordService.findByUserId(userId);
-        ForgotPassword forgotPassword1 = forgotPassword.get();
-        long currentTImeInMillis = System.currentTimeMillis();
-        long otpRequestTimeInMillis = forgotPassword1.getOtp_request_time().getTime();
-        if(otpRequestTimeInMillis + OTP_VALID_TIME < currentTImeInMillis)
-        {
-            throw new AppException(ErrorCode.OTP_EXPIRED);
-        }
-        if(!forgotPassword1.getOtp_code().equals(otp_code))
-        {
-            throw new AppException(ErrorCode.OTP_INVALID);
-        }
-        forgotPasswordService.deleteOTP(forgotPassword1.getId());
-    }
-
-    @Override
-    public void forgotPassword(String newPassword) {
-        var context = SecurityContextHolder.getContext();
-        String currentUserName = context.getAuthentication().getName();
-        Users users = userRepository.findByUsername(currentUserName).orElseThrow(() ->
-                new AppException(ErrorCode.USER_NOT_EXITS));
         users.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(users);
     }

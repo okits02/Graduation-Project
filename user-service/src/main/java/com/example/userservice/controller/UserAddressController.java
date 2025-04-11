@@ -24,11 +24,11 @@ import org.springframework.web.bind.annotation.*;
 public class UserAddressController {
     private final UserAddressService userAddressService;
 
-    @PostMapping("/{userId}/addresses")
-    public ResponseEntity<ApiResponse<?>> addUserAddress(@PathVariable String userId,
-                                                         @RequestBody UserAddressCreateRequest userAddressCreateRequest) {
+    @PostMapping("/addresses")
+    public ResponseEntity<ApiResponse<?>> addUserAddress(@RequestBody UserAddressCreateRequest userAddressCreateRequest)
+    {
         try {
-            userAddressService.addUserAddressToUser(userId, userAddressCreateRequest);
+            userAddressService.addUserAddressToUser( userAddressCreateRequest);
             return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.builder()
                     .code(201)
                     .message("Address added successfully")

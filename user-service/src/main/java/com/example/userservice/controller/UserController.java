@@ -17,7 +17,6 @@ import com.example.userservice.utils.OtpUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.NewTopic;
-import org.apache.kafka.shaded.com.google.protobuf.Api;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -61,8 +60,8 @@ public class UserController {
     ApiResponse<?> endVerificationOTP(@RequestBody @Valid UserUpdateRequest request)
     {
         Optional<Users> users = userRepository.findById(request.getId());
-        Optional<OTP> otp = verificationService.getOtpByUserId(request.getId());
         verificationService.sendverifyOtp(users.get());
+        Optional<OTP> otp = verificationService.getOtpByUserId(request.getId());
         if(otp.isEmpty())
         {
             throw new AppException(ErrorCode.OTP_NOT_EXISTS);
@@ -87,7 +86,7 @@ public class UserController {
     }
 
     @PostMapping("/forgot-password/send-otp")
-    ApiResponse<?> sendForgotPasswordOTP(@RequestBody @Valid ForgotPasswordVerifyRequest request)
+    ApiResponse<?> sendForgotPasswordOTP(@RequestBody @Valid ForgotPasswordRequest request)
     {
         Optional<Users> users = userRepository.findByEmail(request.getEmail());
         forgotPasswordService.createOTP(users.get(), OtpUtils.generateOtp(), request.getEmail());
@@ -124,7 +123,9 @@ public class UserController {
     ResponseEntity<ApiResponse<?>> forgotPassword(@RequestBody ChangePasswordRequest request)
     {
         try{
-            userService.forgotPassword(request.getNewPassword());
+            Users users = userRepository.findByEmail(request.getEmail()).orElseThrow(() ->
+                    new AppException(ErrorCode.USER_NOT_EXITS));
+            userService.forgotPassword(users.getId(), request.getNewPassword());
             return ResponseEntity.ok(ApiResponse.builder()
                     .code(200)
                     .message("Password update successfully")

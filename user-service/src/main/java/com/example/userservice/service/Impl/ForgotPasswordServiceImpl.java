@@ -17,13 +17,12 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ForgotPasswordServiceImpl implements ForgotPasswordService {
     ForgotPasswordRepository forgotPasswordRepository;
     UserRepository userRepository;
     @Override
     public ForgotPassword createOTP(Users users, String otp, String sendTo) {
-        userRepository.findByUsername(users.getUsername()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXITS));
         ForgotPassword forgotPassword = ForgotPassword.builder()
                 .user(users)
                 .otp_code(otp)
