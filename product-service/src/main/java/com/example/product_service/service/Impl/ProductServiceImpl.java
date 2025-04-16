@@ -3,7 +3,10 @@ package com.example.product_service.service.Impl;
 import com.example.product_service.dto.request.ProductRequest;
 import com.example.product_service.dto.request.ProductSearchRequest;
 import com.example.product_service.dto.response.ProductResponse;
+import com.example.product_service.exceptions.AppException;
+import com.example.product_service.exceptions.ErrorCode;
 import com.example.product_service.mapper.ProductMapper;
+import com.example.product_service.model.Products;
 import com.example.product_service.repository.ProductRepository;
 import com.example.product_service.service.ProductService;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -30,27 +34,39 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<ProductResponse> searchProducts(ProductSearchRequest request) {
-        return List.of();
+    public Page<ProductResponse> searchProducts(ProductSearchRequest request) {
+        return productRepository.searchByCriteria(request);
     }
 
     @Override
     public ProductResponse getById(String productId) {
-        return null;
+        Optional<Products> products = productRepository.findById(productId);
+        if(products.isEmpty())
+        {
+            throw new AppException(ErrorCode.PRODUCT_NOT_EXISTS);
+        }
+        return productMapper.toProductResponse(products);
     }
 
     @Override
-    public ProductResponse createProduct(ProductRequest request) {
-        return null;
+    public Products createProduct(ProductRequest request) {
+        productRepository.findById(request.getId()).orElseThrow(()->
+                new AppException(ErrorCode.PRODUCT_NOT_EXISTS));
+        Products products = productMapper.toProduct(request);
+        productRepository.save(products);
+        return products;
     }
 
     @Override
     public ProductResponse updateProduct(ProductRequest request) {
-        return null;
+        Products products = productRepository.findById(request.getId()).orElseThrow(()->
+                new AppException(ErrorCode.PRODUCT_NOT_EXISTS));
+         productMapper.updateProduct(products, request);
+         return productMapper.toProductResponse(productRepository.save(products));
     }
 
     @Override
     public void DeleteProduct(String productId) {
-
+        productRepository.deleteById(productId);
     }
 }

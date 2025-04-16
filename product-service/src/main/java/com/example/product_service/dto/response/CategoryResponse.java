@@ -1,15 +1,16 @@
-package com.example.product_service.dto.request;
+package com.example.product_service.dto.response;
 
+import jakarta.annotation.Nonnull;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 @Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class CategoryRequest {
+public class CategoryResponse {
     String id;
     String name;
-    String descriptions;
+    String description;
 }
