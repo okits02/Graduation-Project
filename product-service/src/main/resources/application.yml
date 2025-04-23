@@ -1,0 +1,8 @@
+server:
+  port: 8060
+spring:
+  database:
+    url: "jdbc:mysql://localhost:3360/db_product"
+    username: "root"
+    password: "root"
+    driver-class-name: com.mysql.cj.jdbc.Driver
