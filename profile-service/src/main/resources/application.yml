@@ -9,4 +9,3 @@ spring:
     authentication:
       username: neo4j
       password: admin123
-    database: profile-db

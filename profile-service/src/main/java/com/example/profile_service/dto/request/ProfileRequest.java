@@ -12,8 +12,8 @@ import java.util.Date;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProfileRequest {
     String userId;
-    String firstname;
-    String lastname;
+    String firstName;
+    String lastName;
     String email;
     String phone;
     Date dob;

@@ -8,10 +8,8 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class AddressResponse {
-    String id;
-    String street;
-    String city;
-    String postalCode;
-    String addressType;
+public class ApiResponse<T> {
+    int code;
+    String message;
+    T result;
 }

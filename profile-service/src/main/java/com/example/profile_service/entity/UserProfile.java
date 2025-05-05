@@ -4,6 +4,7 @@ import jakarta.persistence.GenerationType;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.neo4j.core.schema.*;
+import org.springframework.data.neo4j.core.support.UUIDStringGenerator;
 
 import java.util.Date;
 import java.util.List;
@@ -17,7 +18,7 @@ import java.util.List;
 @Node("user_profile")
 public class UserProfile {
     @Id
-    @GeneratedValue
+    @GeneratedValue(generatorClass = UUIDStringGenerator.class)
     String id;
     @Property("userId")
     String userId;
