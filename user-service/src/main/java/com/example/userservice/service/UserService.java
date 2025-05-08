@@ -19,4 +19,5 @@ public interface UserService {
     public void toggleUserStatus(String userId, boolean isActive);
     public Page<UserResponse> getAllUsers(int page, int size);
     public void deleteUser(String userId);
+    public String getUserId();
 }

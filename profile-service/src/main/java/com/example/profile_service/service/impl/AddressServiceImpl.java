@@ -25,8 +25,13 @@ public class AddressServiceImpl implements AddressService {
     private final AddressMapper addressMapper;
 
     @Override
-    public AddressResponse createAddress(AddressRequest request) {
+    public AddressResponse createAddress(String userId, AddressRequest request) {
+        UserProfile userProfile = profileRepository.findByUserId(userId);
         UserAddress userAddress = addressMapper.toAddress(request);
+        List<UserAddress> userAddressList = userProfile.getAddress();
+        userAddressList.add(userAddress);
+        userProfile.setAddress(userAddressList);
+        profileRepository.save(userProfile);
         addressRepository.save(userAddress);
         return addressMapper.toAddressResponse(userAddress);
     }

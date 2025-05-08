@@ -15,7 +15,6 @@ import java.util.List;
 public class ProfileResponse {
     String firstName;
     String lastName;
-    String email;
     String phone;
     Date dob;
     List<UserAddress> address;

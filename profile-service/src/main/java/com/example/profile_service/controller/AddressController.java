@@ -20,13 +20,15 @@ import java.util.List;
 public class AddressController {
     AddressService addressService;
 
-    @PostMapping
-    ApiResponse<AddressResponse> createAddress(@RequestBody @Valid AddressRequest request)
+    @PostMapping("/{userId}")
+    ApiResponse<AddressResponse> createAddress(
+            @PathVariable String userId,
+            @RequestBody @Valid AddressRequest request)
     {
         return ApiResponse.<AddressResponse>builder()
                 .code(200)
                 .message("Create successful address!")
-                .result(addressService.createAddress(request))
+                .result(addressService.createAddress(userId, request))
                 .build();
     }
 

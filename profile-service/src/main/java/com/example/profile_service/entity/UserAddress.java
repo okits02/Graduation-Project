@@ -5,6 +5,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.support.UUIDStringGenerator;
 
 @Setter
 @Getter
@@ -15,7 +16,7 @@ import org.springframework.data.neo4j.core.schema.Node;
 @Node("user_address")
 public class UserAddress {
     @Id
-    @GeneratedValue
+    @GeneratedValue(generatorClass = UUIDStringGenerator.class)
     String id;
 
     String street;

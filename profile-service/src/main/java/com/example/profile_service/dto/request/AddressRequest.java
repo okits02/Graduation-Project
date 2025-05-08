@@ -13,5 +13,4 @@ public class AddressRequest {
     String street;
     String city;
     String postalCode;
-    String addressType;
 }

@@ -14,7 +14,6 @@ public class ProfileRequest {
     String userId;
     String firstName;
     String lastName;
-    String email;
     String phone;
     Date dob;
 }

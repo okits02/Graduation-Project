@@ -13,8 +13,13 @@ spring:
   kafka:
     bootstrap-servers: localhost:9094
     producer:
+      acks: all
+      retries: 1
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        enable.idempotence: true
+        max.in.fight.request.per.connection: 5
 jwt:
   signerKey: "0+haQiwa2KensXa+0fKTCApar6wrtAhZ2eaUFeeQd8HibrtR6OXN/j8yI5i1s7mS"
 

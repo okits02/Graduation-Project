@@ -152,7 +152,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void toggleUserStatus(String userId, boolean isActive) {
-        Users users = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXITS));
+        Users users = userRepository.findById(userId).orElseThrow(()
+                -> new AppException(ErrorCode.USER_NOT_EXITS));
         users.setActive(isActive);
         userRepository.save(users);
     }
@@ -166,6 +167,15 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUser(String userId) {
         userRepository.deleteById(userId);
+    }
+
+    @Override
+    public String getUserId() {
+        var contex = SecurityContextHolder.getContext();
+        String currentUsername = contex.getAuthentication().getName();
+        Users users = userRepository.findByUsername(currentUsername).orElseThrow(()
+                -> new AppException(ErrorCode.USER_NOT_EXITS));
+        return users.getId();
     }
 
 }

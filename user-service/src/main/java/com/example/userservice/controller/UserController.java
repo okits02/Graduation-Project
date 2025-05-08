@@ -5,7 +5,9 @@ import com.example.userservice.dto.response.ApiResponse;
 import com.example.userservice.dto.response.UserResponse;
 import com.example.userservice.exception.AppException;
 import com.example.userservice.exception.ErrorCode;
+import com.example.userservice.kafka.CreateProfileEvent;
 import com.example.userservice.kafka.NotificationEvent;
+import com.example.userservice.mapper.UserMapper;
 import com.example.userservice.model.ForgotPassword;
 import com.example.userservice.model.OTP;
 import com.example.userservice.model.Users;
@@ -16,7 +18,9 @@ import com.example.userservice.service.VerificationService;
 import com.example.userservice.utils.OtpUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.User;
 import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.shaded.com.google.protobuf.Api;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,27 +38,43 @@ import java.util.Optional;
 public class UserController {
     private final UserService userService;
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
     private final VerificationService verificationService;
     private final ForgotPasswordService forgotPasswordService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
-    private final NewTopic topic;
-
 
     @PostMapping
-    ApiResponse<Users> creationUser(@RequestBody @Valid UserCreationRequest request) {
+    ApiResponse<UserResponse> creationUser(@RequestBody @Valid UserCreationRequest request) {
+        Users users = userService.createUser(request);
+        CreateProfileEvent createProfileEvent = CreateProfileEvent.builder()
+                .userId(users.getId())
+                .firstName(users.getFirstName())
+                .lastName(users.getLastName())
+                .phone(users.getPhone())
+                .build();
+        kafkaTemplate.send("create-profile", createProfileEvent).whenComplete(
+                (result, ex) -> {
+            if (ex != null)
+            {
+                System.err.println("Failed to send message" + ex.getMessage());
+            } else {
+                System.err.println("send message successfully" + result.getProducerRecord());
+            }
+        });
         try {
-            return ApiResponse.<Users>builder()
+            return ApiResponse.<UserResponse>builder()
                     .code(200)
                     .message("User Created")
-                    .result(userService.createUser(request))
+                    .result(userMapper.toUserResponse(users))
                     .build();
         }catch (AppException e) {
-            return ApiResponse.<Users>builder()
+            return ApiResponse.<UserResponse>builder()
                     .code(e.getErrorCode().getCode())
                     .message(e.getMessage())
                     .build();
         }
     }
+
 
     @PostMapping("/verifyEmail/send-otp")
     ApiResponse<?> endVerificationOTP(@RequestBody @Valid UserUpdateRequest request)
@@ -71,7 +91,7 @@ public class UserController {
                 .recipient(users.get().getEmail())
                 .content(otp.get().getOtp_code())
                 .build();
-        kafkaTemplate.send(topic.name(), notificationEvent).whenComplete((result, ex) -> {
+        kafkaTemplate.send("send-otp", notificationEvent).whenComplete((result, ex) -> {
             if (ex != null)
             {
                 System.err.println("Failed to send message" + ex.getMessage());
@@ -104,7 +124,7 @@ public class UserController {
                 .recipient(request.getEmail())
                 .content(forgotPassword.get().getOtp_code())
                 .build();
-        kafkaTemplate.send(topic.name(), notificationEvent).whenComplete((result, ex)->{
+        kafkaTemplate.send("send-otp", notificationEvent).whenComplete((result, ex)->{
             if(ex!=null)
             {
                 System.err.println("Failed to send event " +ex.getMessage());

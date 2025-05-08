@@ -24,7 +24,6 @@ public class UserProfile {
     String userId;
     String firstName;
     String lastName;
-    String email;
     String phone;
     Date dob;
 
