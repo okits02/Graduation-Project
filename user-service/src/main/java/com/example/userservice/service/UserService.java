@@ -2,6 +2,7 @@ package com.example.userservice.service;
 
 import com.example.userservice.dto.request.UserCreationRequest;
 import com.example.userservice.dto.request.UserUpdateRequest;
+import com.example.userservice.dto.response.UserIdResponse;
 import com.example.userservice.dto.response.UserResponse;
 import com.example.userservice.model.Users;
 import org.apache.catalina.User;
@@ -12,12 +13,10 @@ public interface UserService {
     public void registerVerify(String userId, String otp_code);
     public void forgotPassword(String userId, String newPassword);
     public UserResponse updateUser(String userId, UserUpdateRequest request);
-    public UserResponse updateMyInfo(UserUpdateRequest request);
     public void updatePassword(String oldPassword, String newPassword);
-    public UserResponse getMyInfo();
     public UserResponse getUserById(String userId);
     public void toggleUserStatus(String userId, boolean isActive);
     public Page<UserResponse> getAllUsers(int page, int size);
     public void deleteUser(String userId);
-    public String getUserId();
+    public UserIdResponse getUserId();
 }

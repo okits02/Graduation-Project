@@ -50,7 +50,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         if(CollectionUtils.isEmpty(authHeader))
             return unauthenticated(exchange.getResponse());
 
-        String token = authHeader.getFirst().replace("Bearer", "");
+        String token = authHeader.get(0).replace("Bearer ", "");
 
         return identityService.introspect(token).flatMap(introspectResponseApiResponse -> {
             if(introspectResponseApiResponse.getResult().isValid())

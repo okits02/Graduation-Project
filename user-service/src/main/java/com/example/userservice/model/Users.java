@@ -20,15 +20,10 @@ public class Users {
     String id;
     String username;
     String password;
-    String firstName;
-    String lastName;
     String email;
-    String phone;
     boolean isActive;
     boolean isVerified;
     @ManyToOne
     @JoinColumn(name = "role_name", referencedColumnName = "name")
     Role role;
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    List<UserAddress> addressList = new ArrayList<>();
 }

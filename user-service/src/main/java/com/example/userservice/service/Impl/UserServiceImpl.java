@@ -3,6 +3,7 @@ package com.example.userservice.service.Impl;
 import com.example.userservice.constant.PredefinedRole;
 import com.example.userservice.dto.request.UserCreationRequest;
 import com.example.userservice.dto.request.UserUpdateRequest;
+import com.example.userservice.dto.response.UserIdResponse;
 import com.example.userservice.dto.response.UserResponse;
 import com.example.userservice.exception.AppException;
 import com.example.userservice.exception.ErrorCode;
@@ -71,7 +72,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void registerVerify(String userId, String otp_code) {
-        Users users = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXITS));
+        Users users = userRepository.findById(userId).orElseThrow(
+                () -> new AppException(ErrorCode.USER_NOT_EXITS));
         Optional<OTP> optional = verificationService.getOtpByUserId(userId);
         OTP otp = optional.orElseThrow(() -> new AppException(ErrorCode.OTP_NOT_EXISTS));
         long currentTimeInMillis = System.currentTimeMillis();
@@ -91,7 +93,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void forgotPassword(String userId, String newPassword) {
-        Users users = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXITS));
+        Users users = userRepository.findById(userId).orElseThrow(
+                () -> new AppException(ErrorCode.USER_NOT_EXITS));
         users.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(users);
     }
@@ -108,21 +111,13 @@ public class UserServiceImpl implements UserService {
         return userMapper.toUserResponse(userRepository.save(users));
     }
 
-    @Override
-    public UserResponse updateMyInfo(UserUpdateRequest request) {
-        var context = SecurityContextHolder.getContext();
-        String currentUsername = context.getAuthentication().getName();
-        Users users = userRepository.findByUsername(currentUsername).orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXISTS));
-        userMapper.updateUser(users, request);
-        users.setPassword(passwordEncoder.encode(request.getPassword()));
-        return userMapper.toUserResponse(userRepository.save(users));
-    }
 
     @Override
     public void updatePassword(String oldPassword, String newPassword) {
         var context = SecurityContextHolder.getContext();
         String currentUsername = context.getAuthentication().getName();
-        Users users = userRepository.findByUsername(currentUsername).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXITS));
+        Users users = userRepository.findByUsername(currentUsername).orElseThrow(
+                () -> new AppException(ErrorCode.USER_NOT_EXITS));
 
         if(!passwordEncoder.matches(oldPassword,users.getPassword()))
         {
@@ -130,14 +125,6 @@ public class UserServiceImpl implements UserService {
         }
         users.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(users);
-    }
-
-    @Override
-    public UserResponse getMyInfo() {
-        var context = SecurityContextHolder.getContext();
-        String currentUsername = context.getAuthentication().getName();
-        Users users = userRepository.findByUsername(currentUsername).orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXISTS));
-        return userMapper.toUserResponse(users);
     }
 
     @Override
@@ -170,12 +157,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String getUserId() {
+    public UserIdResponse getUserId() {
         var contex = SecurityContextHolder.getContext();
         String currentUsername = contex.getAuthentication().getName();
         Users users = userRepository.findByUsername(currentUsername).orElseThrow(()
                 -> new AppException(ErrorCode.USER_NOT_EXITS));
-        return users.getId();
+        return UserIdResponse.builder()
+                .userId(users.getId())
+                .build();
     }
-
 }

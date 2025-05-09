@@ -2,6 +2,7 @@ package com.example.userservice.controller;
 
 import com.example.userservice.dto.request.*;
 import com.example.userservice.dto.response.ApiResponse;
+import com.example.userservice.dto.response.UserIdResponse;
 import com.example.userservice.dto.response.UserResponse;
 import com.example.userservice.exception.AppException;
 import com.example.userservice.exception.ErrorCode;
@@ -48,9 +49,9 @@ public class UserController {
         Users users = userService.createUser(request);
         CreateProfileEvent createProfileEvent = CreateProfileEvent.builder()
                 .userId(users.getId())
-                .firstName(users.getFirstName())
-                .lastName(users.getLastName())
-                .phone(users.getPhone())
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
+                .phone(request.getPhone())
                 .build();
         kafkaTemplate.send("create-profile", createProfileEvent).whenComplete(
                 (result, ex) -> {
@@ -91,7 +92,8 @@ public class UserController {
                 .recipient(users.get().getEmail())
                 .content(otp.get().getOtp_code())
                 .build();
-        kafkaTemplate.send("send-otp", notificationEvent).whenComplete((result, ex) -> {
+        kafkaTemplate.send("send-otp", notificationEvent).whenComplete(
+                (result, ex) -> {
             if (ex != null)
             {
                 System.err.println("Failed to send message" + ex.getMessage());
@@ -124,7 +126,8 @@ public class UserController {
                 .recipient(request.getEmail())
                 .content(forgotPassword.get().getOtp_code())
                 .build();
-        kafkaTemplate.send("send-otp", notificationEvent).whenComplete((result, ex)->{
+        kafkaTemplate.send("send-otp", notificationEvent).whenComplete(
+                (result, ex) ->{
             if(ex!=null)
             {
                 System.err.println("Failed to send event " +ex.getMessage());
@@ -143,8 +146,8 @@ public class UserController {
     ResponseEntity<ApiResponse<?>> forgotPassword(@RequestBody ChangePasswordRequest request)
     {
         try{
-            Users users = userRepository.findByEmail(request.getEmail()).orElseThrow(() ->
-                    new AppException(ErrorCode.USER_NOT_EXITS));
+            Users users = userRepository.findByEmail(request.getEmail()).orElseThrow(
+                    () -> new AppException(ErrorCode.USER_NOT_EXITS));
             userService.forgotPassword(users.getId(), request.getNewPassword());
             return ResponseEntity.ok(ApiResponse.builder()
                     .code(200)
@@ -168,24 +171,33 @@ public class UserController {
     @PutMapping("/reset-password")
     ResponseEntity<ApiResponse<?>> updatePassword(@RequestBody ResetPasswordRequest request) {
         try {
-        userService.updatePassword(request.getOldPassword(), request.getNewPassword());
-        return ResponseEntity.ok(ApiResponse.builder()
+            userService.updatePassword(request.getOldPassword(), request.getNewPassword());
+            return ResponseEntity.ok(ApiResponse.builder()
                 .code(200)
                 .message("Password updated successfully")
                 .build());
 
-    } catch (AppException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.builder()
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.builder()
                 .code(e.getErrorCode().getCode())
                 .message(e.getMessage())
                 .build());
 
-    } catch (Exception e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.builder()
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.builder()
                 .code(500)
                 .message("Internal server error")
                 .build());
+        }
     }
+
+    @GetMapping("/getUserId")
+    ResponseEntity<ApiResponse<UserIdResponse>> getUserId()
+    {
+        return ResponseEntity.ok(ApiResponse.<UserIdResponse>builder()
+                .code(200)
+                .result(userService.getUserId())
+                .build());
     }
 
     @PutMapping("/{userid}")
@@ -193,27 +205,6 @@ public class UserController {
     public UserResponse updateUser(@PathVariable("userid") String userId,
                                    @RequestBody @Valid UserUpdateRequest request) {
         return userService.updateUser(userId, request);
-    }
-
-    @PutMapping("/updateMyInfo")
-    public UserResponse updateMyInfo(@RequestBody @Valid UserUpdateRequest request) {
-        return userService.updateMyInfo(request);
-    }
-
-    @GetMapping("/Info")
-    ApiResponse<UserResponse> getMyInfo() {
-        try {
-            return ApiResponse.<UserResponse>builder()
-                    .code(200)
-                    .message("OK")
-                    .result(userService.getMyInfo())
-                    .build();
-        }catch (AppException e) {
-            return ApiResponse.<UserResponse>builder()
-                    .code(e.getErrorCode().getCode())
-                    .message(e.getMessage())
-                    .build();
-        }
     }
 
     @GetMapping("/{userId}")
