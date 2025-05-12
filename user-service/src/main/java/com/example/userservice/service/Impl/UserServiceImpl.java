@@ -101,18 +101,6 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public UserResponse updateUser(String userId, UserUpdateRequest request) {
-        Users users = userRepository.findById(String.valueOf(userId)).orElseThrow(()->
-                new AppException(ErrorCode.USER_NOT_EXITS));
-        userMapper.updateUser(users, request);
-        users.setPassword(passwordEncoder.encode(request.getPassword()));
-        var role = roleRepository.findAllById(request.getRole());
-        users.setRole(role);
-        return userMapper.toUserResponse(userRepository.save(users));
-    }
-
-
-    @Override
     public void updatePassword(String oldPassword, String newPassword) {
         var context = SecurityContextHolder.getContext();
         String currentUsername = context.getAuthentication().getName();
@@ -143,12 +131,6 @@ public class UserServiceImpl implements UserService {
                 -> new AppException(ErrorCode.USER_NOT_EXITS));
         users.setActive(isActive);
         userRepository.save(users);
-    }
-
-    @Override
-    public Page<UserResponse> getAllUsers(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        return userRepository.findAll(pageable).map(userMapper::toUserResponse);
     }
 
     @Override

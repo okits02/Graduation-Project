@@ -6,6 +6,8 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.Date;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -22,4 +24,5 @@ public class UserCreationRequest {
     String email;
     @UserPhoneConstraint(min = 10, message = "INVALID_PHONE")
     String phone;
+    Date dob;
 }

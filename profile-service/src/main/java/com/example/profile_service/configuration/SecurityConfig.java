@@ -1,7 +1,7 @@
-package com.example.userservice.configuration;
+package com.example.profile_service.configuration;
 
 
-import com.example.userservice.enums.Roles;
+import com.example.profile_service.configuration.JwtAuthenticationEntryPoint;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,29 +14,16 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
-
-import javax.crypto.spec.SecretKeySpec;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 @Slf4j
 public class SecurityConfig {
-    private final String[] END_POINTS = {
-            "/users/register",
-            "/auth/introspect",
-            "/auth/login",
-            "/auth/verify/[0-9a-zA-Z]+",
-            "/users/verifyEmail/send-otp",
-            "users/forgot-password/send-otp",
-            "/auth/forgot-password/[0-9a-zA-Z]+",
-            "/auth/refresh"};
+    private final String[] END_POINTS = {};
     @Value("${jwt.signerKey}")
     protected String SIGNER_KEY;
     @Autowired
@@ -70,10 +57,5 @@ public class SecurityConfig {
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
         return jwtAuthenticationConverter;
-    }
-
-    @Bean
-    PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(10);
     }
 }

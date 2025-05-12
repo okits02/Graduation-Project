@@ -1,12 +1,14 @@
 package com.example.api_gateway.configuration;
 
 import com.example.api_gateway.dto.response.ApiResponse;
+import com.example.api_gateway.dto.response.IntrospectResponse;
 import com.example.api_gateway.service.IdentityService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import lombok.experimental.FieldDefaults;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -29,15 +31,17 @@ import java.util.Collection;
 import java.util.List;
 
 @Component
+@Slf4j
 @RequiredArgsConstructor
-@FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = true)
+@FieldDefaults(level = AccessLevel.PACKAGE)
 public class AuthenticationFilter implements GlobalFilter, Ordered {
-    IdentityService identityService;
-    ObjectMapper objectMapper;
-    private String[] publicEndpoints = {"/auth/login"};
+    final IdentityService identityService;
+    final ObjectMapper objectMapper;
+    private final String[] publicEndpoints = {"/users/register", "/auth/introspect", "/auth/login",
+            "/users/verifyEmail/send-otp", "users/forgot-password/send-otp",
+            "/auth/refresh"};
 
     @Value("${app.api-prefix}")
-    @NonNull
     private String apiPrefix;
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -50,14 +54,19 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         if(CollectionUtils.isEmpty(authHeader))
             return unauthenticated(exchange.getResponse());
 
-        String token = authHeader.get(0).replace("Bearer ", "");
+        String token = authHeader.getFirst().replace("Bearer ", "");
+        log.info("Token: {}", token);
 
-        return identityService.introspect(token).flatMap(introspectResponseApiResponse -> {
-            if(introspectResponseApiResponse.getResult().isValid())
+        return identityService.introspect(token).flatMap(introspectResponse -> {
+            log.info("Introspect API response: {}", introspectResponse);
+            if(introspectResponse.getResult().isValid())
                 return chain.filter(exchange);
             else
                 return unauthenticated(exchange.getResponse());
-        }).onErrorResume(throwable -> unauthenticated(exchange.getResponse()));
+
+        }).onErrorResume(throwable -> {
+            log.error("Introspect failed: {}", throwable.getMessage(), throwable);
+            return unauthenticated(exchange.getResponse());});
     }
 
     @Override
@@ -74,7 +83,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
     Mono<Void> unauthenticated(ServerHttpResponse response)
     {
         ApiResponse<?> apiResponse = ApiResponse.builder()
-                .code(401)
+                .code(1401)
                 .message("Unauthenticated")
                 .build();
         String body = null;

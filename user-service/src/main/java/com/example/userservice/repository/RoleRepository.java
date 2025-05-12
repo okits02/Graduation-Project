@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface RoleRepository extends JpaRepository<Role, String> {
-    Role findAllById(Role role);
 
     Optional<Role> findByName(String userRole);
 }

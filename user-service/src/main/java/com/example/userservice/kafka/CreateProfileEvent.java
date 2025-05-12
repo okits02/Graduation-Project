@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Builder;
 
+import java.util.Date;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -14,5 +16,5 @@ public class CreateProfileEvent {
     private String firstName;
     private String lastName;
     private String phone;
-    private String dob;
+    private Date dob;
 }

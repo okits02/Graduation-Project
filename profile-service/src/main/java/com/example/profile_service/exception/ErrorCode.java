@@ -6,6 +6,8 @@ import org.springframework.http.HttpStatusCode;
 
 @Getter
 public enum ErrorCode {
+    UNAUTHENTICATED(1401, "Unauthenticated in profile-service!", HttpStatus.BAD_REQUEST),
+    UNAUTHORIZED(1402, "Unauthorized in profile-service!", HttpStatus.BAD_REQUEST),
     PROFILE_EXISTS(2000, "Profile Exist", HttpStatus.BAD_REQUEST),
     PROFILE_NOT_EXITS(2011, "User Not Exit", HttpStatus.BAD_REQUEST),
     ADDRESS_EXISTS(2012, "Address Exist", HttpStatus.BAD_REQUEST),

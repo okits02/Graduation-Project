@@ -44,7 +44,7 @@ public class UserController {
     private final ForgotPasswordService forgotPasswordService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    @PostMapping
+    @PostMapping("/register")
     ApiResponse<UserResponse> creationUser(@RequestBody @Valid UserCreationRequest request) {
         Users users = userService.createUser(request);
         CreateProfileEvent createProfileEvent = CreateProfileEvent.builder()
@@ -52,6 +52,7 @@ public class UserController {
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .phone(request.getPhone())
+                .dob(request.getDob())
                 .build();
         kafkaTemplate.send("create-profile", createProfileEvent).whenComplete(
                 (result, ex) -> {
@@ -62,11 +63,20 @@ public class UserController {
                 System.err.println("send message successfully" + result.getProducerRecord());
             }
         });
+
+        UserResponse userResponse = UserResponse.builder()
+                .username(users.getUsername())
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
+                .email(users.getEmail())
+                .phone(request.getPhone())
+                .role(users.getRole())
+                .build();
         try {
             return ApiResponse.<UserResponse>builder()
                     .code(200)
                     .message("User Created")
-                    .result(userMapper.toUserResponse(users))
+                    .result(userResponse)
                     .build();
         }catch (AppException e) {
             return ApiResponse.<UserResponse>builder()
@@ -200,30 +210,6 @@ public class UserController {
                 .build());
     }
 
-    @PutMapping("/{userid}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public UserResponse updateUser(@PathVariable("userid") String userId,
-                                   @RequestBody @Valid UserUpdateRequest request) {
-        return userService.updateUser(userId, request);
-    }
-
-    @GetMapping("/{userId}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<UserResponse> getUserById(@PathVariable("userId") String userId) {
-        try {
-            return ApiResponse.<UserResponse>builder()
-                    .code(200)
-                    .message("OK")
-                    .result(userService.getUserById(userId))
-                    .build();
-        }catch (AppException e) {
-            return ApiResponse.<UserResponse>builder()
-                    .code(e.getErrorCode().getCode())
-                    .message(e.getMessage())
-                    .build();
-        }
-    }
-
     @PutMapping("/{userId}/status")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<?>> toggleUserStatus(@PathVariable String userId,
@@ -248,27 +234,6 @@ public class UserController {
                     .message("Internal server error")
                     .build());
         }
-    }
-
-    @GetMapping("/allUsers")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Page<UserResponse>>> getAllUsers(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        if (page < 0 || size <= 0) {
-            return ResponseEntity.badRequest().body(ApiResponse.<Page<UserResponse>>builder()
-                    .code(400)
-                    .message("Page index must be non-negative and size must be greater than zero")
-                    .build());
-        }
-
-        Page<UserResponse> users = userService.getAllUsers(page, size);
-
-        return ResponseEntity.ok(ApiResponse.<Page<UserResponse>>builder()
-                .code(1000)
-                .message("success")
-                .result(users)
-                .build());
     }
 
     @DeleteMapping("/{userId}")

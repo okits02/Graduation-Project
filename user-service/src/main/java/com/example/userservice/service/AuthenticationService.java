@@ -47,7 +47,6 @@ public class AuthenticationService {
 
     public IntrospectResponse introspect(IntrospectRequest request) throws JOSEException, ParseException {
         var token = request.getToken();
-
         boolean isValid = true;
         try {
             verifyToken(token);
@@ -55,9 +54,7 @@ public class AuthenticationService {
         {
             isValid = false;
         }
-
         return  IntrospectResponse.builder().valid(isValid).build();
-
     }
 
     public AuthenticationResponse authenticate(AuthenticationRequest request)

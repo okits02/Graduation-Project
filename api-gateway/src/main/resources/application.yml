@@ -13,13 +13,25 @@ spring:
        routes:
          - id: user-service
            uri: http://localhost:8080
-           predicate:
-             - Path=${app.api-prefix}/auth/**, ${app.api-prefix}/user/**
+           predicates:
+             - Path=${app.api-prefix}/auth/**, ${app.api-prefix}/users/**
            filters:
              - StripPrefix=2
          - id: product-service
            uri: http://localhost:8060
-           predicate:
+           predicates:
               - Path=${app.api-prefix}/product/**, ${app.api-prefix}/category/**
            filters:
              - StripPrefix=2
+         - id: profile-service
+           uri: http://localhost:8081
+           predicates:
+              - Path=${app.api-prefix}/profile/**, ${app.api-prefix}/address/**
+           filters:
+            - StripPrefix=2
+         - id: notification-service
+           uri: http://localhost:8084
+           predicates:
+              - Path=${app.api-prefix}/api/notification/**
+           filters:
+             - StripPrefix=2    

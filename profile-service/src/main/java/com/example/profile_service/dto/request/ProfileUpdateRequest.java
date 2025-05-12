@@ -1,22 +1,18 @@
-package com.example.userservice.dto.response;
+package com.example.profile_service.dto.request;
 
-import com.example.userservice.model.Role;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.util.Date;
 
 @Data
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserResponse {
-    String username;
+public class ProfileUpdateRequest {
     String firstName;
     String lastName;
-    String email;
     String phone;
-    Role role;
     Date dob;
 }

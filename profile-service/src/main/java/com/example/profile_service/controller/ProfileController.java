@@ -1,6 +1,7 @@
 package com.example.profile_service.controller;
 
 import com.example.profile_service.dto.request.ProfileRequest;
+import com.example.profile_service.dto.request.ProfileUpdateRequest;
 import com.example.profile_service.dto.response.ApiResponse;
 import com.example.profile_service.dto.response.ProfileResponse;
 import com.example.profile_service.service.ProfileService;
@@ -8,8 +9,11 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.apache.kafka.shaded.com.google.protobuf.Api;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,9 +24,9 @@ public class ProfileController {
 
     ProfileService profileService;
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<ApiResponse<ProfileResponse>> getMyProfile(@PathVariable String userId) {
-        ProfileResponse profile = profileService.getMyProfile(userId);
+    @GetMapping("/myInfo")
+    public ResponseEntity<ApiResponse<ProfileResponse>> getMyProfile() {
+        ProfileResponse profile = profileService.getMyProfile();
         return ResponseEntity.ok(
                 ApiResponse.<ProfileResponse>builder()
                         .code(200)
@@ -33,7 +37,7 @@ public class ProfileController {
     }
 
     @PutMapping
-    public ResponseEntity<ApiResponse<ProfileResponse>> updateMyProfile(@RequestBody @Valid ProfileRequest request) {
+    public ResponseEntity<ApiResponse<ProfileResponse>> updateMyProfile(@RequestBody @Valid ProfileUpdateRequest request) {
         ProfileResponse updatedProfile = profileService.updateMyProfile(request);
         return ResponseEntity.ok(
                 ApiResponse.<ProfileResponse>builder()
@@ -44,7 +48,33 @@ public class ProfileController {
         );
     }
 
-    @DeleteMapping("/{userId}")
+    @GetMapping("/admin/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<ProfileResponse>> getProfileByUserId(@PathVariable String userId)
+    {
+        ProfileResponse profileResponse = profileService.getProfileByUserId(userId);
+        return ResponseEntity.ok(ApiResponse.<ProfileResponse>builder()
+                        .code(200)
+                        .message("Profile retrieved successfully!")
+                        .result(profileResponse)
+                .build());
+    }
+
+    @PutMapping("/admin/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<ProfileResponse>> updateProfileByUserId(@PathVariable String userId,
+                                                                              @RequestBody ProfileUpdateRequest request)
+    {
+        ProfileResponse profileResponse = profileService.updateProfileByUserId(userId, request);
+        return ResponseEntity.ok(ApiResponse.<ProfileResponse>builder()
+                        .code(200)
+                        .message("Profile update successfully!")
+                        .result(profileResponse)
+                .build());
+    }
+
+    @DeleteMapping("/admin/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteMyProfile(@PathVariable String userId) {
         profileService.DeleteProfile(userId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(
@@ -54,5 +84,17 @@ public class ProfileController {
                         .result(null)
                         .build()
         );
+    }
+
+    @GetMapping("/admin/getAll")
+    @PreAuthorize("hasRole('ADMIN)")
+    public ResponseEntity<ApiResponse<Page<ProfileResponse>>> getAllProfile(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    )
+    {
+        return ResponseEntity.ok(ApiResponse.<Page<ProfileResponse>>builder()
+                        .result(profileService.getAllProfile(page, size))
+                .build());
     }
 }

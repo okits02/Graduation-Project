@@ -12,11 +12,9 @@ public interface UserService {
     public Users createUser(UserCreationRequest request);
     public void registerVerify(String userId, String otp_code);
     public void forgotPassword(String userId, String newPassword);
-    public UserResponse updateUser(String userId, UserUpdateRequest request);
     public void updatePassword(String oldPassword, String newPassword);
     public UserResponse getUserById(String userId);
     public void toggleUserStatus(String userId, boolean isActive);
-    public Page<UserResponse> getAllUsers(int page, int size);
     public void deleteUser(String userId);
     public UserIdResponse getUserId();
 }
