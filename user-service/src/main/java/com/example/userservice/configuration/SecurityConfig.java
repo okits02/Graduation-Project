@@ -32,10 +32,10 @@ public class SecurityConfig {
             "/users/register",
             "/auth/introspect",
             "/auth/login",
-            "/auth/verify/[0-9a-zA-Z]+",
+            "/auth/verify",
             "/users/verifyEmail/send-otp",
             "users/forgot-password/send-otp",
-            "/auth/forgot-password/[0-9a-zA-Z]+",
+            "/auth/forgot-password",
             "/auth/refresh"};
     @Value("${jwt.signerKey}")
     protected String SIGNER_KEY;
@@ -73,7 +73,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    PasswordEncoder passwordEncoder() {
+    public static PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(10);
     }
 }

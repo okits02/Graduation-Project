@@ -24,8 +24,6 @@ import org.springframework.security.web.SecurityFilterChain;
 @Slf4j
 public class SecurityConfig {
     private final String[] END_POINTS = {};
-    @Value("${jwt.signerKey}")
-    protected String SIGNER_KEY;
     @Autowired
     private final CustomJwtDecoder customJwtDecoder;
 

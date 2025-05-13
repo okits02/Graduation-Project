@@ -9,6 +9,5 @@ import java.util.Optional;
 
 public interface OtpRepository extends JpaRepository<OTP, String> {
     List<OTP> user(Users user);
-
     Optional<OTP> findByUserId(String userId);
 }

@@ -58,26 +58,26 @@ public class AuthenticationController {
                 .build();
     }
 
-    @PostMapping("/verify/{otp_code}")
-    ResponseEntity<ApiResponse<?>> registerVerify(@PathVariable @Valid String otp_code, @RequestBody UserUpdateRequest request)
+    @PostMapping("/verify")
+    ResponseEntity<ApiResponse<?>> registerVerify(@RequestBody RegisterVerifyRequest request)
     {
-        Users user = userRepository.findById(request.getId()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXITS));
-        userService.registerVerify(request.getId(), otp_code);
+        Users user = userRepository.findByUsername(request.getUsername()).orElseThrow(()
+                -> new AppException(ErrorCode.USER_NOT_EXITS));
+        userService.registerVerify(request.getUsername(), request.getOtp());
         return ResponseEntity.ok(ApiResponse.builder()
                 .code(200)
                 .message("User is verify")
                 .build());
     }
 
-    @PostMapping("/forgot-password/{otp_code}")
-    ApiResponse<ForgotPasswordResponse> forgotPasswordVerify(@PathVariable @Valid String otp_code,
-                                                             @RequestBody ForgotPasswordRequest request)
+    @PostMapping("/forgot-password")
+    ResponseEntity<ApiResponse<ForgotPasswordResponse>> forgotPasswordVerify(@RequestBody ForgotPasswordRequest request)
     {
-        Users users = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXITS));
+        userService.forgotPasswordVerify(request);
         var result = authenticationService.forgotPassword(request);
-        return ApiResponse.<ForgotPasswordResponse>builder()
-                .result(result)
-                .build();
+        return ResponseEntity.ok(ApiResponse.<ForgotPasswordResponse>builder()
+                    .result(result)
+                    .build());
     }
 
     @PostMapping("/logout")

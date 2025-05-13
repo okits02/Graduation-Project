@@ -28,6 +28,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import jakarta.validation.Valid;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -88,18 +89,21 @@ public class UserController {
 
 
     @PostMapping("/verifyEmail/send-otp")
-    ApiResponse<?> endVerificationOTP(@RequestBody @Valid UserUpdateRequest request)
+    ApiResponse<?> endVerificationOTP(@RequestBody @Valid UserCreationRequest request)
     {
-        Optional<Users> users = userRepository.findById(request.getId());
-        verificationService.sendverifyOtp(users.get());
-        Optional<OTP> otp = verificationService.getOtpByUserId(request.getId());
+        var contex = SecurityContextHolder.getContext();
+        String userName = contex.getAuthentication().getName();
+        Users users = userRepository.findByUsername(userName).orElseThrow(()
+                -> new AppException(ErrorCode.USER_NOT_EXITS));
+        verificationService.sendverifyOtp(users);
+        Optional<OTP> otp = verificationService.getOtpByUserId(users.getId());
         if(otp.isEmpty())
         {
             throw new AppException(ErrorCode.OTP_NOT_EXISTS);
         }
         NotificationEvent notificationEvent = NotificationEvent.builder()
                 .channel("EMAIL")
-                .recipient(users.get().getEmail())
+                .recipient(users.getEmail())
                 .content(otp.get().getOtp_code())
                 .build();
         kafkaTemplate.send("send-otp", notificationEvent).whenComplete(
@@ -118,47 +122,51 @@ public class UserController {
     }
 
     @PostMapping("/forgot-password/send-otp")
-    ApiResponse<?> sendForgotPasswordOTP(@RequestBody @Valid ForgotPasswordRequest request)
-    {
-        Optional<Users> users = userRepository.findByEmail(request.getEmail());
-        forgotPasswordService.createOTP(users.get(), OtpUtils.generateOtp(), request.getEmail());
-        Optional<ForgotPassword> forgotPassword = forgotPasswordService.findByUserId(users.get().getId());
-        if(users.isEmpty())
-        {
+    public ApiResponse<?> sendForgotPasswordOTP(@RequestBody @Valid ForgotPasswordRequest request) {
+        Optional<Users> optionalUser = userRepository.findByEmail(request.getEmail());
+        if (optionalUser.isEmpty()) {
             throw new AppException(ErrorCode.USER_NOT_EXITS);
         }
-        if(forgotPassword.isEmpty())
-        {
+        Users user = optionalUser.get();
+
+        String otpCode = OtpUtils.generateOtp();
+        forgotPasswordService.createOTP(user, otpCode, request.getEmail());
+
+        Optional<ForgotPassword> optionalForgotPassword = forgotPasswordService.findByUserId(user.getId());
+        if (optionalForgotPassword.isEmpty()) {
             throw new AppException(ErrorCode.OTP_NOT_EXISTS);
         }
+
         NotificationEvent notificationEvent = NotificationEvent.builder()
                 .channel("Email")
                 .recipient(request.getEmail())
-                .content(forgotPassword.get().getOtp_code())
+                .content(optionalForgotPassword.get().getOtp_code())
                 .build();
-        kafkaTemplate.send("send-otp", notificationEvent).whenComplete(
-                (result, ex) ->{
-            if(ex!=null)
-            {
-                System.err.println("Failed to send event " +ex.getMessage());
-            }else
-            {
-                System.err.println("send message successfully " + result.getProducerRecord());
+
+        kafkaTemplate.send("send-otp", notificationEvent).whenComplete((result, ex) -> {
+            if (ex != null) {
+                System.err.println("Failed to send event: " + ex.getMessage());
+            } else {
+                System.out.println("Sent OTP event: " + result.getProducerRecord());
             }
         });
+
         return ApiResponse.builder()
                 .code(200)
                 .message("OTP has been sent to your email")
                 .build();
     }
+  
 
     @PutMapping("/forgot-password")
     ResponseEntity<ApiResponse<?>> forgotPassword(@RequestBody ChangePasswordRequest request)
     {
         try{
-            Users users = userRepository.findByEmail(request.getEmail()).orElseThrow(
-                    () -> new AppException(ErrorCode.USER_NOT_EXITS));
-            userService.forgotPassword(users.getId(), request.getNewPassword());
+            var contex = SecurityContextHolder.getContext();
+            String email = contex.getAuthentication().getName();
+            Users users = userRepository.findByEmail(email).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXITS));
+            log.info("user: {}", users);
+            userService.forgotPassword(users, request.getNewPassword());
             return ResponseEntity.ok(ApiResponse.builder()
                     .code(200)
                     .message("Password update successfully")

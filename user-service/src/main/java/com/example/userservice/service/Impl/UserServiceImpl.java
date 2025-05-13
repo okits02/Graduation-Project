@@ -1,8 +1,8 @@
 package com.example.userservice.service.Impl;
 
 import com.example.userservice.constant.PredefinedRole;
+import com.example.userservice.dto.request.ForgotPasswordRequest;
 import com.example.userservice.dto.request.UserCreationRequest;
-import com.example.userservice.dto.request.UserUpdateRequest;
 import com.example.userservice.dto.response.UserIdResponse;
 import com.example.userservice.dto.response.UserResponse;
 import com.example.userservice.exception.AppException;
@@ -14,20 +14,17 @@ import com.example.userservice.model.Role;
 import com.example.userservice.model.Users;
 import com.example.userservice.repository.RoleRepository;
 import com.example.userservice.repository.UserRepository;
+import com.example.userservice.repository.httpClient.ProfileClient;
 import com.example.userservice.service.ForgotPasswordService;
 import com.example.userservice.service.UserService;
 import com.example.userservice.service.VerificationService;
-import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.catalina.User;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.Optional;
 
@@ -41,6 +38,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final VerificationService verificationService;
     private final ForgotPasswordService forgotPasswordService;
+    private final ProfileClient profileClient;
     static final long OTP_VALID_TIME = 5 * 60 * 1000;
 
 
@@ -71,10 +69,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void registerVerify(String userId, String otp_code) {
-        Users users = userRepository.findById(userId).orElseThrow(
+    public void registerVerify(String userName, String otp_code) {
+        Users users = userRepository.findByUsername(userName).orElseThrow(
                 () -> new AppException(ErrorCode.USER_NOT_EXITS));
-        Optional<OTP> optional = verificationService.getOtpByUserId(userId);
+        Optional<OTP> optional = verificationService.getOtpByUserId(users.getId());
         OTP otp = optional.orElseThrow(() -> new AppException(ErrorCode.OTP_NOT_EXISTS));
         long currentTimeInMillis = System.currentTimeMillis();
         long otpRequestTimeInMillis = otp.getOtp_request_time().getTime();
@@ -92,13 +90,28 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void forgotPassword(String userId, String newPassword) {
-        Users users = userRepository.findById(userId).orElseThrow(
-                () -> new AppException(ErrorCode.USER_NOT_EXITS));
-        users.setPassword(passwordEncoder.encode(newPassword));
-        userRepository.save(users);
+    public void forgotPasswordVerify(ForgotPasswordRequest request) {
+        Users users = userRepository.findByEmail(request.getEmail()).orElseThrow(()
+                -> new AppException(ErrorCode.USER_NOT_EXITS));
+        Optional<ForgotPassword> forgotPassword = forgotPasswordService.findByUserId(users.getId());
+        long currentTimeInMillis = System.currentTimeMillis();
+        long otpRequestTimeInMillis = forgotPassword.get().getOtp_request_time().getTime();
+        if(otpRequestTimeInMillis + OTP_VALID_TIME < currentTimeInMillis)
+        {
+            throw new AppException(ErrorCode.OTP_EXPIRED);
+        }
+        if(!forgotPassword.get().getOtp_code().equals(request.getOtp()))
+        {
+            throw new AppException(ErrorCode.OTP_INVALID);
+        }
+        forgotPasswordService.deleteOTP(forgotPassword.get().getId());
     }
 
+    @Override
+    public void forgotPassword(Users user, String newPassword) {
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
 
     @Override
     public void updatePassword(String oldPassword, String newPassword) {
@@ -135,6 +148,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUser(String userId) {
+        ServletRequestAttributes servletRequestAttributes =
+                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
+        var response = profileClient.deleteMyProfile(authHeader, userId).getBody();
+        if (response == null || response.getCode() != 200) {
+            throw new RuntimeException("Failed to delete profile from Profile-service");
+        }
         userRepository.deleteById(userId);
     }
 

@@ -5,12 +5,15 @@ import com.example.profile_service.dto.request.ProfileUpdateRequest;
 import com.example.profile_service.dto.response.ApiResponse;
 import com.example.profile_service.dto.response.GetUserIdResponse;
 import com.example.profile_service.dto.response.ProfileResponse;
+import com.example.profile_service.entity.UserAddress;
 import com.example.profile_service.entity.UserProfile;
 import com.example.profile_service.exception.AppException;
 import com.example.profile_service.exception.ErrorCode;
 import com.example.profile_service.mapper.ProfileMapper;
+import com.example.profile_service.repository.AddressRepository;
 import com.example.profile_service.repository.ProfileRepository;
 import com.example.profile_service.repository.httpClient.UserServiceClient;
+import com.example.profile_service.service.AddressService;
 import com.example.profile_service.service.ProfileService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +38,7 @@ public class ProfileServiceImpl implements ProfileService {
     ProfileRepository profileRepository;
     ProfileMapper profileMapper;
     UserServiceClient userServiceClient;
+    AddressRepository addressRepository;
 
 
     @Override
@@ -101,7 +105,17 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     public void DeleteProfile(String userId) {
-        profileRepository.deleteByUserId(userId);
+        UserProfile userProfile = profileRepository.findByUserId(userId);
+        if (userProfile == null) {
+            throw new AppException(ErrorCode.PROFILE_NOT_EXITS);
+        }
+
+        List<UserAddress> addressList = userProfile.getAddress();
+        for (UserAddress address : addressList) {
+            addressRepository.deleteById(address.getId());
+        }
+        userProfile.setAddress(null);
+        profileRepository.save(userProfile);
     }
 
     @Override

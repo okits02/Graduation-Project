@@ -20,7 +20,7 @@ import java.util.List;
 public class AddressController {
     AddressService addressService;
 
-    @PostMapping("/{userId}")
+    @PostMapping
     ApiResponse<AddressResponse> createAddress(
             @PathVariable String userId,
             @RequestBody @Valid AddressRequest request)
@@ -28,13 +28,13 @@ public class AddressController {
         return ApiResponse.<AddressResponse>builder()
                 .code(200)
                 .message("Create successful address!")
-                .result(addressService.createAddress(userId, request))
+                .result(addressService.createAddress(request))
                 .build();
     }
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<ApiResponse<List<AddressResponse>>> getAllMyAddress(@PathVariable String userId) {
-        List<AddressResponse> list = addressService.getAllMyAddress(userId);
+    @GetMapping()
+    public ResponseEntity<ApiResponse<List<AddressResponse>>> getAllMyAddress() {
+        List<AddressResponse> list = addressService.getAllMyAddress();
         ApiResponse<List<AddressResponse>> response = ApiResponse.<List<AddressResponse>>builder()
                 .code(200)
                 .message("Lấy danh sách địa chỉ thành công")
@@ -43,12 +43,11 @@ public class AddressController {
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/{userId}")
+    @PutMapping
     public ResponseEntity<ApiResponse<AddressResponse>> updateAddress(
-            @PathVariable String userId,
             @RequestBody AddressRequest request
     ) {
-        AddressResponse updated = addressService.updateMyAddress(userId, request);
+        AddressResponse updated = addressService.updateMyAddress(request);
         ApiResponse<AddressResponse> response = ApiResponse.<AddressResponse>builder()
                 .code(200)
                 .message("Cập nhật địa chỉ thành công")

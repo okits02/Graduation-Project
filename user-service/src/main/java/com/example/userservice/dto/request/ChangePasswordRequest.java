@@ -12,9 +12,6 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ChangePasswordRequest {
-    String email;
-    String token;
     @Size(min = 8, message = "USER_PASSWORD_INVALID")
     String newPassword;
-    boolean authenticated;
 }

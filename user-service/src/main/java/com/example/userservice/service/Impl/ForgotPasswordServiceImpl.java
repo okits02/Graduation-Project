@@ -18,11 +18,12 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class ForgotPasswordServiceImpl implements ForgotPasswordService {
+public class  ForgotPasswordServiceImpl implements ForgotPasswordService {
     ForgotPasswordRepository forgotPasswordRepository;
     UserRepository userRepository;
     @Override
     public ForgotPassword createOTP(Users users, String otp, String sendTo) {
+        forgotPasswordRepository.findByUserId(users.getId()).ifPresent(forgotPasswordRepository::delete);
         ForgotPassword forgotPassword = ForgotPassword.builder()
                 .user(users)
                 .otp_code(otp)

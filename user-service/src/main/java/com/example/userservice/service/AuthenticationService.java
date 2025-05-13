@@ -6,6 +6,7 @@ import com.example.userservice.dto.response.ForgotPasswordResponse;
 import com.example.userservice.dto.response.IntrospectResponse;
 import com.example.userservice.exception.AppException;
 import com.example.userservice.exception.ErrorCode;
+import com.example.userservice.model.ForgotPassword;
 import com.example.userservice.model.InvalidateToken;
 import com.example.userservice.model.Users;
 import com.example.userservice.repository.InvalidateTokenRepository;
@@ -40,6 +41,7 @@ import java.util.UUID;
 public class AuthenticationService {
     UserRepository  userRepository;
     InvalidateTokenRepository invalidateTokenRepository;
+    PasswordEncoder passwordEncoder;
     @NonFinal
     @Value("${jwt.signerKey}")
     protected String SIGNER_KEY;
@@ -59,11 +61,11 @@ public class AuthenticationService {
 
     public AuthenticationResponse authenticate(AuthenticationRequest request)
     {
-        var users = userRepository.findByUsername(request.getUsername()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXITS));
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+        var users = userRepository.findByUsername(request.getUsername()).orElseThrow(()
+                -> new AppException(ErrorCode.USER_NOT_EXITS));
         boolean authenticate = passwordEncoder.matches(request.getPassword(), users.getPassword());
         boolean active = users.isActive();
-        if(!authenticate && !active)
+        if(!authenticate || !active)
         {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
@@ -169,6 +171,7 @@ public class AuthenticationService {
                 .subject(users.getEmail())
                 .issueTime(issueTime)
                 .expirationTime(expirationTime)
+                .jwtID(String.valueOf(UUID.randomUUID()))
                 .build();
 
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());

@@ -10,6 +10,7 @@ import com.example.profile_service.mapper.AddressMapper;
 import com.example.profile_service.repository.AddressRepository;
 import com.example.profile_service.repository.ProfileRepository;
 import com.example.profile_service.service.AddressService;
+import com.example.profile_service.service.ProfileService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -23,9 +24,11 @@ public class AddressServiceImpl implements AddressService {
     private final AddressRepository addressRepository;
     private final ProfileRepository profileRepository;
     private final AddressMapper addressMapper;
+    private final ProfileService profileService;
 
     @Override
-    public AddressResponse createAddress(String userId, AddressRequest request) {
+    public AddressResponse createAddress(AddressRequest request) {
+        String userId = profileService.getUserId();
         UserProfile userProfile = profileRepository.findByUserId(userId);
         UserAddress userAddress = addressMapper.toAddress(request);
         List<UserAddress> userAddressList = userProfile.getAddress();
@@ -37,7 +40,8 @@ public class AddressServiceImpl implements AddressService {
     }
 
     @Override
-    public List<AddressResponse> getAllMyAddress(String userId) {
+    public List<AddressResponse> getAllMyAddress() {
+        String userId = profileService.getUserId();
         UserProfile userProfile = profileRepository.findByUserId(userId);
         if(userProfile == null)
         {
@@ -48,7 +52,8 @@ public class AddressServiceImpl implements AddressService {
     }
 
     @Override
-    public AddressResponse updateMyAddress(String userId, AddressRequest request) {
+    public AddressResponse updateMyAddress(AddressRequest request) {
+        String userId = profileService.getUserId();
         UserProfile userProfile = profileRepository.findByUserId(userId);
         if (userProfile == null) {
             throw new AppException(ErrorCode.PROFILE_NOT_EXITS);

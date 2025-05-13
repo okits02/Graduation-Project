@@ -37,8 +37,14 @@ import java.util.List;
 public class AuthenticationFilter implements GlobalFilter, Ordered {
     final IdentityService identityService;
     final ObjectMapper objectMapper;
-    private final String[] publicEndpoints = {"/users/register", "/auth/introspect", "/auth/login",
-            "/users/verifyEmail/send-otp", "users/forgot-password/send-otp",
+    private final String[] publicEndpoints = {
+            "/users/register",
+            "/auth/introspect",
+            "/auth/login",
+            "/auth/verify",
+            "/users/verifyEmail/send-otp",
+            "/users/forgot-password/send-otp",
+            "/auth/forgot-password",
             "/auth/refresh"};
 
     @Value("${app.api-prefix}")
