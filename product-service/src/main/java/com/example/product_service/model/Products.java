@@ -25,13 +25,9 @@ public class Products {
     BigDecimal price;
     Integer quantity;
     Integer sold;
-    String thumbnailUrl;
     String warrantyPeriod;
     Float discount;
-
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
-    List<ProductAttribute> attributeList;
-
+    String imageUrl;
     @ManyToOne
     @JoinColumn(name = "category_id")
     Category category;

@@ -19,11 +19,10 @@ public class ProductRequest {
     String description;
     BigDecimal price;
     Integer quantity;
+    String imageUrl;
     Integer sold;
     String thumbnailUrl;
     String warrantyPeriod;
     Float discount;
     String categoryId;
-
-    List<ProductAttributeRequest> attributeRequestList;
 }

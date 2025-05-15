@@ -3,6 +3,7 @@ package com.example.profile_service.controller;
 import com.example.profile_service.dto.request.ProfileRequest;
 import com.example.profile_service.dto.request.ProfileUpdateRequest;
 import com.example.profile_service.dto.response.ApiResponse;
+import com.example.profile_service.dto.response.PageResponse;
 import com.example.profile_service.dto.response.ProfileResponse;
 import com.example.profile_service.service.ProfileService;
 import jakarta.validation.Valid;
@@ -87,12 +88,12 @@ public class ProfileController {
 
     @GetMapping("/admin/getAll")
     @PreAuthorize("hasRole('ADMIN)")
-    public ResponseEntity<ApiResponse<Page<ProfileResponse>>> getAllProfile(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+    public ResponseEntity<ApiResponse<PageResponse<ProfileResponse>>> getAllProfile(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size
     )
     {
-        return ResponseEntity.ok(ApiResponse.<Page<ProfileResponse>>builder()
+        return ResponseEntity.ok(ApiResponse.<PageResponse<ProfileResponse>>builder()
                         .result(profileService.getAllProfile(page, size))
                 .build());
     }

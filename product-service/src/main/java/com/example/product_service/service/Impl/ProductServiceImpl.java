@@ -1,7 +1,7 @@
 package com.example.product_service.service.Impl;
 
+import com.example.product_service.dto.PageResponse;
 import com.example.product_service.dto.request.ProductRequest;
-import com.example.product_service.dto.request.ProductSearchRequest;
 import com.example.product_service.dto.response.ProductResponse;
 import com.example.product_service.exceptions.AppException;
 import com.example.product_service.exceptions.ErrorCode;
@@ -16,7 +16,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -28,14 +27,15 @@ public class ProductServiceImpl implements ProductService {
 
 
     @Override
-    public Page<ProductResponse> getAll(int page, int size) {
+    public PageResponse<ProductResponse> getAll(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return productRepository.findAll(pageable).map(productMapper::toProductResponse);
-    }
-
-    @Override
-    public Page<ProductResponse> searchProducts(ProductSearchRequest request) {
-        return productRepository.searchByCriteria(request);
+        var pageData = productRepository.findAll(pageable);
+        return PageResponse.<ProductResponse>builder()
+                .currentPage(page)
+                .pageSize(pageData.getSize())
+                .totalElements(pageData.getTotalElements())
+                .data(pageData.getContent().stream().map(productMapper::toProductResponse).toList())
+                .build();
     }
 
     @Override

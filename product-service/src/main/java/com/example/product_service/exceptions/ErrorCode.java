@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatusCode;
 
 @Getter
 public enum ErrorCode {
+    UNAUTHENTICATED(40100, "Unauthenticated!", HttpStatus.UNAUTHORIZED),
     PRODUCT_EXISTS(1002, "Product exists!", HttpStatus.BAD_REQUEST),
     PRODUCT_NOT_EXISTS(1004, "Product not exists!", HttpStatus.BAD_REQUEST),
     CATE_NOT_EXISTS(1006, "Category not exists!", HttpStatus.BAD_REQUEST),

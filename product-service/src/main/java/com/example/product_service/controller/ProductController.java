@@ -1,7 +1,7 @@
 package com.example.product_service.controller;
 
+import com.example.product_service.dto.PageResponse;
 import com.example.product_service.dto.request.ProductRequest;
-import com.example.product_service.dto.request.ProductSearchRequest;
 import com.example.product_service.dto.response.ApiResponse;
 import com.example.product_service.dto.response.ProductResponse;
 import com.example.product_service.exceptions.AppException;
@@ -12,7 +12,6 @@ import org.springframework.data.domain.Page;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,23 +42,6 @@ public class ProductController {
         }
     }
 
-    @GetMapping("/search_product")
-    ResponseEntity<ApiResponse<Page<ProductResponse>>> searchProduct(@RequestBody @Valid ProductSearchRequest request){
-        try{
-            return ResponseEntity.ok(ApiResponse.<Page<ProductResponse>>builder()
-                    .code(200)
-                    .result(productService.searchProducts(request))
-                    .build());
-        } catch (AppException e)
-        {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-                    ApiResponse.<Page<ProductResponse>>builder()
-                            .code(e.getErrorCode().getCode())
-                            .message(e.getMessage())
-                            .build());
-        }
-    }
-
     @PutMapping("/update")
     ApiResponse<ProductResponse> updateProduct(@RequestBody @Valid ProductRequest request)
     {
@@ -78,8 +60,9 @@ public class ProductController {
     }
 
     @GetMapping
-    ResponseEntity<ApiResponse<Page<ProductResponse>>> getAllProduct(@RequestParam(defaultValue = "0") int page,
-                                                                    @RequestParam(defaultValue = "10") int size)
+    ResponseEntity<ApiResponse<PageResponse<ProductResponse>>> getAllProduct(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size)
     {
         if(page <= 0 || size <= 0)
         {
@@ -88,7 +71,7 @@ public class ProductController {
                     .message("Page index must be non-negative and size must be greater than zero")
                     .build());
         }
-        return ResponseEntity.ok(ApiResponse.<Page<ProductResponse>>builder()
+        return ResponseEntity.ok(ApiResponse.<PageResponse<ProductResponse>>builder()
                 .code(200)
                 .result(productService.getAll(page, size))
                 .build());

@@ -4,6 +4,7 @@ import com.example.profile_service.dto.request.ProfileRequest;
 import com.example.profile_service.dto.request.ProfileUpdateRequest;
 import com.example.profile_service.dto.response.ApiResponse;
 import com.example.profile_service.dto.response.GetUserIdResponse;
+import com.example.profile_service.dto.response.PageResponse;
 import com.example.profile_service.dto.response.ProfileResponse;
 import com.example.profile_service.entity.UserAddress;
 import com.example.profile_service.entity.UserProfile;
@@ -19,9 +20,11 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
@@ -98,9 +101,15 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
-    public Page<ProfileResponse> getAllProfile(int page, int size) {
+    public PageResponse<ProfileResponse> getAllProfile(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return profileRepository.findAll(pageable).map(profileMapper::toProfileResponse);
+        var pageData = profileRepository.findAll(pageable);
+        return PageResponse.<ProfileResponse>builder()
+                .currentPage(page)
+                .pageSize(pageData.getSize())
+                .totalElement(pageData.getTotalElements())
+                .Data(pageData.getContent().stream().map(profileMapper::toProfileResponse).toList())
+                .build();
     }
 
     @Override
