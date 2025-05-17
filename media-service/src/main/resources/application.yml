@@ -1,0 +1,7 @@
+server:
+  port: 8084
+
+cloudinary:
+  cloud-name: Graduation-Project
+  api-key: 764769719114467
+  api-secret: y5cYvBosBbKYudvQL6HBQhfCUiU

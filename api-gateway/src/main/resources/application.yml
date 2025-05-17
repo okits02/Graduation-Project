@@ -23,6 +23,12 @@ spring:
               - Path=${app.api-prefix}/product/**, ${app.api-prefix}/category/**
            filters:
              - StripPrefix=2
+         - id: media-service
+           uri: http://localhost:8084
+           predicates:
+             - Path=${app.api-prefix}/media/**, ${app.api-prefix}/media/**
+           filters:
+             - StripPrefix=2
          - id: profile-service
            uri: http://localhost:8081
            predicates:
