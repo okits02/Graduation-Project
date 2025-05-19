@@ -17,20 +17,25 @@ import java.util.Set;
 public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @JoinColumn(name = "id_category")
     String id;
+    @JoinColumn(name = "name_category")
     String name;
+    @JoinColumn(name = "description")
     String description;
-
+    @JoinColumn(name = "image_url")
     String imageUrl;
-
     @JsonIgnore
+    @ToString.Exclude
     @OneToMany(mappedBy = "parentCategory", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private Set<Category> subCategories;
+    Set<Category> subCategories;
 
+    @ToString.Exclude
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "parent_category_id")
-    private Category parentCategory;
+    Category parentCategory;
 
+    @ToString.Exclude
     @OneToMany(mappedBy = "category")
-    Set<Products> productsList;
+    Set<Products> products;
 }

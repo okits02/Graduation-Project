@@ -17,7 +17,7 @@ public class ImageController {
 
     @PostMapping("/upload")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> uploadImage(@RequestParam("file") MultipartFile multipartFile,
+    public ResponseEntity<String> uploadImage(@RequestPart("file") MultipartFile multipartFile,
                                               @RequestParam("name") String name) throws IOException {
         String imageUrl = imageService.url(multipartFile, name);
         return ResponseEntity.ok(imageUrl);

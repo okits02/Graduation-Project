@@ -6,16 +6,26 @@ import com.example.product_service.dto.response.ProductResponse;
 import com.example.product_service.exceptions.AppException;
 import com.example.product_service.exceptions.ErrorCode;
 import com.example.product_service.mapper.ProductMapper;
+import com.example.product_service.model.Image;
 import com.example.product_service.model.Products;
 import com.example.product_service.repository.ProductRepository;
+import com.example.product_service.repository.httpClient.MediaClient;
+import com.example.product_service.service.ImageService;
 import com.example.product_service.service.ProductService;
+import feign.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -24,6 +34,7 @@ import java.util.Optional;
 public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
+    private final ImageService imageService;
 
 
     @Override
@@ -49,16 +60,36 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Products createProduct(ProductRequest request) {
+    public Products createProduct(List<MultipartFile> multipartFile, ProductRequest request) {
         productRepository.findById(request.getId()).orElseThrow(()->
-                new AppException(ErrorCode.PRODUCT_NOT_EXISTS));
+                new AppException(ErrorCode.PRODUCT_EXISTS));
         Products products = productMapper.toProduct(request);
+        Products newProducts = productRepository.save(products);
+        ServletRequestAttributes servletRequestAttributes =
+                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
+        List<Image> imgUrl = new ArrayList<>();
+        int i = 0;
+        for (MultipartFile file : multipartFile)
+        {
+            Image img = imageService.createImage(products, file, i);
+            if(i == 0)
+            {
+                img.setIcon(true);
+            }else
+            {
+                img.setIcon(false);
+            }
+            imgUrl.add(img);
+            i++;
+        }
+        products.setImageList(imgUrl);
         productRepository.save(products);
         return products;
     }
 
     @Override
-    public ProductResponse updateProduct(ProductRequest request) {
+    public ProductResponse updateProduct(List<MultipartFile> multipartFiles, ProductRequest request) {
         Products products = productRepository.findById(request.getId()).orElseThrow(()->
                 new AppException(ErrorCode.PRODUCT_NOT_EXISTS));
          productMapper.updateProduct(products, request);

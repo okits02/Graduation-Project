@@ -16,6 +16,9 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -26,12 +29,14 @@ public class ProductController {
     ProductRepository productRepository;
 
     @PostMapping
-    ApiResponse<Products> createProduct(@RequestBody @Valid ProductRequest request)
+    ApiResponse<Products> createProduct(
+            @RequestPart("file") List<MultipartFile> multipartFile,
+            @RequestBody @Valid ProductRequest request)
     {
         try{
             return ApiResponse.<Products>builder()
                     .code(200)
-                    .result(productService.createProduct(request))
+                    .result(productService.createProduct(multipartFile, request))
                     .build();
         }catch (AppException e)
         {
@@ -43,12 +48,14 @@ public class ProductController {
     }
 
     @PutMapping("/update")
-    ApiResponse<ProductResponse> updateProduct(@RequestBody @Valid ProductRequest request)
+    ApiResponse<ProductResponse> updateProduct(
+            @RequestPart("file") List<MultipartFile> multipartFiles,
+            @RequestBody @Valid ProductRequest request)
     {
         try{
             return ApiResponse.<ProductResponse>builder()
                     .code(200)
-                    .result(productService.updateProduct(request))
+                    .result(productService.updateProduct(multipartFiles, request))
                     .build();
         }catch (AppException e)
         {

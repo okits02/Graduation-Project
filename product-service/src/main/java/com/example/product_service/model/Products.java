@@ -17,21 +17,29 @@ import java.util.List;
 public class Products {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id_product")
     String id;
+    @Column(name = "name_product")
     String name;
-    String brand;
-    String model;
+    @Column(name = "description")
     String description;
-    BigDecimal price;
+    @Column(name = "list_price")
+    BigDecimal listPrice;
+    @Column(name = "sell_price")
+    BigDecimal sellPrice;
     Integer quantity;
+    @Column(name = "avg_rating")
+    double avgRating;
+    @Column(name = "sold_quantity")
     Integer sold;
-    String warrantyPeriod;
     Float discount;
-    String imageUrl;
+    @OneToMany(mappedBy = "book", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    List<Image> imageList;
     @ManyToOne
     @JoinColumn(name = "category_id")
     Category category;
-
+    @Column(name = "create_at")
     LocalDate createAt;
+    @Column(name = "update_at")
     LocalDate updateAt;
 }

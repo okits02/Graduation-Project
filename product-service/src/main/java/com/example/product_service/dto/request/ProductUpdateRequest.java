@@ -11,15 +11,15 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ProductRequest {
+public class ProductUpdateRequest {
     String id;
     String name;
     String description;
-    BigDecimal sellPrice;
-    BigDecimal listPrice;
+    double listPrice;
+    double sellPrice;
     Integer quantity;
     Integer sold;
-    double avgRating;
     Float discount;
     String categoryId;
+    List<String> imagesToDelete;
 }
