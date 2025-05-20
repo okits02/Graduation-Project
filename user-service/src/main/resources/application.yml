@@ -1,6 +1,8 @@
 server:
   port: 8080
 spring:
+  application:
+    name: user-service
   datasource:
     url: "jdbc:mysql://localhost:3306/user_db?allowPublicKeyRetrieval=true&useSSL=false"
     username: "root"
@@ -20,6 +22,13 @@ spring:
       properties:
         enable.idempotence: true
         max.in.fight.request.per.connection: 5
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
 jwt:
   signerKey: "0+haQiwa2KensXa+0fKTCApar6wrtAhZ2eaUFeeQd8HibrtR6OXN/j8yI5i1s7mS"
 

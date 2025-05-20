@@ -1,8 +1,18 @@
 server:
   port: 8060
 spring:
+  application:
+    name: product-service
   database:
     url: "jdbc:mysql://localhost:3360/db_product"
     username: "root"
     password: "root"
     driver-class-name: com.mysql.cj.jdbc.Driver
+
+eureka:
+  eureka:
+    client:
+      register-with-eureka: true
+      fetch-registry: true
+      service-url:
+        defaultZone: http://localhost:8761/eureka/

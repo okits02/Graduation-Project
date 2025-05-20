@@ -15,7 +15,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @Slf4j
-@RequestMapping("/api/notification")
+@RequestMapping("/notification")
 public class NotificationController {
     private final NotificationConsumer notificationConsumer;
 
