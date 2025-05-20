@@ -2,6 +2,7 @@ package com.example.product_service.controller;
 
 import com.example.product_service.dto.PageResponse;
 import com.example.product_service.dto.request.ProductRequest;
+import com.example.product_service.dto.request.ProductUpdateRequest;
 import com.example.product_service.dto.response.ApiResponse;
 import com.example.product_service.dto.response.ProductResponse;
 import com.example.product_service.exceptions.AppException;
@@ -30,13 +31,14 @@ public class ProductController {
 
     @PostMapping
     ApiResponse<Products> createProduct(
+            @RequestPart("file") MultipartFile thumbNail,
             @RequestPart("file") List<MultipartFile> multipartFile,
             @RequestBody @Valid ProductRequest request)
     {
         try{
             return ApiResponse.<Products>builder()
                     .code(200)
-                    .result(productService.createProduct(multipartFile, request))
+                    .result(productService.createProduct(thumbNail, multipartFile, request))
                     .build();
         }catch (AppException e)
         {
@@ -49,13 +51,14 @@ public class ProductController {
 
     @PutMapping("/update")
     ApiResponse<ProductResponse> updateProduct(
+            @RequestPart("file") MultipartFile thumbNails,
             @RequestPart("file") List<MultipartFile> multipartFiles,
-            @RequestBody @Valid ProductRequest request)
+            @RequestBody @Valid ProductUpdateRequest request)
     {
         try{
             return ApiResponse.<ProductResponse>builder()
                     .code(200)
-                    .result(productService.updateProduct(multipartFiles, request))
+                    .result(productService.updateProduct(thumbNails, multipartFiles, request))
                     .build();
         }catch (AppException e)
         {
