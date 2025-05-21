@@ -23,5 +23,5 @@ public class Image {
     String urlImg;
     @ManyToOne(cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
     @JoinColumn(name = "id_product", nullable = false)
-    private Products products;
+    private Products product;
 }

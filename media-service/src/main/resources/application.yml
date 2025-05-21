@@ -1,16 +1,6 @@
 server:
   port: 8084
 
-spring:
-  data:
-    mongodb:
-      username: root
-      password: root
-      host: localhost
-      port: 27017
-      database: media-service
-      authentication-database: admin
-
 cloudinary:
   cloud-name: Graduation-Project
   api-key: 764769719114467

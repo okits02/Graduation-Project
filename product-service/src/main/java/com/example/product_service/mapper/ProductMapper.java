@@ -9,7 +9,7 @@ import org.mapstruct.MappingTarget;
 
 import java.util.Optional;
 
-@Mapper(componentModel = "sping")
+@Mapper(componentModel = "spring")
 public interface ProductMapper {
     Products toProduct(ProductRequest request);
     ProductResponse toProductResponse(Products products);

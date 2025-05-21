@@ -33,7 +33,7 @@ public class Products {
     @Column(name = "sold_quantity")
     Integer sold;
     Float discount;
-    @OneToMany(mappedBy = "book", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     List<Image> imageList;
     @ManyToOne
     @JoinColumn(name = "category_id")

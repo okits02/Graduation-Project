@@ -32,7 +32,7 @@ public class ImageServiceImpl implements ImageService {
                 mediaClient.url(authHeader, multipartFile, "product_" + products.getId() + "." + n);
         Image image = new Image();
         image.setUrlImg(response.getBody());
-        image.setProducts(products);
+        image.setProduct(products);
         image.setNameImg(products.getName() + "_image" + "." + n);
         image.setIcon(false);
         return imageRepository.save(image);
