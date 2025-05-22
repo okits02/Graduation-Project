@@ -7,8 +7,10 @@ import com.example.product_service.dto.response.ProductResponse;
 import com.example.product_service.exceptions.AppException;
 import com.example.product_service.exceptions.ErrorCode;
 import com.example.product_service.mapper.ProductMapper;
+import com.example.product_service.model.Attribute;
 import com.example.product_service.model.Image;
 import com.example.product_service.model.Products;
+import com.example.product_service.repository.AttributeRepository;
 import com.example.product_service.repository.ImageRepository;
 import com.example.product_service.repository.ProductRepository;
 import com.example.product_service.repository.httpClient.MediaClient;
@@ -26,9 +28,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -38,7 +38,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductMapper productMapper;
     private final ImageService imageService;
     private final ImageRepository imageRepository;
-
+    private final AttributeRepository attributeRepository;
 
     @Override
     public PageResponse<ProductResponse> getAll(int page, int size) {
@@ -59,13 +59,26 @@ public class ProductServiceImpl implements ProductService {
         {
             throw new AppException(ErrorCode.PRODUCT_NOT_EXISTS);
         }
-        return productMapper.toProductResponse(products);
+        List<Attribute> attributes = attributeRepository.findByCategoryId(products.get().getCategory().getId());
+        Map<String, String> specs = new HashMap<>();
+        attributes.forEach(attribute -> {
+            String value = products.get().getSpecifications().get(attribute.getId());
+            if(value != null)
+            {
+                String unit = attribute.getUnit() != null ? " " + attribute.getUnit() : "";
+                specs.put(attribute.getName(), value + unit);
+            }
+        });
+
+        ProductResponse productResponse = productMapper.toProductResponse(products);
+        productResponse.setSpecifications(specs);
+        return productResponse;
     }
 
     @Override
     public Products createProduct(MultipartFile thumbNail, List<MultipartFile> multipartFile, ProductRequest request) {
         productRepository.findById(request.getId()).orElseThrow(()->
-                new AppException(ErrorCode.PRODUCT_EXISTS));
+                new AppException(ErrorCode.PRODUCT_NOT_EXISTS));
         Products products = productMapper.toProduct(request);
         Products newProducts = productRepository.save(products);
         ServletRequestAttributes servletRequestAttributes =
@@ -74,7 +87,7 @@ public class ProductServiceImpl implements ProductService {
         List<Image> imageList = new ArrayList<>();
 
         if (thumbNail != null && !thumbNail.isEmpty()) {
-            Image thumbImage = imageService.createImage(newProducts, thumbNail, 0);
+            Image thumbImage = imageService.createProductImage(newProducts, thumbNail, 0);
             thumbImage.setIcon(true);
             imageList.add(thumbImage);
         }
@@ -82,14 +95,14 @@ public class ProductServiceImpl implements ProductService {
         int index = 1;
         for (MultipartFile file : multipartFile) {
             if (file != null && !file.isEmpty()) {
-                Image image = imageService.createImage(newProducts, file, index++);
+                Image image = imageService.createProductImage(newProducts, file, index++);
                 image.setIcon(false);
                 imageList.add(image);
             }
         }
 
         newProducts.setImageList(imageList);
-        productRepository.save(products);
+        productRepository.save(newProducts);
         return products;
     }
 
@@ -115,14 +128,14 @@ public class ProductServiceImpl implements ProductService {
         List<Image> newImages = new ArrayList<>();
 
         if (thumbNails != null && !thumbNails.isEmpty()) {
-            Image thumbImg = imageService.createImage(products, thumbNails, 0);
+            Image thumbImg = imageService.createProductImage(products, thumbNails, 0);
             thumbImg.setIcon(true);
             newImages.add(thumbImg);
         }
 
         int index = 1;
         for (MultipartFile file : multipartFiles) {
-            Image img = imageService.createImage(products, file, index++);
+            Image img = imageService.createProductImage(products, file, index++);
             img.setIcon(false);
             newImages.add(img);
         }

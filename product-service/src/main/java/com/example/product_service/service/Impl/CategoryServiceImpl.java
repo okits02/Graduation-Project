@@ -8,20 +8,23 @@ import com.example.product_service.mapper.CategoryMapper;
 import com.example.product_service.model.Category;
 import com.example.product_service.repository.CategoryRepository;
 import com.example.product_service.service.CategoryService;
+import com.example.product_service.service.ImageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class CategoryServiceImpl implements CategoryService {
-
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
+    private final ImageService imageService;
+
     @Override
     public Page<CategoryResponse> finAll(int Page, int Size) {
         Pageable pageable = PageRequest.of(Page, Size);
@@ -36,10 +39,12 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public CategoryResponse createCate(CategoryRequest request) {
+    public CategoryResponse createCate(MultipartFile multipartFile, CategoryRequest request) {
         categoryRepository.findById(request.getId()).orElseThrow(() ->
                 new AppException(ErrorCode.CATE_EXISTS));
         Category category = categoryMapper.toCategory(request);
+        String imgUrl = imageService.createCategoryImage(request, multipartFile, 0);
+        category.setImageUrl(imgUrl);
         categoryRepository.save(category);
         return categoryMapper.toCategoryResponse(category);
     }

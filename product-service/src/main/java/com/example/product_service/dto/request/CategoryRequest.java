@@ -12,15 +12,11 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class CategoryRequest {
+public class  CategoryRequest {
     String id;
     String name;
     String descriptions;
     private String imageUrl;
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Set<CategoryRequest> subCategories;
-
     @JsonProperty("parentCategory")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private CategoryRequest parentCategoryDto;

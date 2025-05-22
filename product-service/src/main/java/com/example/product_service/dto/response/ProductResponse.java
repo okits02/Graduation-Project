@@ -9,6 +9,7 @@ import lombok.experimental.FieldDefaults;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Builder
@@ -27,6 +28,7 @@ public class ProductResponse {
     Float discount;
     List<Image> imageList;
     Category category;
+    Map<String, String> specifications;
     LocalDate createAt;
     LocalDate updateAt;
 }

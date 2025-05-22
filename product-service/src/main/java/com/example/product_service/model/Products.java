@@ -7,6 +7,7 @@ import lombok.experimental.FieldDefaults;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @Entity
 @Data
@@ -38,6 +39,9 @@ public class Products {
     @ManyToOne
     @JoinColumn(name = "category_id")
     Category category;
+
+    @Column(columnDefinition = "JSON")
+    Map<String, String> specifications;
     @Column(name = "create_at")
     LocalDate createAt;
     @Column(name = "update_at")

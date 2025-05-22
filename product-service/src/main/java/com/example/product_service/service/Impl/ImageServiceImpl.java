@@ -1,5 +1,6 @@
 package com.example.product_service.service.Impl;
 
+import com.example.product_service.dto.request.CategoryRequest;
 import com.example.product_service.dto.request.ProductRequest;
 import com.example.product_service.exceptions.AppException;
 import com.example.product_service.exceptions.ErrorCode;
@@ -24,7 +25,7 @@ public class ImageServiceImpl implements ImageService {
     private final MediaClient mediaClient;
 
     @Override
-    public Image createImage(Products products, MultipartFile multipartFile, int n) {
+    public Image createProductImage(Products products, MultipartFile multipartFile, int n) {
         ServletRequestAttributes servletRequestAttributes =
                 (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
@@ -36,6 +37,16 @@ public class ImageServiceImpl implements ImageService {
         image.setNameImg(products.getName() + "_image" + "." + n);
         image.setIcon(false);
         return imageRepository.save(image);
+    }
+
+    @Override
+    public String createCategoryImage(CategoryRequest categoryRequest, MultipartFile multipartFile, int n) {
+        ServletRequestAttributes servletRequestAttributes =
+                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
+        ResponseEntity<String> response =
+                mediaClient.url(authHeader, multipartFile, "product_" + categoryRequest.getId() + "." + n);
+        return  response.getBody();
     }
 
     @Override

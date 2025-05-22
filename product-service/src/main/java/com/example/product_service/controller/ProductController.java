@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,6 +31,7 @@ public class ProductController {
     ProductRepository productRepository;
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<Products> createProduct(
             @RequestPart("file") MultipartFile thumbNail,
             @RequestPart("file") List<MultipartFile> multipartFile,
@@ -50,6 +52,7 @@ public class ProductController {
     }
 
     @PutMapping("/update")
+    @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<ProductResponse> updateProduct(
             @RequestPart("file") MultipartFile thumbNails,
             @RequestPart("file") List<MultipartFile> multipartFiles,
@@ -105,6 +108,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/{product_id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<?>> deleteProduct(@PathVariable String productId)
     {
         try {

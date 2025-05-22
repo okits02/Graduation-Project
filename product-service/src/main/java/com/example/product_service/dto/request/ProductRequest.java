@@ -1,10 +1,13 @@
 package com.example.product_service.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Builder
@@ -22,4 +25,8 @@ public class ProductRequest {
     double avgRating;
     Float discount;
     String categoryId;
+    Map<String, String> specificcations;
+    @JsonProperty("category")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    CategoryRequest categoryRequest;
 }

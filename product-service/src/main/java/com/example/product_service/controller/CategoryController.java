@@ -13,6 +13,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/category")
@@ -22,12 +23,14 @@ public class CategoryController {
     CategoryService categoryService;
 
     @PostMapping
-    ApiResponse<CategoryResponse> createCate(@RequestBody @Valid CategoryRequest request)
+    ApiResponse<CategoryResponse> createCate(
+            @RequestPart("file") MultipartFile multipartFile,
+            @RequestBody @Valid CategoryRequest request)
     {
         try {
             return ApiResponse.<CategoryResponse>builder()
                     .code(200)
-                    .result(categoryService.createCate(request))
+                    .result(categoryService.createCate(multipartFile, request))
                     .build();
         }catch (AppException e)
         {

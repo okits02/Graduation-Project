@@ -5,6 +5,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Builder
@@ -20,6 +21,7 @@ public class ProductUpdateRequest {
     Integer quantity;
     Integer sold;
     Float discount;
+    Map<String, String> specifications;
     String categoryId;
     List<String> imagesToDelete;
 }
