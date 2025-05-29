@@ -6,8 +6,13 @@ import com.example.product_service.dto.request.ProductUpdateRequest;
 import com.example.product_service.dto.response.ApiResponse;
 import com.example.product_service.dto.response.ProductResponse;
 import com.example.product_service.exceptions.AppException;
+import com.example.product_service.exceptions.ErrorCode;
+import com.example.product_service.kafka.CreateProductEvent;
+import com.example.product_service.model.Category;
 import com.example.product_service.model.Products;
+import com.example.product_service.repository.CategoryRepository;
 import com.example.product_service.repository.ProductRepository;
+import com.example.product_service.service.CategoryService;
 import com.example.product_service.service.ProductService;
 import org.springframework.data.domain.Page;
 import jakarta.validation.Valid;
@@ -16,10 +21,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -29,6 +36,9 @@ import java.util.List;
 public class ProductController {
     ProductService productService;
     ProductRepository productRepository;
+    CategoryService categoryService;
+    CategoryRepository categoryRepository;
+    KafkaTemplate<String, Object> kafkaTemplate;
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -38,9 +48,21 @@ public class ProductController {
             @RequestPart("requestProduct") @Valid ProductRequest request)
     {
         try{
+            Products product = productService.createProduct(thumbNail, multipartFile, request);
+            CreateProductEvent createProductEvent = createEventProduct(product);
+            kafkaTemplate.send("create-product", createProductEvent).whenComplete(
+                    (result, ex) -> {
+                        if(ex != null)
+                        {
+                            System.err.println("Failed to send message" + ex.getMessage());
+                        }else
+                        {
+                            System.err.println("send message successfully" + result.getProducerRecord());
+                        }
+                    });
             return ApiResponse.<Products>builder()
                     .code(200)
-                    .result(productService.createProduct(thumbNail, multipartFile, request))
+                    .result(product)
                     .build();
         }catch (AppException e)
         {
@@ -125,5 +147,34 @@ public class ProductController {
                     .message(e.getMessage())
                     .build());
         }
+    }
+
+    private CreateProductEvent createEventProduct(Products product)
+    {
+        String currentCateId = product.getCategoryId();
+        List<String> categoryId = categoryService.getCategoryHierarchy(currentCateId);
+        List<String> categories = new ArrayList<>();
+        for(String cateId : categoryId){
+            Category category = categoryRepository.findById(cateId).orElseThrow(()
+                    -> new AppException(ErrorCode.CATE_NOT_EXISTS));
+            categories.add(category.getName());
+        }
+        CreateProductEvent createProductEvent = CreateProductEvent.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .description(product.getDescription())
+                .listPrice(product.getListPrice())
+                .sellPrice(product.getSellPrice())
+                .quantity(product.getQuantity())
+                .avgRating(product.getAvgRating())
+                .sold(product.getSold())
+                .discount(product.getDiscount())
+                .imageList(product.getImageList())
+                .categories(categories)
+                .specifications(product.getSpecifications())
+                .createAt(product.getCreateAt())
+                .updateAt(product.getUpdateAt())
+                .build();
+        return  createProductEvent;
     }
 }
