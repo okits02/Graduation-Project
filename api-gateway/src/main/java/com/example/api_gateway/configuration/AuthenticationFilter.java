@@ -45,7 +45,11 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             "/users/verifyEmail/send-otp",
             "/users/forgot-password/send-otp",
             "/auth/forgot-password",
-            "/auth/refresh"};
+            "/auth/refresh",
+            "/product",
+            "/product/*",
+            "/category",
+            "/category/*"};
 
     @Value("${app.api-prefix}")
     private String apiPrefix;

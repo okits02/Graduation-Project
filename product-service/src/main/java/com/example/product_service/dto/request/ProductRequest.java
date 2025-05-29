@@ -24,9 +24,6 @@ public class ProductRequest {
     Integer sold;
     double avgRating;
     Float discount;
-    String categoryId;
-    Map<String, String> specificcations;
-    @JsonProperty("category")
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    CategoryRequest categoryRequest;
+    CategoryRequest category;
+    Map<String, String> specifications;
 }

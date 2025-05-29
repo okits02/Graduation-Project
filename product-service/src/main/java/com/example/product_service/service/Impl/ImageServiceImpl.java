@@ -10,6 +10,7 @@ import com.example.product_service.repository.ImageRepository;
 import com.example.product_service.repository.httpClient.MediaClient;
 import com.example.product_service.service.ImageService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -20,6 +21,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ImageServiceImpl implements ImageService {
     private final ImageRepository imageRepository;
     private final MediaClient mediaClient;
@@ -33,9 +35,8 @@ public class ImageServiceImpl implements ImageService {
                 mediaClient.url(authHeader, multipartFile, "product_" + products.getId() + "." + n);
         Image image = new Image();
         image.setUrlImg(response.getBody());
-        image.setProduct(products);
         image.setNameImg(products.getName() + "_image" + "." + n);
-        image.setIcon(false);
+        image.setProductId(products.getId());
         return imageRepository.save(image);
     }
 
@@ -44,8 +45,9 @@ public class ImageServiceImpl implements ImageService {
         ServletRequestAttributes servletRequestAttributes =
                 (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
+        log.info("token: {}", authHeader);
         ResponseEntity<String> response =
-                mediaClient.url(authHeader, multipartFile, "product_" + categoryRequest.getId() + "." + n);
+                mediaClient.url(authHeader, multipartFile, "product_" + categoryRequest.getName() + "." + n);
         return  response.getBody();
     }
 

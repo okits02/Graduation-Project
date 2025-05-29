@@ -1,8 +1,10 @@
 package com.example.product_service.dto.response;
 
 import jakarta.annotation.Nonnull;
+import jakarta.persistence.Id;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 @Data
 @Builder
@@ -13,4 +15,6 @@ public class CategoryResponse {
     String id;
     String name;
     String description;
+    String imageUrl;
+    String parentId;
 }

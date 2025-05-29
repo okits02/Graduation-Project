@@ -4,10 +4,12 @@ import com.example.userservice.dto.request.*;
 import com.example.userservice.dto.response.AuthenticationResponse;
 import com.example.userservice.dto.response.ForgotPasswordResponse;
 import com.example.userservice.dto.response.IntrospectResponse;
+import com.example.userservice.enums.Roles;
 import com.example.userservice.exception.AppException;
 import com.example.userservice.exception.ErrorCode;
 import com.example.userservice.model.ForgotPassword;
 import com.example.userservice.model.InvalidateToken;
+import com.example.userservice.model.Role;
 import com.example.userservice.model.Users;
 import com.example.userservice.repository.InvalidateTokenRepository;
 import com.example.userservice.repository.UserRepository;
@@ -33,6 +35,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.StringJoiner;
 import java.util.UUID;
+
+import static com.example.userservice.enums.Roles.ADMIN;
 
 @Service
 @CommonsLog
@@ -65,8 +69,11 @@ public class AuthenticationService {
                 -> new AppException(ErrorCode.USER_NOT_EXITS));
         boolean authenticate = passwordEncoder.matches(request.getPassword(), users.getPassword());
         boolean active = users.isActive();
-        if(!authenticate || !active)
-        {
+        if (!authenticate) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+        if (users.getRole().toString().equalsIgnoreCase("ADMIN") && !users.isActive()) {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
 

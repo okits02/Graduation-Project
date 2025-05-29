@@ -1,14 +1,13 @@
 package com.example.product_service.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
-import java.util.List;
-import java.util.Set;
-
-@Entity
+@Document(collection = "categories")
 @Data
 @Builder
 @AllArgsConstructor
@@ -16,26 +15,13 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Category {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @JoinColumn(name = "id_category")
     String id;
-    @JoinColumn(name = "name_category")
+    @Field("name_category")
     String name;
-    @JoinColumn(name = "description")
+    @Field("description")
     String description;
-    @JoinColumn(name = "image_url")
+    @Field("image_url")
     String imageUrl;
-    @JsonIgnore
-    @ToString.Exclude
-    @OneToMany(mappedBy = "parentCategory", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    Set<Category> subCategories;
-
-    @ToString.Exclude
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "parent_category_id")
-    Category parentCategory;
-
-    @ToString.Exclude
-    @OneToMany(mappedBy = "category")
-    Set<Products> products;
+    @Field("parent_category_id")
+    String parentId;
 }

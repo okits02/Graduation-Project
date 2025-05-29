@@ -34,7 +34,7 @@ public class SecurityConfig {
             "/auth/login",
             "/auth/verify",
             "/users/verifyEmail/send-otp",
-            "users/forgot-password/send-otp",
+            "/users/forgot-password/send-otp",
             "/auth/forgot-password",
             "/auth/refresh"};
     @Value("${jwt.signerKey}")

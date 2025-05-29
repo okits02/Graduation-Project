@@ -20,7 +20,7 @@ public class ImageServiceImpl implements ImageService {
         url = cloudinary.uploader()
                 .upload(multipartFile.getBytes(), Map.of("public_id", name))
                 .get("url")
-                        .toString();
+                .toString();
         return url;
     }
 

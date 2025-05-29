@@ -33,9 +33,9 @@ public class ProductController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<Products> createProduct(
-            @RequestPart("file") MultipartFile thumbNail,
+            @RequestPart("fileThumbNail") MultipartFile thumbNail,
             @RequestPart("file") List<MultipartFile> multipartFile,
-            @RequestBody @Valid ProductRequest request)
+            @RequestPart("requestProduct") @Valid ProductRequest request)
     {
         try{
             return ApiResponse.<Products>builder()
@@ -74,7 +74,7 @@ public class ProductController {
 
     @GetMapping
     ResponseEntity<ApiResponse<PageResponse<ProductResponse>>> getAllProduct(
-            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "10") int size)
     {
         if(page <= 0 || size <= 0)
@@ -86,11 +86,12 @@ public class ProductController {
         }
         return ResponseEntity.ok(ApiResponse.<PageResponse<ProductResponse>>builder()
                 .code(200)
-                .result(productService.getAll(page, size))
+                .result(productService.getAll(page - 1, size))
                 .build());
     }
 
     @GetMapping("/{product_id}")
+    @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<ProductResponse> getById(@PathVariable String productId)
     {
         try{

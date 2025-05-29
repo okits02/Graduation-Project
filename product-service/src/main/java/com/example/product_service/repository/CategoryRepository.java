@@ -1,7 +1,10 @@
 package com.example.product_service.repository;
 
 import com.example.product_service.model.Category;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.bson.types.ObjectId;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
-public interface CategoryRepository extends JpaRepository<Category, String> {
+import java.util.Optional;
+
+public interface CategoryRepository extends MongoRepository<Category, String> {
 }

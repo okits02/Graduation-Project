@@ -23,7 +23,7 @@ public class ApplicationInitConfig {
             if(userRepository.findByUsername("admin").isEmpty())
             {
                 var role = new Role();
-                role.setName("admin");
+                role.setName("ADMIN");
                 role = roleRepository.save(role);
                 Users user = Users.builder()
                         .username("admin")

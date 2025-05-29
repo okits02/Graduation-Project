@@ -18,13 +18,12 @@ public class ImageController {
     @PostMapping("/upload")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> uploadImage(@RequestPart("file") MultipartFile multipartFile,
-                                              @RequestParam("name") String name) throws IOException {
+                                              @RequestPart("name") String name) throws IOException {
         String imageUrl = imageService.url(multipartFile, name);
         return ResponseEntity.ok(imageUrl);
     }
 
     @DeleteMapping("/delete")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> deleteImage(@RequestParam("url") String imageUrl) {
         try {
             imageService.deleteImage(imageUrl);

@@ -1,11 +1,13 @@
 package com.example.product_service.model;
 
 
-import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
-@Entity
+@Document(collection = "Images")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -13,15 +15,13 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Image {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     String id;
-    @Column(name = "name_image", length = 256)
+    @Field("name_image")
     String nameImg;
-    @Column(name = "is_thumbnail")
+    @Field("is_thumbnail")
     boolean icon;
-    @Column(name = "url_image", length = 512)
+    @Field("url_image")
     String urlImg;
-    @ManyToOne(cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
-    @JoinColumn(name = "id_product", nullable = false)
-    private Products product;
+    @Field("id_product")
+    String productId;
 }

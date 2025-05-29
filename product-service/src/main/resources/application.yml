@@ -3,15 +3,13 @@ server:
 spring:
   application:
     name: product-service
-  datasource:
-    url: "jdbc:mysql://localhost:3306/db_product"
-    username: "root"
-    password: "root"
-    driver-class-name: com.mysql.cj.jdbc.Driver
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
+  data:
+    mongodb:
+      username: root
+      password: root
+      host: localhost
+      port: 27017
+      authentication-database: admin
 eureka:
   eureka:
     client:

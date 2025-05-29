@@ -7,22 +7,17 @@ import com.example.product_service.dto.response.ProductResponse;
 import com.example.product_service.exceptions.AppException;
 import com.example.product_service.exceptions.ErrorCode;
 import com.example.product_service.mapper.ProductMapper;
-import com.example.product_service.model.Attribute;
 import com.example.product_service.model.Image;
 import com.example.product_service.model.Products;
-import com.example.product_service.repository.AttributeRepository;
 import com.example.product_service.repository.ImageRepository;
 import com.example.product_service.repository.ProductRepository;
-import com.example.product_service.repository.httpClient.MediaClient;
+import com.example.product_service.service.CategoryService;
 import com.example.product_service.service.ImageService;
 import com.example.product_service.service.ProductService;
-import feign.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -38,7 +33,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductMapper productMapper;
     private final ImageService imageService;
     private final ImageRepository imageRepository;
-    private final AttributeRepository attributeRepository;
+    private final CategoryService categoryService;
 
     @Override
     public PageResponse<ProductResponse> getAll(int page, int size) {
@@ -54,64 +49,48 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductResponse getById(String productId) {
-        Optional<Products> products = productRepository.findById(productId);
-        if(products.isEmpty())
-        {
-            throw new AppException(ErrorCode.PRODUCT_NOT_EXISTS);
-        }
-        List<Attribute> attributes = attributeRepository.findByCategoryId(products.get().getCategory().getId());
-        Map<String, String> specs = new HashMap<>();
-        attributes.forEach(attribute -> {
-            String value = products.get().getSpecifications().get(attribute.getId());
-            if(value != null)
-            {
-                String unit = attribute.getUnit() != null ? " " + attribute.getUnit() : "";
-                specs.put(attribute.getName(), value + unit);
-            }
-        });
-
-        ProductResponse productResponse = productMapper.toProductResponse(products);
-        productResponse.setSpecifications(specs);
+        Products product = productRepository.findById(productId)
+                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTS));
+        ProductResponse productResponse = productMapper.toProductResponse(product);
+        productResponse.setListCategory(categoryService.getCategoryHierarchy(product.getCategoryId()));
         return productResponse;
     }
 
     @Override
     public Products createProduct(MultipartFile thumbNail, List<MultipartFile> multipartFile, ProductRequest request) {
-        productRepository.findById(request.getId()).orElseThrow(()->
-                new AppException(ErrorCode.PRODUCT_NOT_EXISTS));
+        if (productRepository.existsById(request.getId())) {
+            throw new AppException(ErrorCode.PRODUCT_EXISTS);
+        }
         Products products = productMapper.toProduct(request);
         Products newProducts = productRepository.save(products);
-        ServletRequestAttributes servletRequestAttributes =
-                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
-        List<Image> imageList = new ArrayList<>();
-
+        List<String> imageList = new ArrayList<>();
         if (thumbNail != null && !thumbNail.isEmpty()) {
             Image thumbImage = imageService.createProductImage(newProducts, thumbNail, 0);
             thumbImage.setIcon(true);
-            imageList.add(thumbImage);
+            imageRepository.save(thumbImage);
+            imageList.add(thumbImage.getId());
         }
-
         int index = 1;
         for (MultipartFile file : multipartFile) {
             if (file != null && !file.isEmpty()) {
                 Image image = imageService.createProductImage(newProducts, file, index++);
                 image.setIcon(false);
-                imageList.add(image);
+                imageRepository.save(image);
+                imageList.add(image.getId());
             }
         }
-
+        newProducts.setCategoryId(request.getCategory().getId());
         newProducts.setImageList(imageList);
         productRepository.save(newProducts);
-        return products;
+        return newProducts;
     }
 
     @Override
-    public ProductResponse updateProduct(MultipartFile thumbNails, List<MultipartFile> multipartFiles, ProductUpdateRequest request) {
+    public ProductResponse updateProduct(MultipartFile thumbNails, List<MultipartFile> multipartFiles,
+                                         ProductUpdateRequest request) {
         Products products = productRepository.findById(request.getId()).orElseThrow(()->
                 new AppException(ErrorCode.PRODUCT_NOT_EXISTS));
         productMapper.updateProduct(products, request);
-
         if(!request.getImagesToDelete().isEmpty())
         {
             for(String url : request.getImagesToDelete())
@@ -124,30 +103,30 @@ public class ProductServiceImpl implements ProductService {
                 imageRepository.deleteById(image.getId());
             }
         }
-
-        List<Image> newImages = new ArrayList<>();
+        List<String> newImages = new ArrayList<>();
 
         if (thumbNails != null && !thumbNails.isEmpty()) {
             Image thumbImg = imageService.createProductImage(products, thumbNails, 0);
             thumbImg.setIcon(true);
-            newImages.add(thumbImg);
+            imageRepository.save(thumbImg);
+            newImages.add(thumbImg.getId());
         }
-
         int index = 1;
         for (MultipartFile file : multipartFiles) {
             Image img = imageService.createProductImage(products, file, index++);
             img.setIcon(false);
-            newImages.add(img);
+            imageRepository.save(img);
+            newImages.add(img.getId());
         }
-
+        products.setCategoryId(request.getCategoryId());
         products.setImageList(newImages);
         productRepository.save(products);
-        return productMapper.toProductResponse(productRepository.save(products));
+        return productMapper.toProductResponse(products);
     }
 
     @Override
     public void DeleteProduct(String productId) {
-        List<Image> imageList = imageRepository.findByProductsId(productId);
+        List<Image> imageList = imageRepository.findByProductId(productId);
         for(Image image : imageList)
         {
             imageService.deleteImage(image.getId());

@@ -11,10 +11,12 @@ import org.springframework.web.multipart.MultipartFile;
         url = "http://localhost:8084",
         configuration = FeignMultipartSupportConfig.class)
 public interface MediaClient {
-    @PostMapping(value = "/media/upload", produces = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/media/upload",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<String> url(@RequestHeader("Authorization") String token,
                                @RequestPart("file") MultipartFile multipartFile,
-                               @RequestParam("name") String name);
+                               @RequestPart("name") String name);
 
     @DeleteMapping(value = "media/delete", produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<String> deleteImage(@RequestHeader("Authorization") String token,

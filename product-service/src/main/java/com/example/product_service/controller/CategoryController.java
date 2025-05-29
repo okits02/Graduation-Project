@@ -1,47 +1,44 @@
 package com.example.product_service.controller;
 
-import com.cloudinary.Api;
 import com.example.product_service.dto.request.CategoryRequest;
 import com.example.product_service.dto.response.ApiResponse;
 import com.example.product_service.dto.response.CategoryResponse;
 import com.example.product_service.exceptions.AppException;
+import com.example.product_service.model.Category;
 import com.example.product_service.service.CategoryService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/category")
 @RequiredArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class CategoryController {
-    CategoryService categoryService;
+    private final CategoryService categoryService;
 
-    @PostMapping
-    ApiResponse<CategoryResponse> createCate(
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    ApiResponse<Category> createCate(
             @RequestPart("file") MultipartFile multipartFile,
-            @RequestBody @Valid CategoryRequest request)
+            @RequestPart("request") CategoryRequest request)
     {
-        try {
-            return ApiResponse.<CategoryResponse>builder()
-                    .code(200)
-                    .result(categoryService.createCate(multipartFile, request))
-                    .build();
-        }catch (AppException e)
-        {
-            return ApiResponse.<CategoryResponse>builder()
-                    .code(e.getErrorCode().getCode())
-                    .message(e.getMessage())
-                    .build();
-        }
+        return ApiResponse.<Category>builder()
+                .code(200)
+                .result(categoryService.createCate(multipartFile, request))
+                .build();
     }
 
     @PutMapping("/update_cate")
+    @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<CategoryResponse> updateCategory(@RequestBody @Valid CategoryRequest request)
     {
         try{
@@ -59,7 +56,7 @@ public class CategoryController {
     }
 
     @GetMapping
-    ResponseEntity<ApiResponse<Page<CategoryResponse>>> getAllCate(@RequestParam(defaultValue = "0") int page,
+    ResponseEntity<ApiResponse<Page<CategoryResponse>>> getAllCate(@RequestParam(defaultValue = "1") int page,
                                                                    @RequestParam(defaultValue = "10") int size)
     {
         if(page <= 0 || size <= 0)
@@ -73,20 +70,23 @@ public class CategoryController {
         return ResponseEntity.ok(
                 ApiResponse.<Page<CategoryResponse>>builder()
                         .code(200)
-                        .result(categoryService.finAll(page, size))
+                        .result(categoryService.finAll(page - 1, size))
                         .build());
     }
 
-    @GetMapping("/{cate_id}")
+    @GetMapping("/cate/{categoryId}")
+    @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<CategoryResponse> getById(@PathVariable String categoryId)
     {
+        log.info("id: {}", categoryId);
         return ApiResponse.<CategoryResponse>builder()
                 .code(200)
                 .result(categoryService.findById(categoryId))
                 .build();
     }
 
-    @DeleteMapping("/{cate_id}")
+    @DeleteMapping("/{categoryId}")
+    @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<CategoryResponse> deleteById(@PathVariable String categoryId)
     {
         categoryService.deleteCateById(categoryId);

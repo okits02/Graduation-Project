@@ -26,8 +26,8 @@ public class ProductResponse {
     double avgRating;
     Integer sold;
     Float discount;
-    List<Image> imageList;
-    Category category;
+    List<String> imageList;
+    List<String> listCategory;
     Map<String, String> specifications;
     LocalDate createAt;
     LocalDate updateAt;

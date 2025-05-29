@@ -15,9 +15,6 @@ import java.util.Set;
 public class  CategoryRequest {
     String id;
     String name;
-    String descriptions;
-    private String imageUrl;
-    @JsonProperty("parentCategory")
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private CategoryRequest parentCategoryDto;
+    String description;
+    String parentId;
 }

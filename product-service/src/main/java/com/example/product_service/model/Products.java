@@ -1,15 +1,19 @@
 package com.example.product_service.model;
 
-import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
-@Entity
+@Document(collection = "products")
 @Data
 @Builder
 @AllArgsConstructor
@@ -17,33 +21,30 @@ import java.util.Map;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Products {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id_product")
+    @Field("id_product")
     String id;
-    @Column(name = "name_product")
+    @Field("name_product")
     String name;
-    @Column(name = "description")
+    @Field("description")
     String description;
-    @Column(name = "list_price")
+    @Field("list_price")
     BigDecimal listPrice;
-    @Column(name = "sell_price")
+    @Field("sell_price")
     BigDecimal sellPrice;
     Integer quantity;
-    @Column(name = "avg_rating")
+    @Field("avg_rating")
     double avgRating;
-    @Column(name = "sold_quantity")
+    @Field("sold_quantity")
     Integer sold;
     Float discount;
-    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    List<Image> imageList;
-    @ManyToOne
-    @JoinColumn(name = "category_id")
-    Category category;
-
-    @Column(columnDefinition = "JSON")
+    @Field("images")
+    List<String> imageList;
+    String categoryId;
     Map<String, String> specifications;
-    @Column(name = "create_at")
+    @CreatedDate
+    @Field("create_at")
     LocalDate createAt;
-    @Column(name = "update_at")
+    @LastModifiedDate
+    @Field("update_at")
     LocalDate updateAt;
 }
