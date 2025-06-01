@@ -71,6 +71,11 @@
 			<artifactId>spring-kafka-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.elasticsearch</groupId>
+			<artifactId>elasticsearch</artifactId>
+			<version>8.17.6</version>
+		</dependency>
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>
