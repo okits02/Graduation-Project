@@ -1,6 +1,8 @@
 package com.example.search_service.service;
 
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
+import co.elastic.clients.elasticsearch._types.aggregations.StringTermsAggregate;
+import co.elastic.clients.elasticsearch._types.aggregations.StringTermsBucket;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.FuzzyQuery;
 import co.elastic.clients.json.JsonData;
@@ -8,18 +10,22 @@ import com.example.search_service.constant.SortType;
 import com.example.search_service.model.Products;
 import com.example.search_service.viewmodel.ProductGetListVM;
 import com.example.search_service.viewmodel.ProductGetVM;
+import com.example.search_service.viewmodel.ProductNameGetListVm;
+import com.example.search_service.viewmodel.ProductNameGetVm;
 import lombok.RequiredArgsConstructor;
 import org.elasticsearch.common.unit.Fuzziness;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregation;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.SearchHitSupport;
-import org.springframework.data.elasticsearch.core.SearchHits;
-import org.springframework.data.elasticsearch.core.SearchPage;
+import org.springframework.data.elasticsearch.core.*;
+import org.springframework.data.elasticsearch.core.query.FetchSourceFilter;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -46,31 +52,14 @@ public class ProductService {
                                      .fields("name")
                                      .query(keyword)
                                      .fuzziness(Fuzziness.ONE.asString())));
-                             if(category != null && !category.isBlank())
-                             {
-                                 b.filter(f -> f.term(t -> t
-                                         .field("categories.keyword")
-                                         .value(category)));
-                             }
-
-                             if(attribute != null && !attribute.isBlank())
-                             {
-                                 b.filter(f -> f.term(t -> t
-                                         .field("specifications.keyword")
-                                         .value(attribute)));
-                             }
-
-                             if(minPrice != null || maxPrice != null)
-                             {
-                                 b.filter(f -> f.range(r -> {
-                                     r.field("sellPrice");
-                                     if (minPrice != null) r.gte(JsonData.of(minPrice));
-                                     if (maxPrice != null) r.lte(JsonData.of(maxPrice));
-                                     return r;
-                                 }));
-                             }
                              return b;
                         }))
+                .withFilter(f -> f.bool(b -> {
+                    extractedStr(category, "categories.keyword", b);
+                    extractedStr(attribute, "specifications.keyword", b);
+                    extractRange(minPrice, maxPrice, "sellPrice", b);
+                    return b;
+                }))
                 .withPageable(PageRequest.of(page, size));
         SearchHits<Products> productsSearchHits = elasticsearchOperations.search(nativeQueryBuilder.build(), Products.class);
         SearchPage<Products> productsSearchPage = SearchHitSupport.searchPageFor(
@@ -83,11 +72,65 @@ public class ProductService {
                 .totalPage(productsSearchPage.getTotalPages())
                 .pageSize(productsSearchPage.getSize())
                 .totalElements(productsSearchPage.getTotalElements())
+                .aggregations(getAggregations(productsSearchHits))
                 .build();
     }
 
     private void extractedStr(String strField, String productField, BoolQuery.Builder b)
     {
-        
+        if(strField != null && !strField.isBlank())
+        {
+            String[] strFields = strField.split(",");
+            for(String str : strFields)
+            {
+                b.should(s -> s.term(t -> t
+                        .field(productField)
+                        .value(str)
+                        .caseInsensitive(true)));
+            }
+        }
+    }
+
+    private void extractRange(Number min, Number max, String productField, BoolQuery.Builder b)
+    {
+        if(min != null || max != null)
+        {
+            b.must(m -> m.range(r -> r
+                    .field(productField)
+                    .from(min != null ? min.toString() : null)
+                    .to(max != null ? max.toString() : null)
+            ));
+        }
+    }
+
+    private Map<String, Map<String, Long>> getAggregations(SearchHits<Products> searchHits)
+    {
+        List<org.springframework.data.elasticsearch.client.elc.Aggregation> aggregations = new ArrayList<>();
+        if(searchHits.hasAggregations())
+        {
+            ((List<ElasticsearchAggregation>)searchHits.getAggregations().aggregations())
+                    .forEach(elsAgg -> aggregations.add(elsAgg.aggregation()));
+        }
+        Map<String, Map<String, Long>> aggregationsMap = new HashMap<>();
+        aggregations.forEach(aggregation -> {
+            Map<String, Long> agg = new HashMap<>();
+            StringTermsAggregate stringTermsAggregate = (StringTermsAggregate) aggregation.getAggregate()._get();
+            List<StringTermsBucket> stringTermsBuckets =
+                    (List<StringTermsBucket>) stringTermsAggregate.buckets()._get();
+            stringTermsBuckets.forEach(bucket -> agg.put(bucket.key()._get().toString(), bucket.docCount()));
+            aggregationsMap.put(aggregation.getName(), agg);
+            });
+        return aggregationsMap;
+    }
+
+    public ProductNameGetListVm autoCompleteProductName(final String keyword){
+        NativeQuery nativeQuery = NativeQuery.builder().withQuery(q -> q
+                .matchPhrasePrefix(m -> m.field("name").query(keyword)))
+                .withSourceFilter(new FetchSourceFilter(
+                        new String[]{"name"}, null
+                )).build();
+        SearchHits<Products> result = elasticsearchOperations.search(nativeQuery, Products.class);
+        List<Products> products = result.stream().map(SearchHit::getContent).toList();
+        return new ProductNameGetListVm(products.stream().map(ProductNameGetVm::fromModel).toList());
     }
 }
