@@ -21,7 +21,6 @@ import java.util.Map;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Products {
     @Id
-    @Field("id_product")
     String id;
     @Field("name_product")
     String name;

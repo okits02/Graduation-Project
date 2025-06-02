@@ -15,7 +15,6 @@ import java.util.Map;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductRequest {
-    String id;
     String name;
     String description;
     BigDecimal sellPrice;
@@ -24,6 +23,6 @@ public class ProductRequest {
     Integer sold;
     double avgRating;
     Float discount;
-    CategoryRequest category;
+    String categoryId;
     Map<String, String> specifications;
 }

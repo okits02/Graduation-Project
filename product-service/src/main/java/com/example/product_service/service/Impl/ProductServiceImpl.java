@@ -58,9 +58,6 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Products createProduct(MultipartFile thumbNail, List<MultipartFile> multipartFile, ProductRequest request) {
-        if (productRepository.existsById(request.getId())) {
-            throw new AppException(ErrorCode.PRODUCT_EXISTS);
-        }
         Products products = productMapper.toProduct(request);
         Products newProducts = productRepository.save(products);
         List<String> imageList = new ArrayList<>();
@@ -79,10 +76,8 @@ public class ProductServiceImpl implements ProductService {
                 imageList.add(image.getId());
             }
         }
-        newProducts.setCategoryId(request.getCategory().getId());
         newProducts.setImageList(imageList);
-        productRepository.save(newProducts);
-        return newProducts;
+        return productRepository.save(newProducts);
     }
 
     @Override
