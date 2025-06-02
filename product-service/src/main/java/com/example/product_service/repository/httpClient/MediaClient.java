@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @FeignClient(name = "media-service",
-        url = "http://localhost:8084",
+        url = "http://localhost:8086",
         configuration = FeignMultipartSupportConfig.class)
 public interface MediaClient {
     @PostMapping(value = "/media/upload",
