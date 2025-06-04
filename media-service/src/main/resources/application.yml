@@ -5,3 +5,13 @@ cloudinary:
   cloud-name: db0ryuuyt
   api-key: 764769719114467
   api-secret: y5cYvBosBbKYudvQL6HBQhfCUiU
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    instance:
+      prefer-ip-address: true
+      ip-address: 127.0.0.1

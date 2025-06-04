@@ -30,7 +30,6 @@ public class ProductConsumer {
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Cannot deserialize ProductEvent: " + e.getMessage(), e);
         }
-
         productsRepository.save(products);
     }
 }

@@ -13,7 +13,7 @@ import java.util.List;
 public interface ProductService {
     public PageResponse<ProductResponse> getAll(int page, int size);
     public ProductResponse getById(String productId);
-    public Products createProduct(MultipartFile thumbNail, List<MultipartFile> multipartFile, ProductRequest request);
-    public ProductResponse updateProduct(MultipartFile thumbNails, List<MultipartFile> multipartFiles, ProductUpdateRequest request);
+    public Products createProduct(ProductRequest request);
+    public ProductResponse updateProduct(ProductUpdateRequest request);
     public void DeleteProduct(String productId);
 }

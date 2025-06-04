@@ -23,6 +23,8 @@ public class ProductRequest {
     Integer sold;
     double avgRating;
     Float discount;
+    String thumbNail;
+    List<String> imageList;
     String categoryId;
     Map<String, String> specifications;
 }

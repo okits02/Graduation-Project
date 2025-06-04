@@ -1,8 +1,5 @@
 package com.example.product_service.dto.response;
 
-import com.example.product_service.model.Category;
-import com.example.product_service.model.Image;
-import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -26,6 +23,7 @@ public class ProductResponse {
     double avgRating;
     Integer sold;
     Float discount;
+    String thumbNail;
     List<String> imageList;
     List<String> listCategory;
     Map<String, String> specifications;

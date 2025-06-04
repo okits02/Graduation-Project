@@ -4,31 +4,26 @@ import com.example.search_service.constant.SortType;
 import com.example.search_service.service.ProductService;
 import com.example.search_service.viewmodel.ProductGetListVM;
 import com.example.search_service.viewmodel.ProductNameGetListVm;
+import com.example.search_service.viewmodel.dto.request.SearchRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-@RestController("/search")
+@RestController
+@RequestMapping("/search")
 @RequiredArgsConstructor
 public class ProductController {
     private final ProductService productService;
 
-    @GetMapping("/catalog-search")
+    @PostMapping("/catalog-search")
     public ResponseEntity<ProductGetListVM> searchAdvance(
-            @RequestParam String keword,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size,
-            @RequestParam String category,
-            @RequestParam String attribute,
-            @RequestParam Double minPrice,
-            @RequestParam Double maxPrice,
-            @RequestParam(defaultValue = "DEFAULT")SortType sortType
+            @RequestBody SearchRequest request
             )
     {
         return ResponseEntity.ok(productService
-                .searchProductAdvance(keword, page, size, category, attribute, minPrice, maxPrice, sortType));
+                .searchProductAdvance(request.getKeyword(), page - 1, size, request.getCategory()));
     }
 
     @GetMapping("search_suggest")

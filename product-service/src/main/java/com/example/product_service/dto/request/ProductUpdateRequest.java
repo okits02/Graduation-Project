@@ -21,7 +21,8 @@ public class ProductUpdateRequest {
     Integer quantity;
     Integer sold;
     Float discount;
+    String thumbNail;
+    List<String> imageList;
     Map<String, String> specifications;
     String categoryId;
-    List<String> imagesToDelete;
 }

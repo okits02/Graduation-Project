@@ -36,6 +36,8 @@ public class Products {
     @Field("sold_quantity")
     Integer sold;
     Float discount;
+    @Field("thumb_nail")
+    String thumbNail;
     @Field("images")
     List<String> imageList;
     String categoryId;

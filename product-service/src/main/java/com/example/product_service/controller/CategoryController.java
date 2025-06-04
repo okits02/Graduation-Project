@@ -55,7 +55,7 @@ public class CategoryController {
         }
     }
 
-    @GetMapping
+    @GetMapping("/getAll")
     ResponseEntity<ApiResponse<Page<CategoryResponse>>> getAllCate(@RequestParam(defaultValue = "1") int page,
                                                                    @RequestParam(defaultValue = "10") int size)
     {

@@ -13,6 +13,5 @@ import java.util.Optional;
 public interface ProductMapper {
     Products toProduct(ProductRequest request);
     ProductResponse toProductResponse(Products products);
-    ProductResponse toProductResponse(Optional<Products> products);
     void updateProduct(@MappingTarget Products products, ProductUpdateRequest productRequest);
 }

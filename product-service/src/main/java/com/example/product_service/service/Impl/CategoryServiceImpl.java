@@ -6,14 +6,10 @@ import com.example.product_service.exceptions.AppException;
 import com.example.product_service.exceptions.ErrorCode;
 import com.example.product_service.mapper.CategoryMapper;
 import com.example.product_service.model.Category;
-import com.example.product_service.model.Image;
 import com.example.product_service.repository.CategoryRepository;
-import com.example.product_service.repository.httpClient.MediaClient;
 import com.example.product_service.service.CategoryService;
-import com.example.product_service.service.ImageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.types.ObjectId;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -33,9 +29,6 @@ import java.util.Optional;
 public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
-    private final ImageService imageService;
-    private final MediaClient mediaClient;
-
     @Override
     public Page<CategoryResponse> finAll(int Page, int Size) {
         Pageable pageable = PageRequest.of(Page, Size);
@@ -52,9 +45,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public Category createCate(MultipartFile multipartFile, CategoryRequest request) {
         Category category = categoryMapper.toCategory(request);
-        String imgUrl = imageService.createCategoryImage(request, multipartFile, 0);
         category.setDescription(request.getDescription());
-        category.setImageUrl(imgUrl);
         category.setParentId(request.getParentId());
         Category newCategory = categoryRepository.save(category);
         log.info("category: {}", newCategory);
@@ -79,7 +70,7 @@ public class CategoryServiceImpl implements CategoryService {
             Optional<Category> categoryOptional = categoryRepository.findById(currentId);
             if(categoryOptional.isPresent()) {
                 categoryHierarchy.add(categoryOptional.get().getId());
-                currentId = categoryOptional.get().getId();
+                currentId = categoryOptional.get().getParentId();
             }else {
                 break;
             }
@@ -89,12 +80,6 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public void deleteCateById(String categoryId) {
-        ServletRequestAttributes servletRequestAttributes =
-                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
-        Category category = categoryRepository.findById(categoryId).orElseThrow(()
-                -> new AppException(ErrorCode.CATE_NOT_EXISTS));
-        ResponseEntity<?> response = mediaClient.deleteImage(authHeader, category.getImageUrl());
         categoryRepository.deleteById(categoryId);
     }
 }

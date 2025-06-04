@@ -2,26 +2,49 @@ package com.example.media_service.service.Impl;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.example.media_service.dto.response.ProductImageResponse;
 import com.example.media_service.service.ImageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class ImageServiceImpl implements ImageService {
     private final Cloudinary cloudinary;
+
     @Override
     public String url(MultipartFile multipartFile, String name) throws IOException {
         String url = "";
         url = cloudinary.uploader()
-                .upload(multipartFile.getBytes(), Map.of("public_id", name))
+                .upload(multipartFile.getBytes(), Map.of("public_name", name))
                 .get("url")
                 .toString();
         return url;
+    }
+
+    @Override
+    public ProductImageResponse imageProduct(MultipartFile thumbNailFile,
+                                             List<MultipartFile> imageProductFile,
+                                             String name) throws IOException {
+        String thumbnailUrl = "";
+        List<String> imageProductUrl = new ArrayList<>();
+        thumbnailUrl = url(thumbNailFile, name);
+        for (MultipartFile file : imageProductFile)
+        {
+            String url = url(file, name);
+            imageProductUrl.add(url);
+        }
+        ProductImageResponse productImageResponse = ProductImageResponse.builder()
+                .urlThumbnail(thumbnailUrl)
+                .imageUrl(imageProductUrl)
+                .build();
+        return productImageResponse;
     }
 
     @Override

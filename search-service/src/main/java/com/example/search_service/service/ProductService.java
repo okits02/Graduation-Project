@@ -1,5 +1,6 @@
 package com.example.search_service.service;
 
+import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
 import co.elastic.clients.elasticsearch._types.aggregations.StringTermsAggregate;
 import co.elastic.clients.elasticsearch._types.aggregations.StringTermsBucket;
@@ -13,6 +14,7 @@ import com.example.search_service.viewmodel.ProductGetVM;
 import com.example.search_service.viewmodel.ProductNameGetListVm;
 import com.example.search_service.viewmodel.ProductNameGetVm;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.common.unit.Fuzziness;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregation;
@@ -29,38 +31,38 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ProductService {
     private final ElasticsearchOperations elasticsearchOperations;
 
     public ProductGetListVM searchProductAdvance(String keyword,
                                                  Integer page,
                                                  Integer size,
-                                                 String category,
-                                                 String attribute,
-                                                 Double minPrice,
-                                                 Double maxPrice,
-                                                 SortType sortType)
+                                                 String category)
     {
         NativeQueryBuilder nativeQueryBuilder = NativeQuery.builder()
                 .withAggregation("categories", Aggregation.of(
-                        a -> a.terms(ta-> ta.field("categories.keyword"))))
+                        a -> a.terms(ta-> ta.field("categories"))))
                 .withAggregation("specifications", Aggregation.of(
-                        a -> a.terms(ta -> ta.field("specification.<key>.keyword"))))
-                .withQuery(q -> q
-                        .bool(b ->  {
-                             b.must(m -> m.multiMatch(mm -> mm
-                                     .fields("name")
-                                     .query(keyword)
-                                     .fuzziness(Fuzziness.ONE.asString())));
-                             return b;
-                        }))
-                .withFilter(f -> f.bool(b -> {
-                    extractedStr(category, "categories.keyword", b);
-                    extractedStr(attribute, "specifications.keyword", b);
-                    extractRange(minPrice, maxPrice, "sellPrice", b);
-                    return b;
-                }))
+                        a -> a.terms(ta -> ta.field("specification"))))
                 .withPageable(PageRequest.of(page, size));
+        if(keyword != null)
+        {
+            nativeQueryBuilder.withQuery(q -> q
+                    .matchPhrasePrefix(m -> m
+                            .field("name")
+                            .query(keyword)));
+        }else {
+            nativeQueryBuilder.withQuery(q -> q.matchAll(ma -> ma));
+        }
+        nativeQueryBuilder.withFilter(f -> f.bool(
+                b -> {
+                    if(category != null) {
+                        extractedStr(category, "categories", b);
+                    }
+                    return b;
+                }
+        ));
         SearchHits<Products> productsSearchHits = elasticsearchOperations.search(nativeQueryBuilder.build(), Products.class);
         SearchPage<Products> productsSearchPage = SearchHitSupport.searchPageFor(
                 productsSearchHits, nativeQueryBuilder.getPageable());
@@ -97,8 +99,8 @@ public class ProductService {
         {
             b.must(m -> m.range(r -> r
                     .field(productField)
-                    .from(min != null ? min.toString() : null)
-                    .to(max != null ? max.toString() : null)
+                    .gte(min != null ? JsonData.fromJson(min.toString()) : null)
+                    .lte(max != null ? JsonData.fromJson(max.toString()) : null)
             ));
         }
     }

@@ -6,7 +6,7 @@ import org.springframework.http.HttpStatusCode;
 
 @Getter
 public enum ErrorCode {
-    UNAUTHENTICATED(40100, "Unauthenticated!", HttpStatus.UNAUTHORIZED);
+    UNAUTHENTICATED(40300, "Unauthenticated!", HttpStatus.UNAUTHORIZED);
     private final int code;
     private final String message;
     private final HttpStatusCode httpStatusCode;
