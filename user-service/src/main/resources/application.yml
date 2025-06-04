@@ -29,6 +29,9 @@ eureka:
     fetch-registry: true
     service-url:
       defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+    ip-address: 127.0.0.1
 jwt:
   signerKey: "0+haQiwa2KensXa+0fKTCApar6wrtAhZ2eaUFeeQd8HibrtR6OXN/j8yI5i1s7mS"
 

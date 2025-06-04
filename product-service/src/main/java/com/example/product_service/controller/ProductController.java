@@ -35,20 +35,17 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProductController {
     ProductService productService;
-    ProductRepository productRepository;
     CategoryService categoryService;
     CategoryRepository categoryRepository;
     KafkaTemplate<String, Object> kafkaTemplate;
 
-    @PostMapping
+    @PostMapping("/create")
     @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<Products> createProduct(
-            @RequestPart("fileThumbNail") MultipartFile thumbNail,
-            @RequestPart("file") List<MultipartFile> multipartFile,
-            @RequestPart("requestProduct") @Valid ProductRequest request)
+            @RequestBody ProductRequest request)
     {
         try{
-            Products product = productService.createProduct(thumbNail, multipartFile, request);
+            Products product = productService.createProduct(request);
             CreateProductEvent createProductEvent = createEventProduct(product);
             kafkaTemplate.send("create-product", createProductEvent).whenComplete(
                     (result, ex) -> {
@@ -75,15 +72,12 @@ public class ProductController {
 
     @PutMapping("/update")
     @PreAuthorize("hasRole('ADMIN')")
-    ApiResponse<ProductResponse> updateProduct(
-            @RequestPart("file") MultipartFile thumbNails,
-            @RequestPart("file") List<MultipartFile> multipartFiles,
-            @RequestBody @Valid ProductUpdateRequest request)
+    ApiResponse<ProductResponse> updateProduct(@RequestBody @Valid ProductUpdateRequest request)
     {
         try{
             return ApiResponse.<ProductResponse>builder()
                     .code(200)
-                    .result(productService.updateProduct(thumbNails, multipartFiles, request))
+                    .result(productService.updateProduct(request))
                     .build();
         }catch (AppException e)
         {
@@ -94,7 +88,7 @@ public class ProductController {
         }
     }
 
-    @GetMapping
+    @GetMapping("/getAll")
     ResponseEntity<ApiResponse<PageResponse<ProductResponse>>> getAllProduct(
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "10") int size)
@@ -113,7 +107,6 @@ public class ProductController {
     }
 
     @GetMapping("/{product_id}")
-    @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<ProductResponse> getById(@PathVariable String productId)
     {
         try{

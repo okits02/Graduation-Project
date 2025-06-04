@@ -35,6 +35,12 @@ spring:
               - Path=${app.api-prefix}/profile/**, ${app.api-prefix}/address/**
            filters:
             - StripPrefix=2
+         - id: search-service
+           uri: lb://search-service
+           predicates:
+               - Path=${app.api-prefix}/search/**
+           filters:
+               - StripPrefix=2
          - id: notification-service
            uri: lb://notification-service
            predicates:
@@ -48,3 +54,6 @@ eureka:
     fetch-registry: true
     service-url:
       defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+    ip-address: 127.0.0.1

@@ -21,7 +21,6 @@ import java.util.Map;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Products {
     @Id
-    @Field("id_product")
     String id;
     @Field("name_product")
     String name;
@@ -37,6 +36,8 @@ public class Products {
     @Field("sold_quantity")
     Integer sold;
     Float discount;
+    @Field("thumb_nail")
+    String thumbNail;
     @Field("images")
     List<String> imageList;
     String categoryId;
