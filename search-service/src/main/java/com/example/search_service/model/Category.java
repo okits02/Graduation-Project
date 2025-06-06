@@ -13,9 +13,5 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 @AllArgsConstructor
 public class Category {
     @Field(type = FieldType.Keyword)
-    String id;
-    @Field(type = FieldType.Keyword)
     String name;
-    @Field(type = FieldType.Text)
-    String description;
 }
