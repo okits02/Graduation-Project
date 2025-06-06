@@ -1,6 +1,8 @@
 package com.example.search_service.viewmodel;
 
+import com.example.search_service.model.Category;
 import com.example.search_service.model.Products;
+import com.example.search_service.model.Specification;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -28,8 +30,8 @@ public class ProductGetVM {
     Integer sold;
     Float discount;
     List<String> imageList;
-    List<String> categories;
-    Map<String, String> specifications;
+    List<Category> categories;
+    List<Specification> specifications;
     @JsonFormat(pattern = "yyyy-MM-dd")
     LocalDate createAt;
     @JsonFormat(pattern = "yyyy-MM-dd")
