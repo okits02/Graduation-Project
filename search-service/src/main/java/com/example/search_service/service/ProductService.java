@@ -13,10 +13,13 @@ import com.example.search_service.viewmodel.ProductGetListVM;
 import com.example.search_service.viewmodel.ProductGetVM;
 import com.example.search_service.viewmodel.ProductNameGetListVm;
 import com.example.search_service.viewmodel.ProductNameGetVm;
+import jakarta.servlet.Filter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.common.unit.Fuzziness;
+import org.elasticsearch.search.aggregations.bucket.terms.IncludeExclude;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregation;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
@@ -38,31 +41,48 @@ public class ProductService {
     public ProductGetListVM searchProductAdvance(String keyword,
                                                  Integer page,
                                                  Integer size,
-                                                 String category)
+                                                 List<String> category,
+                                                 List<Map<String, String>> attributes,
+                                                 Double minPrice,
+                                                 Double maxPrice,
+                                                 SortType sortType)
     {
-        NativeQueryBuilder nativeQueryBuilder = NativeQuery.builder()
-                .withAggregation("categories", Aggregation.of(
-                        a -> a.terms(ta-> ta.field("categories"))))
-                .withAggregation("specifications", Aggregation.of(
-                        a -> a.terms(ta -> ta.field("specification"))))
-                .withPageable(PageRequest.of(page, size));
-        if(keyword != null)
+        NativeQueryBuilder nativeQueryBuilder = NativeQuery.builder();
+        nativeQueryBuilder.withQuery(q -> q.bool(b -> {
+            if (keyword != null && !keyword.isBlank()) {
+                b.must(m -> m.match(match -> match
+                        .field("name")
+                        .query(keyword)
+                ));
+            }
+            return b;
+        }));
+        nativeQueryBuilder.withFilter(f -> f.bool(b -> {
+            extractCategory(category, "categories", b);
+            extractAttributes(attributes, "specifications", b);
+            extractRange(minPrice, maxPrice, "sellPrice", b);
+            return b;
+        }));
+
+        switch (sortType)
         {
-            nativeQueryBuilder.withQuery(q -> q
-                    .matchPhrasePrefix(m -> m
-                            .field("name")
-                            .query(keyword)));
-        }else {
-            nativeQueryBuilder.withQuery(q -> q.matchAll(ma -> ma));
+            case DEFAULT -> {
+                break;
+            }
+            case PRICE_ASC -> {
+                nativeQueryBuilder.withSort(Sort.by(Sort.Direction.ASC, "sellPrice"));
+                break;
+            }
+            case PRICE_DESC -> {
+                nativeQueryBuilder.withSort(Sort.by(Sort.Direction.DESC, "sellPrice"));
+                break;
+            }
+            case RATING_ASC -> {
+                nativeQueryBuilder.withSort(Sort.by(Sort.Direction.ASC, "avgRating"));
+                break;
+            }
         }
-        nativeQueryBuilder.withFilter(f -> f.bool(
-                b -> {
-                    if(category != null) {
-                        extractedStr(category, "categories", b);
-                    }
-                    return b;
-                }
-        ));
+        nativeQueryBuilder.withPageable(PageRequest.of(page, size));
         SearchHits<Products> productsSearchHits = elasticsearchOperations.search(nativeQueryBuilder.build(), Products.class);
         SearchPage<Products> productsSearchPage = SearchHitSupport.searchPageFor(
                 productsSearchHits, nativeQueryBuilder.getPageable());
@@ -78,18 +98,59 @@ public class ProductService {
                 .build();
     }
 
-    private void extractedStr(String strField, String productField, BoolQuery.Builder b)
-    {
-        if(strField != null && !strField.isBlank())
+    private void extractAttributes(List<Map<String, String>> attributes, String productField, BoolQuery.Builder b) {
+        if (attributes == null || attributes.isEmpty()) {
+            return;
+        }
+        for (Map<String, String> attr : attributes)
         {
-            String[] strFields = strField.split(",");
-            for(String str : strFields)
-            {
-                b.should(s -> s.term(t -> t
-                        .field(productField)
-                        .value(str)
-                        .caseInsensitive(true)));
-            }
+            b.must(m -> m
+                    .nested(nested -> nested
+                            .path(productField)
+                            .query(q -> q
+                                    .bool(bl -> bl
+                                            .must(must1 -> must1
+                                                    .term(t1 -> t1
+                                                            .field(productField + ".key")
+                                                            .value(attr.get("key"))
+                                                    )
+                                            )
+                                            .must(must2 -> must2
+                                                    .term(t2 -> t2
+                                                            .field(productField + ".value")
+                                                            .value(attr.get("value"))
+                                                    )
+                                            )
+                                    )
+                            )
+                    )
+            );
+        }
+    }
+
+    private void extractCategory(List<String> category, String productField, BoolQuery.Builder b)
+    {
+        if(category == null || category.isEmpty())
+        {
+            return;
+        }
+
+        for(String cate : category)
+        {
+            b.must(m -> m
+                    .nested(nested -> nested
+                            .path(productField)
+                            .query(q -> q.bool(bl -> bl
+                                    .must(m1 -> m1
+                                            .term(t -> t
+                                                    .field("categories.name")
+                                                    .value(cate)
+                                            )
+                                    )
+                                    )
+                            )
+                    )
+            );
         }
     }
 
