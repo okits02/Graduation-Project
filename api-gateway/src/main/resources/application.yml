@@ -10,43 +10,74 @@ spring:
 
   cloud:
     gateway:
-       routes:
-         - id: user-service
-           uri: lb://user-service
-           predicates:
-             - Path=${app.api-prefix}/auth/**, ${app.api-prefix}/users/**
-           filters:
-             - StripPrefix=2
-         - id: product-service
-           uri: lb://product-service
-           predicates:
-              - Path=${app.api-prefix}/product/**, ${app.api-prefix}/category/**
-           filters:
-             - StripPrefix=2
-         - id: media-service
-           uri: lb://media-service
-           predicates:
-             - Path=${app.api-prefix}/media/**
-           filters:
-             - StripPrefix=2
-         - id: profile-service
-           uri: lb://profile-service
-           predicates:
-              - Path=${app.api-prefix}/profile/**, ${app.api-prefix}/address/**
-           filters:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=${app.api-prefix}/auth/**,${app.api-prefix}/users/**
+          filters:
             - StripPrefix=2
-         - id: search-service
-           uri: lb://search-service
-           predicates:
-               - Path=${app.api-prefix}/search/**
-           filters:
-               - StripPrefix=2
-         - id: notification-service
-           uri: lb://notification-service
-           predicates:
-              - Path=${app.api-prefix}/notification/**
-           filters:
-             - StripPrefix=2
+
+        - id: product-service
+          uri: lb://product-service
+          predicates:
+            - Path=${app.api-prefix}/product/**,${app.api-prefix}/category/**
+          filters:
+            - StripPrefix=2
+
+        - id: media-service
+          uri: lb://media-service
+          predicates:
+            - Path=${app.api-prefix}/media/**
+          filters:
+            - StripPrefix=2
+
+        - id: profile-service
+          uri: lb://profile-service
+          predicates:
+            - Path=${app.api-prefix}/profile/**,${app.api-prefix}/address/**
+          filters:
+            - StripPrefix=2
+
+        - id: search-service
+          uri: lb://search-service
+          predicates:
+            - Path=${app.api-prefix}/search/**
+          filters:
+            - StripPrefix=2
+
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=${app.api-prefix}/notification/**
+          filters:
+            - StripPrefix=2
+
+springdoc:
+  swagger-ui:
+    urls:
+      - name: User – Auth
+        url: ${app.api-prefix}/auth/v3/api-docs
+      - name: User – Users
+        url: ${app.api-prefix}/users/v3/api-docs
+      - name: Product
+        url: ${app.api-prefix}/product/v3/api-docs
+      - name: Category
+        url: ${app.api-prefix}/category/v3/api-docs
+      - name: Media
+        url: ${app.api-prefix}/media/v3/api-docs
+      - name: Profile
+        url: ${app.api-prefix}/profile/v3/api-docs
+      - name: Address
+        url: ${app.api-prefix}/address/v3/api-docs
+      - name: Search
+        url: ${app.api-prefix}/search/v3/api-docs
+      - name: Notification
+        url: ${app.api-prefix}/notification/v3/api-docs
 
 eureka:
   client:

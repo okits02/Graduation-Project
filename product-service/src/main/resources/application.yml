@@ -20,6 +20,15 @@ spring:
       properties:
         enable.idempotence: true
         max.in.fight.request.per.connection: 5
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+open:
+  api:
+    version: v1.0.0
+    serverUrl: http://localhost:8060
+    serverName: Test-productService
 eureka:
   client:
     register-with-eureka: true

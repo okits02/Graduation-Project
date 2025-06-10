@@ -6,6 +6,8 @@ import com.example.profile_service.dto.response.ApiResponse;
 import com.example.profile_service.dto.response.PageResponse;
 import com.example.profile_service.dto.response.ProfileResponse;
 import com.example.profile_service.service.ProfileService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,9 @@ public class ProfileController {
 
     ProfileService profileService;
 
+    @Operation(summary = "get my info",
+            description = "Api used to get user's info",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @GetMapping("/myInfo")
     public ResponseEntity<ApiResponse<ProfileResponse>> getMyProfile() {
         ProfileResponse profile = profileService.getMyProfile();
@@ -36,6 +41,9 @@ public class ProfileController {
         );
     }
 
+    @Operation(summary = "update info",
+            description = "Api used to update user's info",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @PutMapping
     public ResponseEntity<ApiResponse<ProfileResponse>> updateMyProfile(@RequestBody @Valid ProfileUpdateRequest request) {
         ProfileResponse updatedProfile = profileService.updateMyProfile(request);
@@ -48,6 +56,9 @@ public class ProfileController {
         );
     }
 
+    @Operation(summary = "admin get user info",
+            description = "Api used to get user's info",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @GetMapping("/admin/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ProfileResponse>> getProfileByUserId(@PathVariable String userId)
@@ -60,6 +71,9 @@ public class ProfileController {
                 .build());
     }
 
+    @Operation(summary = "admin update user info",
+            description = "Api used to update user's info",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @PutMapping("/admin/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ProfileResponse>> updateProfileByUserId(@PathVariable String userId,
@@ -73,6 +87,9 @@ public class ProfileController {
                 .build());
     }
 
+    @Operation(summary = "admin delete user info",
+            description = "Api used to delete user's info",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @DeleteMapping("/admin/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteMyProfile(@PathVariable String userId) {
@@ -86,6 +103,9 @@ public class ProfileController {
         );
     }
 
+    @Operation(summary = "admin get all user info",
+            description = "Api used to get all user's info",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @GetMapping("/admin/getAll")
     @PreAuthorize("hasRole('ADMIN)")
     public ResponseEntity<ApiResponse<PageResponse<ProfileResponse>>> getAllProfile(

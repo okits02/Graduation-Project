@@ -32,7 +32,15 @@ spring:
           auth: true
           starttls:
             enable: true
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
 
+open:
+  api:
+    version: v1.0.0
+    serverUrl: http://localhost:8040
+    serverName: Test-notificationService
 eureka:
   client:
     register-with-eureka: true

@@ -23,7 +23,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableMethodSecurity
 @Slf4j
 public class SecurityConfig {
-    private final String[] END_POINTS = {};
+    private final String[] END_POINTS = {"/swagger-ui/**", "/v3/api-docs/**"};
     @Autowired
     private final CustomJwtDecoder customJwtDecoder;
 
@@ -34,7 +34,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request -> request
-                .requestMatchers(HttpMethod.POST, END_POINTS)
+                .requestMatchers(END_POINTS)
                 .permitAll()
                 .anyRequest()
                 .authenticated());

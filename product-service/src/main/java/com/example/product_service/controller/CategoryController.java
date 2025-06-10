@@ -6,6 +6,8 @@ import com.example.product_service.dto.response.CategoryResponse;
 import com.example.product_service.exceptions.AppException;
 import com.example.product_service.model.Category;
 import com.example.product_service.service.CategoryService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class CategoryController {
     private final CategoryService categoryService;
 
+    @Operation(summary = "admin create category", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<Category> createCate(
@@ -37,6 +40,7 @@ public class CategoryController {
                 .build();
     }
 
+    @Operation(summary = "admin update category", security = @SecurityRequirement(name = "bearerAuth"))
     @PutMapping("/update_cate")
     @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<CategoryResponse> updateCategory(@RequestBody @Valid CategoryRequest request)
@@ -55,6 +59,7 @@ public class CategoryController {
         }
     }
 
+    @Operation(summary = "get all category")
     @GetMapping("/getAll")
     ResponseEntity<ApiResponse<Page<CategoryResponse>>> getAllCate(@RequestParam(defaultValue = "1") int page,
                                                                    @RequestParam(defaultValue = "10") int size)
@@ -74,6 +79,8 @@ public class CategoryController {
                         .build());
     }
 
+    @Operation(summary = "admin get category by id",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @GetMapping("/cate/{categoryId}")
     @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<CategoryResponse> getById(@PathVariable String categoryId)
@@ -85,6 +92,8 @@ public class CategoryController {
                 .build();
     }
 
+    @Operation(summary = "admin delete category",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @DeleteMapping("/{categoryId}")
     @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<CategoryResponse> deleteById(@PathVariable String categoryId)

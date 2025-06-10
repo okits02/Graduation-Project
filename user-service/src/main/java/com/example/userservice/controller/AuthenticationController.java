@@ -13,6 +13,8 @@ import com.example.userservice.service.AuthenticationService;
 import com.example.userservice.service.ForgotPasswordService;
 import com.example.userservice.service.UserService;
 import com.nimbusds.jose.JOSEException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +35,8 @@ public class AuthenticationController {
     UserService userService;
     ForgotPasswordService forgotPasswordService;
 
+    @Operation(summary = "login",
+    description = "API login for user")
     @PostMapping("/login")
     ApiResponse<AuthenticationResponse> authenticated(@RequestBody AuthenticationRequest request)
     {
@@ -42,6 +46,8 @@ public class AuthenticationController {
                 .build();
     }
 
+    @Operation(summary = "introspect",
+    description = "API check JWT token")
     @PostMapping("/introspect")
     ApiResponse<IntrospectResponse> introspect(@RequestBody IntrospectRequest request) throws ParseException, JOSEException {
         var result = authenticationService.introspect(request);
@@ -50,6 +56,8 @@ public class AuthenticationController {
                 .build();
     }
 
+    @Operation(summary = "refresh",
+    description = "Api for refresh jwt token")
     @PostMapping("/refresh")
     ApiResponse<AuthenticationResponse> introspect(@RequestBody RefreshTokenRequest request) throws ParseException, JOSEException {
         var result = authenticationService.refreshToken(request);
@@ -58,6 +66,8 @@ public class AuthenticationController {
                 .build();
     }
 
+    @Operation(summary = "verify otp",
+    description = "API is used to authenticate otp when users create new accounts")
     @PostMapping("/verify")
     ResponseEntity<ApiResponse<?>> registerVerify(@RequestBody RegisterVerifyRequest request)
     {
@@ -70,6 +80,8 @@ public class AuthenticationController {
                 .build());
     }
 
+    @Operation(summary = "verify otp forgot password",
+            description = "API is used to authenticate otp when users forgot password")
     @PostMapping("/forgot-password")
     ResponseEntity<ApiResponse<ForgotPasswordResponse>> forgotPasswordVerify(@RequestBody ForgotPasswordRequest request)
     {
@@ -80,6 +92,9 @@ public class AuthenticationController {
                     .build());
     }
 
+    @Operation(summary = "logout",
+            description = "API is used logout",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/logout")
     ApiResponse<Void> logout(@RequestBody LogoutRequest request) throws ParseException, JOSEException {
         authenticationService.logout(request);

@@ -3,6 +3,8 @@ package com.example.media_service.controller;
 import com.example.media_service.dto.ApiResponse;
 import com.example.media_service.dto.response.ProductImageResponse;
 import com.example.media_service.service.ImageService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,6 +20,8 @@ import java.util.List;
 public class ImageController {
     private final ImageService imageService;
 
+    @Operation(summary = "admin upload product image",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/upload-product")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ProductImageResponse>> uploadImage(
@@ -32,7 +36,10 @@ public class ImageController {
                 .build());
     }
 
+    @Operation(summary = "admin upload category image",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/upload-category")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<String>> uploadCategoryImage(
             @RequestPart("imageCategory") MultipartFile multipartFile,
             @RequestPart("name")  String name) throws IOException {
@@ -44,6 +51,8 @@ public class ImageController {
                 .build());
     }
 
+    @Operation(summary = "admin delete image",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @DeleteMapping("/delete")
     public ResponseEntity<String> deleteImage(@RequestParam("url") String imageUrl) {
         try {

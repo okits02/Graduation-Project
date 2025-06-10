@@ -16,7 +16,15 @@ spring:
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     properties:
       string.json.trusted.packages: "*"
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
 
+open:
+  api:
+    version: v1.0.0
+    serverUrl: http://localhost:8082
+    serverName: Test-searchService
 eureka:
   client:
     register-with-eureka: true

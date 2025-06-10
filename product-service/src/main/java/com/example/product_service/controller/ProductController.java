@@ -14,6 +14,8 @@ import com.example.product_service.repository.CategoryRepository;
 import com.example.product_service.repository.ProductRepository;
 import com.example.product_service.service.CategoryService;
 import com.example.product_service.service.ProductService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.data.domain.Page;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -39,6 +41,7 @@ public class ProductController {
     CategoryRepository categoryRepository;
     KafkaTemplate<String, Object> kafkaTemplate;
 
+    @Operation(summary = "admin create product", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/create")
     @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<Products> createProduct(
@@ -70,6 +73,7 @@ public class ProductController {
         }
     }
 
+    @Operation(summary = "admin update product", security = @SecurityRequirement(name = "bearerAuth"))
     @PutMapping("/update")
     @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<ProductResponse> updateProduct(@RequestBody @Valid ProductUpdateRequest request)
@@ -88,6 +92,7 @@ public class ProductController {
         }
     }
 
+    @Operation(summary = "get all product")
     @GetMapping("/getAll")
     ResponseEntity<ApiResponse<PageResponse<ProductResponse>>> getAllProduct(
             @RequestParam(value = "page", defaultValue = "1") int page,
@@ -106,6 +111,7 @@ public class ProductController {
                 .build());
     }
 
+    @Operation(summary = "get product by id")
     @GetMapping("/{product_id}")
     ApiResponse<ProductResponse> getById(@PathVariable String productId)
     {
@@ -123,6 +129,7 @@ public class ProductController {
         } 
     }
 
+    @Operation(summary = "admin delete product", security = @SecurityRequirement(name = "bearerAuth"))
     @DeleteMapping("/{product_id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<?>> deleteProduct(@PathVariable String productId)

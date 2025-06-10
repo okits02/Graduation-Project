@@ -1,11 +1,22 @@
 server:
   port: 8086
-
+spring:
+  application:
+    name: media-service
 cloudinary:
   cloud-name: db0ryuuyt
   api-key: 764769719114467
   api-secret: y5cYvBosBbKYudvQL6HBQhfCUiU
 
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+open:
+  api:
+    version: v1.0.0
+    serverUrl: http://localhost:8082
+    serverName: Test-mediaService
 eureka:
   client:
     register-with-eureka: true

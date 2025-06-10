@@ -4,6 +4,8 @@ import com.example.profile_service.dto.request.AddressRequest;
 import com.example.profile_service.dto.response.AddressResponse;
 import com.example.profile_service.dto.response.ApiResponse;
 import com.example.profile_service.service.AddressService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,9 @@ import java.util.List;
 public class AddressController {
     AddressService addressService;
 
+    @Operation(summary = "create address",
+            description = "Api used to create user's address",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping
     ApiResponse<AddressResponse> createAddress(
             @PathVariable String userId,
@@ -32,6 +37,9 @@ public class AddressController {
                 .build();
     }
 
+    @Operation(summary = "get all my address",
+            description = "Api used to get all user's address",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @GetMapping()
     public ResponseEntity<ApiResponse<List<AddressResponse>>> getAllMyAddress() {
         List<AddressResponse> list = addressService.getAllMyAddress();
@@ -43,6 +51,9 @@ public class AddressController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "update my address",
+            description = "Api used to update user's address",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @PutMapping
     public ResponseEntity<ApiResponse<AddressResponse>> updateAddress(
             @RequestBody AddressRequest request
@@ -56,6 +67,9 @@ public class AddressController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "delete my address",
+            description = "Api used to delete user's address",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @DeleteMapping("/{addressId}")
     public ResponseEntity<ApiResponse<String>> deleteAddress(@PathVariable String addressId) {
         addressService.deleteAddress(addressId);

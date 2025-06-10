@@ -17,6 +17,10 @@ import com.example.userservice.service.ForgotPasswordService;
 import com.example.userservice.service.UserService;
 import com.example.userservice.service.VerificationService;
 import com.example.userservice.utils.OtpUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.tags.Tags;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.User;
@@ -37,6 +41,7 @@ import java.util.Optional;
 @RequestMapping("/users")
 @RequiredArgsConstructor
 @RestController
+@Tag(name = "Api for user")
 public class UserController {
     private final UserService userService;
     private final UserRepository userRepository;
@@ -45,6 +50,7 @@ public class UserController {
     private final ForgotPasswordService forgotPasswordService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
+    @Operation(summary = "create user", description = "Api creates users for new people")
     @PostMapping("/register")
     ApiResponse<UserResponse> creationUser(@RequestBody @Valid UserCreationRequest request) {
         Users users = userService.createUser(request);
@@ -87,13 +93,12 @@ public class UserController {
         }
     }
 
-
+    @Operation(summary = "send otp",
+            description = "API is used to send OTP via email of users, OTP is used to verify email")
     @PostMapping("/verifyEmail/send-otp")
-    ApiResponse<?> endVerificationOTP(@RequestBody @Valid UserCreationRequest request)
+    ApiResponse<?> sendVerificationOTP(@RequestBody @Valid UserCreationRequest request)
     {
-        var contex = SecurityContextHolder.getContext();
-        String userName = contex.getAuthentication().getName();
-        Users users = userRepository.findByUsername(userName).orElseThrow(()
+        Users users = userRepository.findByUsername(request.getUsername()).orElseThrow(()
                 -> new AppException(ErrorCode.USER_NOT_EXITS));
         verificationService.sendverifyOtp(users);
         Optional<OTP> otp = verificationService.getOtpByUserId(users.getId());
@@ -121,6 +126,8 @@ public class UserController {
                 .build();
     }
 
+    @Operation(summary = "send otp when forgot password",
+            description = "API is used to send OTP via email of users, OTP is used to verify and change the password")
     @PostMapping("/forgot-password/send-otp")
     public ApiResponse<?> sendForgotPasswordOTP(@RequestBody @Valid ForgotPasswordRequest request) {
         Optional<Users> optionalUser = userRepository.findByEmail(request.getEmail());
@@ -157,7 +164,8 @@ public class UserController {
                 .build();
     }
   
-
+    @Operation(summary = "forgot password",
+    description = "change new password after verify email by OTP")
     @PutMapping("/forgot-password")
     ResponseEntity<ApiResponse<?>> forgotPassword(@RequestBody ChangePasswordRequest request)
     {
@@ -186,6 +194,9 @@ public class UserController {
         }
     }
 
+    @Operation(summary = "reset password",
+            description = "API used when users want to change passwords when logging in",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @PutMapping("/reset-password")
     ResponseEntity<ApiResponse<?>> updatePassword(@RequestBody ResetPasswordRequest request) {
         try {
@@ -209,6 +220,9 @@ public class UserController {
         }
     }
 
+    @Operation(summary = "get userId",
+            description = "API used to get userId",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @GetMapping("/getUserId")
     ResponseEntity<ApiResponse<UserIdResponse>> getUserId()
     {
@@ -218,6 +232,9 @@ public class UserController {
                 .build());
     }
 
+    @Operation(summary = "Toggle user status admin",
+    description = "API for administrator, it has an exaggeration of user account",
+    security = @SecurityRequirement(name = "bearerAuth"))
     @PutMapping("/{userId}/status")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<?>> toggleUserStatus(@PathVariable String userId,
@@ -244,6 +261,9 @@ public class UserController {
         }
     }
 
+    @Operation(summary = "delete user admin",
+            description = "API for administrators, it has the effect of deleting the user's account",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @DeleteMapping("/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<?>> deleteUser(@PathVariable String userId) {
