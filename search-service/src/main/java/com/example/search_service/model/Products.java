@@ -38,10 +38,10 @@ public class Products {
     Float discount;
     @Field(type = FieldType.Keyword)
     List<String> imageList;
-    @Field(type = FieldType.Keyword)
-    List<String> categories;
-    @Field(type = FieldType.Object)
-    Map<String, String> specifications;
+    @Field(type = FieldType.Nested)
+    List<Category> categories;
+    @Field(type = FieldType.Nested)
+    List<Specification> specifications;
     @Field(type = FieldType.Date,
             format = DateFormat.date,
             pattern = "yyy-MM-dd")

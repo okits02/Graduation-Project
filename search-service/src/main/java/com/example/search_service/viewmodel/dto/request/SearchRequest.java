@@ -4,6 +4,9 @@ import com.example.search_service.constant.SortType;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.List;
+import java.util.Map;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -11,9 +14,9 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SearchRequest {
     String keyword;
-    String category;
-    String attributes;
-    String minPrice;
-    String maxPrice;
+    List<String> category;
+    List<Map<String, String>> attributes;
+    Double minPrice;
+    Double maxPrice;
     SortType sortType;
 }

@@ -9,6 +9,7 @@ import org.springframework.kafka.config.TopicBuilder;
 public class kafkaConfig {
     @Bean
     public NewTopic createProductsTopic(){return TopicBuilder.name("create-product")
+            .partitions(1)
             .replicas(2)
             .build();
     }
