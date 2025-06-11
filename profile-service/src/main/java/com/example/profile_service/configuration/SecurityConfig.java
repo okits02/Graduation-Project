@@ -23,7 +23,9 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableMethodSecurity
 @Slf4j
 public class SecurityConfig {
-    private final String[] END_POINTS = {"/swagger-ui/**", "/v3/api-docs/**"};
+    private final String[] END_POINTS = {
+            "/swagger-ui/**",
+            "/v3/api-docs/**"};
     @Autowired
     private final CustomJwtDecoder customJwtDecoder;
 

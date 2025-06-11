@@ -1,5 +1,7 @@
 server:
   port: 8084
+  servlet:
+    context-path: /search-service
 spring:
   application:
     name: search-service
@@ -33,4 +35,4 @@ eureka:
       default-zone: http://localhost:8761/eureka/
   instance:
     prefer-ip-address: true
-    ip-address: 127.0.0.1
+    ip-address: 172.28.48.1

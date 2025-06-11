@@ -20,7 +20,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.PathMatcher;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerRequest;
@@ -33,28 +35,29 @@ import java.util.List;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-@FieldDefaults(level = AccessLevel.PACKAGE)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class AuthenticationFilter implements GlobalFilter, Ordered {
     final IdentityService identityService;
     final ObjectMapper objectMapper;
+    static final PathMatcher PATH_MATCHER = new AntPathMatcher();
     private final String[] publicEndpoints = {
-            "/users/register",
-            "/auth/introspect",
-            "/auth/login",
-            "/auth/verify",
-            "/users/verifyEmail/send-otp",
-            "/users/forgot-password/send-otp",
-            "/auth/forgot-password",
-            "/auth/refresh",
-            "/product/getAll",
-            "/product/*",
-            "/category/getAll",
-            "/search/catalog-search",
-            "/search/search_suggest",
+            "/user-service/users/register",
+            "/user-service/auth/introspect",
+            "/user-service/auth/login",
+            "/user-service/auth/verify",
+            "/user-service/users/verifyEmail/send-otp",
+            "/user-service/users/forgot-password/send-otp",
+            "/user-service/auth/forgot-password",
+            "/user-service/auth/refresh",
+            "/user-service/product/getAll",
+            "/product-service/product/**",
+            "/product-service/category/getAll",
+            "/search-service/search/catalog-search",
+            "/search-service/search/search_suggest",
             "/swagger-ui.html",
             "/swagger-ui/**",
             "/v3/api-docs/**",
-            "/api/v1/**/v3/api-docs"};
+            "/**/v3/api-docs"};
 
     @Value("${app.api-prefix}")
     private String apiPrefix;
@@ -91,15 +94,16 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
 
     private boolean isPublicEndpoint(ServerHttpRequest request)
     {
+        String path = request.getURI().getPath();
         return Arrays.stream(publicEndpoints)
-                .anyMatch(s -> request.getURI().getPath(). matches(apiPrefix + s));
+                .anyMatch(pattern -> PATH_MATCHER.match(apiPrefix + pattern, path));
     }
 
     Mono<Void> unauthenticated(ServerHttpResponse response)
     {
         ApiResponse<?> apiResponse = ApiResponse.builder()
                 .code(1401)
-                .message("Unauthenticated")
+                .message("Unauthenticated!!")
                 .build();
         String body = null;
         try{

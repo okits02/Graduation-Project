@@ -1,5 +1,7 @@
 server:
   port: 8086
+  servlet:
+    context-path: /media-service
 spring:
   application:
     name: media-service
@@ -17,12 +19,14 @@ open:
     version: v1.0.0
     serverUrl: http://localhost:8082
     serverName: Test-mediaService
+
+
 eureka:
   client:
     register-with-eureka: true
     fetch-registry: true
     service-url:
       defaultZone: http://localhost:8761/eureka/
-    instance:
-      prefer-ip-address: true
-      ip-address: 127.0.0.1
+  instance:
+    prefer-ip-address: true
+    ip-address: 172.28.48.1
