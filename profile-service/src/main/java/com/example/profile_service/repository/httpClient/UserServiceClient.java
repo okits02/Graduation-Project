@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 
 @FeignClient(name = "user-service")
 public interface UserServiceClient {
-    @GetMapping(value = "/users/getUserId", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/user-service/users/getUserId", produces = MediaType.APPLICATION_JSON_VALUE)
     ApiResponse<GetUserIdResponse> getUserId(@RequestHeader("Authorization") String token);
 }
 

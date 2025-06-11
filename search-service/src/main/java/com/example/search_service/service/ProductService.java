@@ -156,13 +156,16 @@ public class ProductService {
 
     private void extractRange(Number min, Number max, String productField, BoolQuery.Builder b)
     {
-        if(min != null || max != null)
-        {
-            b.must(m -> m.range(r -> r
-                    .field(productField)
-                    .gte(min != null ? JsonData.fromJson(min.toString()) : null)
-                    .lte(max != null ? JsonData.fromJson(max.toString()) : null)
-            ));
+        if (min != null || max != null) {
+            b.must(q -> q
+                    .range(r -> r
+                            .number(n -> n
+                                    .field(productField)
+                                    .gte(min != null ? min.doubleValue() : null)
+                                    .lte(max != null ? max.doubleValue() : null)
+                            )
+                    )
+            );
         }
     }
 

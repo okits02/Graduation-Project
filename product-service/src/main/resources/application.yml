@@ -1,5 +1,5 @@
 server:
-  port: 8060
+  port: 8062
   servlet:
     context-path: /product-service
 spring:
