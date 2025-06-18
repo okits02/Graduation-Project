@@ -1,0 +1,36 @@
+server:
+  port: 8066
+  context-path: /promotion-service
+
+spring:
+  application:
+    name: promotion-service
+  datasource:
+    url: "jdbc:mysql://localhost:3306/promotion_db?allowPublicKeyRetrieval=true&useSSL=false"
+    username: "root"
+    password: "root"
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+open:
+  api:
+    version: v1.0.0
+    serverUrl: http://localhost:8066
+    serverName: Test-promotionService
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    instance:
+      prefer-ip-address: true
+      ip-address: 172.28.48.1
+
