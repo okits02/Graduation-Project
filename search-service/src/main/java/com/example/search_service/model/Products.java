@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Document(indexName = "product")
 @Setting(settingPath = "static/es-settings.json")
@@ -28,14 +29,14 @@ public class Products {
     BigDecimal listPrice;
     @Field(type = FieldType.Double)
     BigDecimal sellPrice;
+    @Field(type = FieldType.Nested)
+    Set<Promotion> promotions;
     @Field(type = FieldType.Integer)
     Integer quantity;
     @Field(type = FieldType.Double)
     double avgRating;
     @Field(type = FieldType.Integer)
     Integer sold;
-    @Field(type = FieldType.Double)
-    Float discount;
     @Field(type = FieldType.Keyword)
     List<String> imageList;
     @Field(type = FieldType.Nested)
@@ -50,4 +51,17 @@ public class Products {
             format = DateFormat.date,
             pattern = "yyy-MM-dd")
     LocalDate updateAt;
+
+    public void calculatorSellPrice() {
+        for(Promotion promotion : promotions) {
+            if(promotion.getIsActive() == true) {
+                if(promotion.getDiscountPercent() != null && promotion.getFixedAmount() == null) {
+                    sellPrice = listPrice.multiply(promotion.discountPercent);
+                }
+                if(promotion.getFixedAmount() != null && promotion.getDiscountPercent() == null) {
+                    sellPrice = listPrice.subtract(promotion.getFixedAmount());
+                }
+            }
+        }
+    }
 }

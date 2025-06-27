@@ -23,11 +23,9 @@ public class CreateProductEvent {
     String name;
     String description;
     BigDecimal listPrice;
-    BigDecimal sellPrice;
     Integer quantity;
     double avgRating;
     Integer sold;
-    Float discount;
     List<String> imageList;
     List<String> categories;
     Map<String, String> specifications;

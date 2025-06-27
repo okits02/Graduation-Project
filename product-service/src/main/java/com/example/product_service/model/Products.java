@@ -28,14 +28,11 @@ public class Products {
     String description;
     @Field("list_price")
     BigDecimal listPrice;
-    @Field("sell_price")
-    BigDecimal sellPrice;
     Integer quantity;
     @Field("avg_rating")
     double avgRating;
     @Field("sold_quantity")
     Integer sold;
-    Float discount;
     @Field("thumb_nail")
     String thumbNail;
     @Field("images")

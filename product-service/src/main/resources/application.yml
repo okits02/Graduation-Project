@@ -22,7 +22,6 @@ spring:
       properties:
         enable.idempotence: true
         max.in.fight.request.per.connection: 5
-
 springdoc:
   swagger-ui:
     path: /swagger-ui.html

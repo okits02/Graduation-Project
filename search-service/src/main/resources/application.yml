@@ -12,10 +12,10 @@ spring:
   kafka:
     bootstrap-servers: localhost:9094
     consumer:
-      group-id: product
       auto-offer-reset: latest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      
     properties:
       string.json.trusted.packages: "*"
 springdoc:

@@ -7,11 +7,13 @@ import com.example.promotion_service.dto.response.PageResponse;
 import com.example.promotion_service.dto.response.PromotionResponse;
 import com.example.promotion_service.exception.AppException;
 import com.example.promotion_service.exception.ErrorCode;
+import com.example.promotion_service.kafka.PromotionEvent;
 import com.example.promotion_service.model.Promotion;
 import com.example.promotion_service.services.PromotionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import static com.example.promotion_service.enums.UsageType.LIMITED;
@@ -20,6 +22,7 @@ import static com.example.promotion_service.enums.UsageType.LIMITED;
 @RequiredArgsConstructor
 public class PromotionController {
     private final PromotionService promotionService;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @PostMapping("/create")
     ResponseEntity<ApiResponse<Promotion>> createPromotion(@RequestBody PromotionCreationRequest request)
@@ -28,11 +31,31 @@ public class PromotionController {
             if (request.getUsageType().equals(LIMITED)) {
                 throw new AppException(ErrorCode.USAGE_LIMITED_NULL);
             }
+        Promotion promotion = promotionService.createPromotion(request);
+        PromotionEvent promotionEvent = PromotionEvent.builder()
+                .id(promotion.getId())
+                .name(promotion.getName())
+                .descriptions(promotion.getDescriptions())
+                .isActive(promotion.isActive())
+                .discountPercent(promotion.getDiscountPercent())
+                .fixedAmount(promotion.getFixedAmount())
+                .productIdList(promotion.getPromotionApplyTo().getProductId())
+                .categoryIdList(promotion.getPromotionApplyTo().getCategoryId())
+                .build();
+        kafkaTemplate.send("promotion-create-event", promotionEvent).whenComplete(
+                (result, ex) -> {
+            if (ex != null)
+            {
+                System.err.println("Failed to send message" + ex.getMessage());
+            } else {
+                System.err.println("send message successfully" + result.getProducerRecord());
+            }
+        });
 
         return ResponseEntity.ok(ApiResponse.<Promotion>builder()
                         .code(200)
                         .message("Create promotion successfully!")
-                        .Result(promotionService.createPromotion(request))
+                        .Result(promotion)
                         .build());
     }
 

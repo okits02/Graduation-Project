@@ -17,10 +17,8 @@ public class ProductUpdateRequest {
     String name;
     String description;
     double listPrice;
-    double sellPrice;
     Integer quantity;
     Integer sold;
-    Float discount;
     String thumbNail;
     List<String> imageList;
     Map<String, String> specifications;

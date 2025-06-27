@@ -1,11 +1,11 @@
 package com.example.search_service.controller;
 
-import com.example.search_service.constant.SortType;
-import com.example.search_service.service.ProductService;
 import com.example.search_service.viewmodel.ProductGetListVM;
 import com.example.search_service.viewmodel.ProductNameGetListVm;
 import com.example.search_service.viewmodel.dto.request.SearchRequest;
 import lombok.RequiredArgsConstructor;
+
+import com.example.search_service.service.SearchService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/search")
 @RequiredArgsConstructor
 public class ProductController {
-    private final ProductService productService;
+    private final SearchService searchService;
 
     @PostMapping("/catalog-search")
     public ResponseEntity<ProductGetListVM> searchAdvance(
@@ -22,7 +22,7 @@ public class ProductController {
             @RequestBody SearchRequest request
             )
     {
-        return ResponseEntity.ok(productService
+        return ResponseEntity.ok(searchService
                 .searchProductAdvance(request.getKeyword(), page - 1, size, request.getCategory(),
                         request.getAttributes(), request.getMinPrice(), request.getMaxPrice(), request.getSortType()));
     }
@@ -30,6 +30,6 @@ public class ProductController {
     @GetMapping("search_suggest")
     public ResponseEntity<ProductNameGetListVm> productSearchAutoComplete(@RequestParam String keyword)
     {
-        return ResponseEntity.ok(productService.autoCompleteProductName(keyword));
+        return ResponseEntity.ok(searchService.autoCompleteProductName(keyword));
     }
 }

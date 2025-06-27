@@ -1,28 +1,29 @@
-package com.example.product_service.dto.request;
+package com.example.search_service.viewmodel.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@Setter
+@Getter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductRequest {
+    String id;
     String name;
     String description;
     BigDecimal listPrice;
     Integer quantity;
-    Integer sold;
     double avgRating;
-    String thumbNail;
+    Integer sold;
     List<String> imageList;
-    String categoryId;
+    List<String> categories;
     Map<String, String> specifications;
+    LocalDate createAt;
+    LocalDate updateAt;
 }
