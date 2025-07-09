@@ -11,7 +11,7 @@ import java.util.List;
 public interface CategoryService {
     public Page<CategoryResponse> finAll(int Page, int Size);
     public CategoryResponse findById(String categoryId);
-    public Category createCate(MultipartFile multipartFile, CategoryRequest request);
+    public Category createCate(CategoryRequest request);
     public CategoryResponse updateCate(CategoryRequest request);
     public List<String> getCategoryHierarchy(String categoryId);
     public void deleteCateById(String categoryId);

@@ -24,7 +24,6 @@ spring:
         enable.idempotence: true
         max.in.fight.request.per.connection: 5
         retry.backoff.ms: 1000
-
 springdoc:
   swagger-ui:
     path: /swagger-ui.html

@@ -36,6 +36,13 @@ spring:
           filters:
             - StripPrefix=2
 
+        - id: promotion-service
+          uri: lb://promotion-service
+          predicates:
+              - Path=${app.api-prefix}/promotion-service/**
+          filters:
+              - StripPrefix=2
+
         - id: profile-service
           uri: lb://profile-service
           predicates:
@@ -72,6 +79,8 @@ springdoc:
         url: ${app.api-prefix}/search-service/v3/api-docs
       - name: Notification
         url: ${app.api-prefix}/notification-service/v3/api-docs
+      - name: Promotion
+        url: ${app.api-prefix}/promotion-service/v3/api-docs
 
 eureka:
   client:

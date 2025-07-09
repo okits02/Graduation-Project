@@ -17,12 +17,10 @@ import java.util.Map;
 public class ProductRequest {
     String name;
     String description;
-    BigDecimal sellPrice;
     BigDecimal listPrice;
     Integer quantity;
     Integer sold;
     double avgRating;
-    Float discount;
     String thumbNail;
     List<String> imageList;
     String categoryId;

@@ -4,9 +4,11 @@ import com.example.search_service.model.Category;
 import com.example.search_service.model.Products;
 import com.example.search_service.model.Specification;
 import com.example.search_service.viewmodel.dto.ProductEventDTO;
+import com.example.search_service.viewmodel.dto.request.ProductRequest;
 import jdk.jfr.Name;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 
 import java.util.List;
@@ -17,7 +19,11 @@ import java.util.stream.Collectors;
 public interface ProductsMapper {
     @Mapping(target = "categories", source = "categories", qualifiedByName = "mapCategories")
     @Mapping(target = "specifications", source = "specifications", qualifiedByName = "mapSpecifications")
-    Products toProducts(ProductEventDTO productEventDTO);
+    Products toProducts(ProductRequest productRequest);
+
+    @Mapping(target = "categories", source = "categories", qualifiedByName = "mapCategories")
+    @Mapping(target = "specifications", source = "specifications", qualifiedByName = "mapSpecifications")
+    void updateProduct(@MappingTarget Products products, ProductRequest request);
 
     @Named("mapCategories")
     default List<Category> mapCategories(List<String> category) {

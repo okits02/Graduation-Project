@@ -18,8 +18,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -58,13 +56,13 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductResponse updateProduct(ProductUpdateRequest request) {
+    public Products updateProduct(ProductUpdateRequest request) {
         Products products = productRepository.findById(request.getId()).orElseThrow(()->
                 new AppException(ErrorCode.PRODUCT_NOT_EXISTS));
         productMapper.updateProduct(products, request);
         products.setCategoryId(request.getCategoryId());
         productRepository.save(products);
-        return productMapper.toProductResponse(products);
+        return products;
     }
 
     @Override

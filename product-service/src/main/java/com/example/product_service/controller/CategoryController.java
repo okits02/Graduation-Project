@@ -28,15 +28,12 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @Operation(summary = "admin create category", security = @SecurityRequirement(name = "bearerAuth"))
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping("/create")
     @PreAuthorize("hasRole('ADMIN')")
-    ApiResponse<Category> createCate(
-            @RequestPart("file") MultipartFile multipartFile,
-            @RequestPart("request") CategoryRequest request)
-    {
+    ApiResponse<Category> createCate(@RequestBody @Valid CategoryRequest request) {
         return ApiResponse.<Category>builder()
                 .code(200)
-                .result(categoryService.createCate(multipartFile, request))
+                .result(categoryService.createCate(request))
                 .build();
     }
 

@@ -8,6 +8,8 @@ import com.example.product_service.dto.response.ProductResponse;
 import com.example.product_service.exceptions.AppException;
 import com.example.product_service.exceptions.ErrorCode;
 import com.example.product_service.kafka.CreateProductEvent;
+import com.example.product_service.kafka.DeleteProductEvent;
+import com.example.product_service.mapper.ProductMapper;
 import com.example.product_service.model.Category;
 import com.example.product_service.model.Products;
 import com.example.product_service.repository.CategoryRepository;
@@ -37,8 +39,10 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProductController {
     ProductService productService;
+    ProductMapper productMapper;
     CategoryService categoryService;
     CategoryRepository categoryRepository;
+    ProductRepository productRepository;
     KafkaTemplate<String, Object> kafkaTemplate;
 
     @Operation(summary = "admin create product", security = @SecurityRequirement(name = "bearerAuth"))
@@ -50,7 +54,7 @@ public class ProductController {
         try{
             Products product = productService.createProduct(request);
             CreateProductEvent createProductEvent = createEventProduct(product);
-            kafkaTemplate.send("create-product", createProductEvent).whenComplete(
+            kafkaTemplate.send("product-create-event", createProductEvent).whenComplete(
                     (result, ex) -> {
                         if(ex != null)
                         {
@@ -79,9 +83,22 @@ public class ProductController {
     ApiResponse<ProductResponse> updateProduct(@RequestBody @Valid ProductUpdateRequest request)
     {
         try{
+            Products product = productService.updateProduct(request);
+            CreateProductEvent createProductEvent = createEventProduct(product);
+            kafkaTemplate.send("product-update-event", createProductEvent).whenComplete(
+                    (result, ex) -> {
+                        if(ex != null)
+                        {
+                            System.err.println("Failed to send message" + ex.getMessage());
+                        }else
+                        {
+                            System.err.println("send message successfully" + result.getProducerRecord());
+                        }
+                    });
+            ProductResponse productResponse = productMapper.toProductResponse(product);
             return ApiResponse.<ProductResponse>builder()
                     .code(200)
-                    .result(productService.updateProduct(request))
+                    .result(productResponse)
                     .build();
         }catch (AppException e)
         {
@@ -136,6 +153,10 @@ public class ProductController {
     {
         try {
             productService.DeleteProduct(productId);
+            DeleteProductEvent deleteProductEvent = DeleteProductEvent.builder()
+                    .productId(productId)
+                    .build();
+            kafkaTemplate.send("product-delete-event", deleteProductEvent);
             return ResponseEntity.ok(ApiResponse.builder()
                     .code(200)
                     .message("Product delete successfully")
@@ -164,11 +185,9 @@ public class ProductController {
                 .name(product.getName())
                 .description(product.getDescription())
                 .listPrice(product.getListPrice())
-                .sellPrice(product.getSellPrice())
                 .quantity(product.getQuantity())
                 .avgRating(product.getAvgRating())
                 .sold(product.getSold())
-                .discount(product.getDiscount())
                 .imageList(product.getImageList())
                 .categories(categories)
                 .specifications(product.getSpecifications())

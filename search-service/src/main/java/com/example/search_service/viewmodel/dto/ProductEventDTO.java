@@ -1,9 +1,7 @@
 package com.example.search_service.viewmodel.dto;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -14,6 +12,9 @@ import java.util.Map;
 @Builder
 @Setter
 @Getter
+@AllArgsConstructor
+@NoArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductEventDTO {
     String id;
     String name;
