@@ -6,14 +6,23 @@ spring:
   application:
     name: notification-service
   datasource:
-    url: "jdbc:mysql://localhost:3306/db_notification"
+    url: "jdbc:mysql://localhost:3306/db_notification?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC"
     username: "root"
     password: "root"
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
   kafka:
     bootstrap-servers: localhost:9094
     consumer:
@@ -21,8 +30,10 @@ spring:
       auto-offer-reset: latest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-    properties:
-      string.json.trusted.packages: "*"
+      properties:
+        string.json.trusted.packages: "*"
+        max.poll.interval.ms: 300000
+        session.timeout.ms: 10000
   mail:
     host: smtp.gmail.com
     port: 587
@@ -34,15 +45,24 @@ spring:
           auth: true
           starttls:
             enable: true
+          ssl:
+            trust: smtp.gmail.com
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
 
 open:
   api:
     version: v1.0.0
-    serverUrl: http://localhost:8040
-    serverName: Test-notificationService
+    serverUrl: http://localhost:8064
+    serverName: Notification Service
+
 eureka:
   client:
     register-with-eureka: true
@@ -51,4 +71,5 @@ eureka:
       defaultZone: http://localhost:8761/eureka/
   instance:
     prefer-ip-address: true
-    ip-address: 172.28.48.1
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
