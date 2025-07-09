@@ -19,7 +19,7 @@ public class PromotionCreationRequest {
     @NotNull
     String name;
     @NotNull
-    String description;
+    String descriptions;
     @NotNull
     DiscountType discountType;
     @NotNull
@@ -32,8 +32,8 @@ public class PromotionCreationRequest {
     Double minimumOrderPurchaseAmount;
     Date startDate;
     Date endDate;
-    boolean isActive;
+    Boolean active;
     List<String> productId;
-    List<String> categoryId;
+    List<String> categoryName;
     boolean isVoucher;
 }

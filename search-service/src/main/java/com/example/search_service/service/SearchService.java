@@ -135,15 +135,15 @@ public class SearchService {
                             .path(productField)
                             .query(q -> q.bool(bl -> bl
                                     .must(m1 -> m1
-                                            .term(t -> t
-                                                    .field("categories.name")
-                                                    .value(cate)
-                                            )
-                                    )
-                                    )
-                            )
-                    )
-            );
+                                                .term(t -> t
+                                                        .field("categories.name")
+                                                        .value(cate)
+                                                )
+                                        )
+                                        )
+                                )
+                        )
+                );
         }
     }
 

@@ -43,7 +43,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public Category createCate(MultipartFile multipartFile, CategoryRequest request) {
+    public Category createCate(CategoryRequest request) {
         Category category = categoryMapper.toCategory(request);
         category.setDescription(request.getDescription());
         category.setParentId(request.getParentId());

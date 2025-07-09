@@ -8,7 +8,7 @@ import com.example.promotion_service.model.Promotion;
 import org.springframework.http.ResponseEntity;
 
 public interface PromotionService {
-    public Promotion createPromotion(PromotionCreationRequest request);
+    public PromotionResponse createPromotion(PromotionCreationRequest request);
     public Promotion updatePromotion(PromotionUpdateRequest request);
     public PromotionResponse getPromotion(String promotionId);
     public PageResponse<PromotionResponse> getAllPromotion(int page, int size);

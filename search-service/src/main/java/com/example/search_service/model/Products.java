@@ -53,15 +53,27 @@ public class Products {
     LocalDate updateAt;
 
     public void calculatorSellPrice() {
-        for(Promotion promotion : promotions) {
-            if(promotion.getIsActive() == true) {
-                if(promotion.getDiscountPercent() != null && promotion.getFixedAmount() == null) {
-                    sellPrice = listPrice.multiply(promotion.discountPercent);
+        if (listPrice == null || promotions == null) return;
+        BigDecimal discount = BigDecimal.ZERO;
+        BigDecimal fixedAmount = BigDecimal.ZERO;
+
+        for (Promotion promotion : promotions) {
+            if (Boolean.TRUE.equals(promotion.getActive())) {
+                if (promotion.getDiscountPercent() != null && promotion.getDiscountPercent().compareTo(BigDecimal.ZERO) > 0) {
+                    discount = discount.add(promotion.getDiscountPercent().divide(BigDecimal.valueOf(100)));
                 }
-                if(promotion.getFixedAmount() != null && promotion.getDiscountPercent() == null) {
-                    sellPrice = listPrice.subtract(promotion.getFixedAmount());
+                if (promotion.getFixedAmount() != null && promotion.getFixedAmount().compareTo(BigDecimal.ZERO) > 0) {
+                    fixedAmount = fixedAmount.add(promotion.getFixedAmount());
                 }
             }
         }
+        if (discount.compareTo(BigDecimal.ZERO) > 0) {
+            sellPrice = listPrice.multiply(BigDecimal.ONE.subtract(discount));
+        }
+        if (fixedAmount.compareTo(BigDecimal.ZERO) > 0) {
+            if (sellPrice == null) sellPrice = listPrice;
+            sellPrice = sellPrice.subtract(fixedAmount);
+        }
     }
+
 }

@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -37,11 +38,11 @@ public class Promotion {
     Double minimumOrderPurchaseAmount;
     int usageLimited;
     int usageCount;
-    boolean isActive;
-    @OneToMany(mappedBy = "promotion", cascade = CascadeType.ALL, orphanRemoval = true)
+    Boolean active;
+    @OneToOne(mappedBy = "promotion", cascade = CascadeType.ALL, orphanRemoval = true)
     PromotionApplyTo promotionApplyTo;
     Date createAt;
-    Date deleteAt;
+    Date updateAt;
 
     @Override
     public boolean equals(Object object)

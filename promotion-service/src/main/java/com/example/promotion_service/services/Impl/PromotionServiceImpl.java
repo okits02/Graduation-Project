@@ -20,10 +20,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.*;
 
 import static com.example.promotion_service.enums.ApplyTo.Category;
 import static com.example.promotion_service.enums.ApplyTo.Product;
@@ -37,7 +36,7 @@ public class PromotionServiceImpl implements PromotionService {
     private final PromotionMapper promotionMapper;
 
     @Override
-    public Promotion createPromotion(PromotionCreationRequest request) {
+    public PromotionResponse createPromotion(PromotionCreationRequest request) {
         if(promotionRepository.existsByName(request.getName()))
         {
             throw new AppException(ErrorCode.PROMOTION_EXISTS);
@@ -56,9 +55,9 @@ public class PromotionServiceImpl implements PromotionService {
             }
 
             case Category -> {
-                if(request.getCategoryId() != null && !request.getCategoryId().isEmpty()){
+                if(request.getCategoryName() != null && !request.getCategoryName().isEmpty()){
                     promotionApplyTo.setPromotion(promotion);
-                    promotionApplyTo.setProductId(new HashSet<>(request.getCategoryId()));
+                    promotionApplyTo.setCategoryName(new HashSet<>(request.getCategoryName()));
                 }else{
                     throw new AppException(ErrorCode.INVALID_CATEGORY_IDS);
                 }
@@ -71,7 +70,9 @@ public class PromotionServiceImpl implements PromotionService {
         }
         applyToRepository.save(promotionApplyTo);
         promotion.setPromotionApplyTo(promotionApplyTo);
-        return promotionRepository.save(promotion);
+        promotion.setCreateAt(Date.from(Instant.now()));
+        promotionRepository.save(promotion);
+        return promotionMapper.toPromotionResponse(promotion);
     }
 
     @Override
@@ -82,10 +83,10 @@ public class PromotionServiceImpl implements PromotionService {
             switch (request.getApplyTo()){
                 case Product -> {
                     promotionApplyTo.setProductId(new HashSet<>(request.getProductId()));
-                    promotionApplyTo.setCategoryId(null);
+                    promotionApplyTo.setCategoryName(null);
                 }
                 case Category -> {
-                    promotionApplyTo.setCategoryId(new HashSet<>(request.getCategoryId()));
+                    promotionApplyTo.setCategoryName(new HashSet<>(request.getCategoryId()));
                     promotionApplyTo.setProductId(null);
                 }
             }
@@ -102,7 +103,7 @@ public class PromotionServiceImpl implements PromotionService {
                     promotionApplyTo.setProductId(productId);
                 }
                 case Category -> {
-                    Set<String> categoryId = promotionApplyTo.getCategoryId();
+                    Set<String> categoryId = promotionApplyTo.getCategoryName();
                     if(request.getDeleteApplyTo() != null)
                     {
                         categoryId.removeAll(request.getCategoryId());
@@ -110,7 +111,7 @@ public class PromotionServiceImpl implements PromotionService {
                     if (request.getCategoryId() != null) {
                         categoryId.addAll(request.getCategoryId());
                     }
-                    promotionApplyTo.setCategoryId(categoryId);
+                    promotionApplyTo.setCategoryName(categoryId);
                 }
             }
         }
@@ -143,6 +144,6 @@ public class PromotionServiceImpl implements PromotionService {
         Promotion promotion = promotionRepository.findById(promotionId).orElseThrow(() ->
                 new AppException(ErrorCode.PROMOTION_NOT_EXISTS));
         applyToRepository.deleteById(promotion.getPromotionApplyTo().getId());
-        promotionRepository.delete(promotionId);
+        promotionRepository.deleteById(promotionId);
     }
 }

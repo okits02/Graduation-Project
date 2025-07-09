@@ -12,11 +12,6 @@ import java.text.ParseException;
 
 @Component
 public class CustomJwtDecoder implements JwtDecoder {
-    @NonFinal
-    @Value("${jwt.signerKey}")
-    private String signerKey;
-
-
     @Override
     public Jwt decode(String token) throws JwtException {
         try{

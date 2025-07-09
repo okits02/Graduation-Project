@@ -16,7 +16,7 @@ public class PromotionEvent {
     String descriptions;
     Double discountPercent;
     Double fixedAmount;
-    boolean isActive;
+    boolean active;
     Set<String> productIdList;
-    Set<String> categoryIdList;
+    Set<String> categoryNameList;
 }

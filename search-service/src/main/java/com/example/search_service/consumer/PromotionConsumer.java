@@ -2,6 +2,7 @@ package com.example.search_service.consumer;
 
 import com.example.search_service.service.ProductService;
 import com.example.search_service.viewmodel.dto.ApplyPromotionEventDTO;
+import com.example.search_service.viewmodel.dto.StatusPromotionDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,5 +28,17 @@ public class PromotionConsumer {
             throw new RuntimeException(e);
         }
         productService.createPromotion(applyPromotionEventDTO);
+    }
+
+    @KafkaListener(topics = "promotion-status-event",
+            containerFactory = "updateStatusPromotionKafkaListenerContainerFactory")
+    public void updateStatusPromotionConsumer(String statusEvent) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        StatusPromotionDTO statusPromotionDTO = null;
+        try {
+            statusPromotionDTO = objectMapper.readValue(statusEvent, StatusPromotionDTO.class);
+        }catch (JsonMappingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

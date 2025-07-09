@@ -21,5 +21,5 @@ public class PromotionApplyTo {
     @JoinColumn(name = "promotion_id")
     Promotion promotion;
     Set<String> productId;
-    Set<String> categoryId;
+    Set<String> categoryName;
 }

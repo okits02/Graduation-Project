@@ -20,6 +20,7 @@ import java.util.Date;
 @Setter
 @Getter
 public class PromotionResponse {
+    String id;
     String name;
     DiscountType discountType;
     ApplyTo applyTo;
@@ -33,8 +34,8 @@ public class PromotionResponse {
     Double minimumOrderPurchaseAmount;
     int usageLimited;
     int usageCount;
-    boolean isActive;
-    PromotionApplyTo promotionApplyTo;
+    Boolean active;
+    PromotionApplyToResponse promotionApplyTo;
     Date createAt;
-    Date deleteAt;
+    Date UpdateAt;
 }

@@ -12,7 +12,7 @@ import java.util.List;
 public interface PromotionRepository extends JpaRepository<Promotion, String> {
     boolean existsByName(@NotNull String name);
     Promotion findByName(@NotNull String name);
-    @Query("Select p form Promotion p where p.isActive = true and p.endDate<:now")
+    @Query("Select p from Promotion p where p.active = true and p.endDate<:now")
     List<Promotion> findExpiredPromotion(@Param("now")LocalDateTime now);
-    void delete(String promotionId);
+    void deleteById(String promotionId);
 }

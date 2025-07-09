@@ -47,7 +47,6 @@ public class ProductGetVM {
                 .quantity(products.getQuantity())
                 .avgRating(products.getAvgRating())
                 .sold(products.getSold())
-                .discount(products.getDiscount())
                 .imageList(products.getImageList())
                 .categories(products.getCategories())
                 .specifications(products.getSpecifications())

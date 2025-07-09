@@ -14,4 +14,12 @@ public class KafkaConfig {
                 .partitions(12)
                 .build();
     }
+
+    @Bean
+    public NewTopic promotionStatusTopic() {
+        return TopicBuilder.name("promotion-status-event")
+                .replicas(3)
+                .partitions(15)
+                .build();
+    }
 }

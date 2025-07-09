@@ -23,5 +23,5 @@ public class Promotion {
     @Field(type = FieldType.Double)
     BigDecimal fixedAmount;
     @Field(type = FieldType.Boolean)
-    Boolean isActive;
+    Boolean active;
 }

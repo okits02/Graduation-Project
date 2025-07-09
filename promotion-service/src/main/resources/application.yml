@@ -1,7 +1,7 @@
 server:
   port: 8066
-  context-path: /promotion-service
-
+  servlet:
+    context-path: /promotion-service
 spring:
   application:
     name: promotion-service

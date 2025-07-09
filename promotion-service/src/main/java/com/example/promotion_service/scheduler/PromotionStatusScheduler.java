@@ -1,5 +1,6 @@
 package com.example.promotion_service.scheduler;
 
+import com.example.promotion_service.controller.PromotionController;
 import com.example.promotion_service.model.Promotion;
 import com.example.promotion_service.repository.PromotionRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PromotionStatusScheduler {
     private final PromotionRepository promotionRepository;
+    private final PromotionController promotionController;
 
     @Scheduled(fixedRate = 300000)
     public void updateExpiredPromotion() {
@@ -21,6 +23,7 @@ public class PromotionStatusScheduler {
         for(Promotion p : promotionList){
             p.setActive(false);
             promotionRepository.save(p);
+            promotionController.UpdatePromotionStatus(p.getId());
         }
     }
 }

@@ -27,7 +27,7 @@ public class PromotionUpdateRequest {
     Double minimumOrderPurchaseAmount;
     Date startDate;
     Date endDate;
-    boolean isActive;
+    boolean active;
     List<String> productId;
     List<String> categoryId;
     List<String> deleteApplyTo;

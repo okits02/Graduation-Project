@@ -27,7 +27,7 @@ public class ProductController {
                         request.getAttributes(), request.getMinPrice(), request.getMaxPrice(), request.getSortType()));
     }
 
-    @GetMapping("search_suggest")
+    @GetMapping("/search_suggest")
     public ResponseEntity<ProductNameGetListVm> productSearchAutoComplete(@RequestParam String keyword)
     {
         return ResponseEntity.ok(searchService.autoCompleteProductName(keyword));

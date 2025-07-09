@@ -10,10 +10,12 @@ import com.example.search_service.mapper.ProductsMapper;
 import com.example.search_service.model.Products;
 import com.example.search_service.model.Promotion;
 import com.example.search_service.viewmodel.dto.ApplyPromotionEventDTO;
+import com.example.search_service.viewmodel.dto.StatusPromotionDTO;
 import com.example.search_service.viewmodel.dto.request.ProductRequest;
 import lombok.RequiredArgsConstructor;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
@@ -26,6 +28,7 @@ import java.io.IOException;
 import java.util.*;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class ProductService {
     private final ProductsRepository productsRepository;
@@ -35,8 +38,9 @@ public class ProductService {
 
 
     public void createProduct(ProductRequest request) {
-        productsRepository.findById(request.getId()).orElseThrow(() ->
-                new AppException(ErrorCode.PRODUCT_EXISTS));
+        if(productsRepository.existsById(request.getId())) {
+            throw new AppException(ErrorCode.PRODUCT_EXISTS);
+        }
         Products products = productsMapper.toProducts(request);
         productsRepository.save(products);
     }
@@ -56,16 +60,18 @@ public class ProductService {
         Promotion promotion = Promotion.builder()
                 .id(request.getId())
                 .name(request.getName())
-                .descriptions(request.getDescription())
+                .descriptions(request.getDescriptions())
                 .discountPercent(request.getDiscountPercent())
                 .fixedAmount(request.getFixedAmount())
+                .active(request.getActive())
                 .build();
         if(request.getProductIdList() != null) {
             createPromotionByProductId(promotion, request.getProductIdList());
         }
-        if(request.getCategoryIdList() != null) {
-            createPromotionByCategoryId(promotion, request.getCategoryIdList());
+        if(request.getCategoryNameList() != null) {
+            createPromotionByCategoryId(promotion, request.getCategoryNameList());
         }
+        log.info("create promotion successfully");
     }
 
     public void createPromotionByProductId(Promotion promotion, Set<String> listProductId) throws IOException {
@@ -86,10 +92,10 @@ public class ProductService {
                 product.setPromotions(new HashSet<>());
             }
             product.getPromotions().add(promotion);
-
+            product.calculatorSellPrice();
             BulkOperation bulkOperation = BulkOperation.of(b -> b
                     .update(u -> u
-                            .index("products")
+                            .index("product")
                             .id(product.getId())
                             .action(a -> a
                                     .doc(product)
@@ -115,12 +121,33 @@ public class ProductService {
         }
     }
 
-    public void createPromotionByCategoryId(Promotion promotion, Set<String> categoryId) throws IOException {
+    public void createPromotionByCategoryId(Promotion promotion, Set<String> listCategoryName) throws IOException {
         List<BulkOperation> bulkOperationList = new LinkedList<>();
         NativeQuery nativeQuery = NativeQuery.builder()
-                .withQuery(q -> q.terms(t -> t.field("categories.id").terms(v -> v.value(
-                        categoryId.stream().map(FieldValue::of).toList()
-                ))))
+                .withQuery(query -> query
+                        .bool(b -> b
+                                .must(must -> must
+                                        .nested(nested -> nested
+                                                .path("categories")
+                                                .query(q -> q
+                                                        .bool(bool -> bool
+                                                                .must(m1 -> m1
+                                                                        .terms(t -> t
+                                                                                .field("categories.name")
+                                                                                .terms(terms -> terms
+                                                                                        .value(listCategoryName.stream()
+                                                                                                .map(FieldValue::of)
+                                                                                                .toList()
+                                                                                        )
+                                                                                )
+                                                                        )
+                                                                )
+                                                        )
+                                                )
+                                        )
+                                )
+                        )
+                )
                 .build();
         SearchHits<Products> searchHits = elasticsearchOperations.search(nativeQuery, Products.class);
         for(SearchHit<Products> hit : searchHits) {
@@ -129,9 +156,10 @@ public class ProductService {
                 products.setPromotions(new HashSet<>());
             }
             products.getPromotions().add(promotion);
+            products.calculatorSellPrice();
             BulkOperation bulkOperation = BulkOperation.of(b -> b
                     .update(u -> u
-                            .index("products")
+                            .index("product")
                             .id(products.getId())
                             .action(a -> a.doc(products))));
             bulkOperationList.add(bulkOperation);
@@ -140,7 +168,6 @@ public class ProductService {
             BulkRequest bulkRequest = BulkRequest.of(b -> b.operations(bulkOperationList));
 
             BulkResponse bulkResponse = elasticsearchClient.bulk(bulkRequest);
-
             if (bulkResponse.errors()) {
                 throw new IOException("Bulk update promotions failed: " + bulkResponse.toString());
             } else {
@@ -148,6 +175,40 @@ public class ProductService {
             }
         } else {
             System.out.println("No products found for given product IDs.");
+        }
+    }
+
+
+    public void updateStatusPromotion(StatusPromotionDTO request) throws IOException {
+        List<BulkOperation> operations = new LinkedList<>();
+        NativeQuery nativeQuery = NativeQuery.builder()
+                .withQuery(q -> q
+                        .term(t -> t
+                                .field("promotion.id")
+                                .value(request.getId())))
+                .build();
+        SearchHits<Products> searchHits = elasticsearchOperations.search(nativeQuery, Products.class);
+        for(SearchHit<Products> hit : searchHits){
+            Products products = hit.getContent();
+            if(products.getPromotions() != null) {
+                products.getPromotions().forEach(promotion -> {
+                    if(promotion.getId().equals(request.getId())){
+                        promotion.setActive(false);
+                    }
+                });
+            }
+            BulkOperation bulkOperation = BulkOperation.of(b -> b
+                    .update(u -> u
+                            .index("products")
+                            .id(products.getId())
+                            .action(a -> a.doc(products))));
+            operations.add(bulkOperation);
+        }
+        if (!operations.isEmpty()) {
+            BulkRequest bulkRequest = new BulkRequest.Builder()
+                    .operations(operations)
+                    .build();
+            elasticsearchClient.bulk(bulkRequest);
         }
     }
 }
