@@ -17,7 +17,7 @@ import java.io.IOException;
 public class PromotionConsumer {
     private final ProductService productService;
 
-    @KafkaListener(topics = "promotion-create-event",
+    @KafkaListener(topics = "promotion-event",
             containerFactory = "applyPromotionKafkaListenerContainerFactory")
     public void applyPromotionConsumer(String promotionEvent) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();

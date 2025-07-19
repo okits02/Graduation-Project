@@ -12,6 +12,7 @@ import com.example.promotion_service.kafka.StatusEvent;
 import com.example.promotion_service.model.Promotion;
 import com.example.promotion_service.services.PromotionService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -22,6 +23,7 @@ import static com.example.promotion_service.enums.UsageType.LIMITED;
 @RestController
 @RequestMapping("/promotion")
 @RequiredArgsConstructor
+@Slf4j
 public class PromotionController {
     private final PromotionService promotionService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
@@ -44,7 +46,7 @@ public class PromotionController {
                 .productIdList(promotion.getPromotionApplyTo().getProductId())
                 .categoryNameList(promotion.getPromotionApplyTo().getCategoryName())
                 .build();
-        kafkaTemplate.send("promotion-create-event", promotionEvent).whenComplete(
+        kafkaTemplate.send("promotion-event", promotionEvent).whenComplete(
                 (result, ex) -> {
             if (ex != null)
             {
@@ -62,7 +64,7 @@ public class PromotionController {
     }
 
     @PutMapping("/update")
-    ResponseEntity<ApiResponse<Promotion>> updatePromotion(@RequestBody PromotionUpdateRequest request) {
+    ResponseEntity<ApiResponse<PromotionResponse>> updatePromotion(@RequestBody PromotionUpdateRequest request) {
         if(request.getUsageLimited() == 0)
         {
             if(request.getUsageType().equals(LIMITED))
@@ -70,10 +72,31 @@ public class PromotionController {
                 throw new AppException(ErrorCode.USAGE_LIMITED_NULL);
             }
         }
-        return  ResponseEntity.ok(ApiResponse.<Promotion>builder()
+        PromotionResponse promotionResponse = promotionService.updatePromotion(request);
+        PromotionEvent promotionEvent = PromotionEvent.builder()
+                .id(promotionResponse.getId())
+                .name(promotionResponse.getName())
+                .descriptions(promotionResponse.getDescriptions())
+                .active(promotionResponse.getActive())
+                .discountPercent(promotionResponse.getDiscountPercent())
+                .fixedAmount(promotionResponse.getFixedAmount())
+                .productIdList(promotionResponse.getPromotionApplyTo().getProductId())
+                .categoryNameList(promotionResponse.getPromotionApplyTo().getCategoryName())
+                .build();
+        kafkaTemplate.send("promotion-event", promotionEvent).whenComplete(
+                (result, ex) -> {
+            if(ex != null)
+            {
+                System.err.println("Failed to send message" + ex.getMessage());
+            }else {
+                System.err.println("send message successfully" + result.getProducerRecord());
+            }
+        });
+
+        return  ResponseEntity.ok(ApiResponse.<PromotionResponse>builder()
                         .code(200)
                         .message("Update promotion successfully!")
-                        .Result(promotionService.updatePromotion(request))
+                        .Result(promotionResponse)
                         .build());
     }
 

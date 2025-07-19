@@ -76,7 +76,7 @@ public class PromotionServiceImpl implements PromotionService {
     }
 
     @Override
-    public Promotion updatePromotion(PromotionUpdateRequest request) {
+    public PromotionResponse updatePromotion(PromotionUpdateRequest request) {
         Promotion promotion = promotionRepository.findByName(request.getName());
         PromotionApplyTo promotionApplyTo = applyToRepository.findByPromotionId(promotion.getId());
         if(!promotion.getApplyTo().equals(request.getApplyTo())) {
@@ -117,7 +117,7 @@ public class PromotionServiceImpl implements PromotionService {
         }
         promotion.setPromotionApplyTo(promotionApplyTo);
         promotionMapper.updatePromotion(promotion, request);
-        return  promotionRepository.save(promotion);
+        return  promotionMapper.toPromotionResponse(promotionRepository.save(promotion));
     }
 
     @Override

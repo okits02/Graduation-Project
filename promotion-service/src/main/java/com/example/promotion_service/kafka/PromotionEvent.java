@@ -3,6 +3,7 @@ package com.example.promotion_service.kafka;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.Date;
 import java.util.Set;
 
 @Data
@@ -19,4 +20,6 @@ public class PromotionEvent {
     boolean active;
     Set<String> productIdList;
     Set<String> categoryNameList;
+    Date createAt;
+    Date updateAt;
 }
