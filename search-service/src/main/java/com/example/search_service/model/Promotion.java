@@ -20,6 +20,8 @@ public class Promotion {
     String descriptions;
     @Field(type = FieldType.Double)
     BigDecimal discountPercent;
+    @Field(type = FieldType.Keyword)
+    String applyTo;
     @Field(type = FieldType.Double)
     BigDecimal fixedAmount;
     @Field(type = FieldType.Boolean)

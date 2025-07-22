@@ -25,6 +25,7 @@ import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.lang.annotation.Native;
 import java.util.*;
 
 @Service
@@ -42,6 +43,48 @@ public class ProductService {
             throw new AppException(ErrorCode.PRODUCT_EXISTS);
         }
         Products products = productsMapper.toProducts(request);
+        NativeQuery nativeQuery = NativeQuery.builder()
+                .withQuery(query -> query
+                        .bool(b -> b
+                                .must(must -> must
+                                        .nested(nested -> nested
+                                                .path("categories")
+                                                .query(q -> q
+                                                        .bool(bool -> bool
+                                                                .must(m1 -> m1
+                                                                        .terms(t -> t
+                                                                                .field("categories.name")
+                                                                                .terms(terms -> terms
+                                                                                        .value(products.getCategories()
+                                                                                                .stream()
+                                                                                                .map(FieldValue::of)
+                                                                                                .toList()
+                                                                                        )
+                                                                                )
+                                                                        )
+                                                                )
+                                                        )
+                                                )
+                                        )
+                                )
+                                .must(must1 -> must1
+                                        .nested(nested1 -> nested1
+                                                .path("promotions")
+                                                .query(q1 -> q1
+                                                        .bool(b1 -> b1
+                                                                .must(m1 -> m1
+                                                                        .term(t1 -> t1
+                                                                                .field("promotions.applyTo")
+                                                                                .value("Category")
+                                                                        )
+                                                                )
+                                                        )
+                                                )
+                                        )
+                                )
+                        )
+                )
+                .build();
         productsRepository.save(products);
     }
 
