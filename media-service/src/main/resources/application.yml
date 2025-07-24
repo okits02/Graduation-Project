@@ -1,0 +1,40 @@
+server:
+  port: 8065
+  servlet:
+    context-path: /media-service
+spring:
+  application:
+    name: media-service
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+cloudinary:
+  cloud-name: db0ryuuyt
+  api-key: 764769719114467
+  api-secret: y5cYvBosBbKYudvQL6HBQhfCUiU
+  secure: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+open:
+  api:
+    version: v1.0.0
+    serverUrl: http://localhost:8065
+    serverName: Media Service
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90

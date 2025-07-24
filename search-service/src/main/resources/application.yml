@@ -1,0 +1,46 @@
+server:
+  port: 8063
+  servlet:
+    context-path: /search-service
+spring:
+  application:
+    name: search-service
+  data:
+    elasticsearch:
+      uris: http://localhost:9200
+      connection-timeout: 1s
+      socket-timeout: 30s
+  kafka:
+    bootstrap-servers: localhost:9094
+    consumer:
+      auto-offer-reset: latest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    properties:
+      string.json.trusted.packages: "*"
+      properties:
+        string.json.trusted.packages: "*"
+        max.poll.interval.ms: 300000
+        session.timeout.ms: 10000
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+open:
+  api:
+    version: v1.0.0
+    serverUrl: http://localhost:8063
+    serverName: Search Service
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90

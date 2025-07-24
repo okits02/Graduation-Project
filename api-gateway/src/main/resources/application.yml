@@ -1,0 +1,94 @@
+server:
+  port: 8888
+
+app:
+  api-prefix: /api/v1
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=${app.api-prefix}/user-service/**
+          filters:
+            - StripPrefix=2
+
+        - id: product-service
+          uri: lb://product-service
+          predicates:
+            - Path=${app.api-prefix}/product-service/**
+          filters:
+            - StripPrefix=2
+
+        - id: media-service
+          uri: lb://media-service
+          predicates:
+            - Path=${app.api-prefix}/media-service/**
+          filters:
+            - StripPrefix=2
+
+        - id: promotion-service
+          uri: lb://promotion-service
+          predicates:
+              - Path=${app.api-prefix}/promotion-service/**
+          filters:
+              - StripPrefix=2
+
+        - id: profile-service
+          uri: lb://profile-service
+          predicates:
+            - Path=${app.api-prefix}/profile-service/**
+          filters:
+            - StripPrefix=2
+
+        - id: search-service
+          uri: lb://search-service
+          predicates:
+            - Path=${app.api-prefix}/search-service/**
+          filters:
+            - StripPrefix=2
+
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=${app.api-prefix}/notification-service/**
+          filters:
+            - StripPrefix=2
+
+springdoc:
+  swagger-ui:
+    urls:
+      - name: User
+        url: ${app.api-prefix}/user-service/v3/api-docs
+      - name: Product
+        url: ${app.api-prefix}/product-service/v3/api-docs
+      - name: Media
+        url: ${app.api-prefix}/media-service/v3/api-docs
+      - name: Profile
+        url: ${app.api-prefix}/profile-service/v3/api-docs
+      - name: Search
+        url: ${app.api-prefix}/search-service/v3/api-docs
+      - name: Notification
+        url: ${app.api-prefix}/notification-service/v3/api-docs
+      - name: Promotion
+        url: ${app.api-prefix}/promotion-service/v3/api-docs
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
