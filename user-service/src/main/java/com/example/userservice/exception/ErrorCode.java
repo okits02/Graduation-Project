@@ -11,7 +11,11 @@ public enum ErrorCode {
     ROLE_NOT_EXISTS(2003, "Role Not Exist", HttpStatus.BAD_REQUEST),
     PASSWORD_NOT_MATCH(2005, "Password Not Match", HttpStatus.BAD_REQUEST),
     UNAUTHENTICATED(40100, "Unauthenticated!", HttpStatus.UNAUTHORIZED),
-    UNAUTHORIZED(40300, "Unauthorized!", HttpStatus.FORBIDDEN),;
+    UNAUTHORIZED(40300, "Unauthorized!", HttpStatus.FORBIDDEN),
+    OTP_NOT_EXISTS(2007, "OTP Not Exist", HttpStatus.BAD_REQUEST),
+    EMAIL_EXISTS(2008, " Email Exist" , HttpStatus.BAD_REQUEST),
+    OTP_INVALID(2009, "OTP is no valid!", HttpStatus.BAD_REQUEST),
+    OTP_EXPIRED(2010, "OTP has expried!", HttpStatus.BAD_REQUEST);
 
     ErrorCode(int code, String message, HttpStatusCode httpStatusCode) {
         this.code = code;

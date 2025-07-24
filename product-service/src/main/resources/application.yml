@@ -1,0 +1,48 @@
+server:
+  port: 8062
+  servlet:
+    context-path: /product-service
+spring:
+  application:
+    name: product-service
+  data:
+    mongodb:
+      username: root
+      password: root
+      host: localhost
+      port: 27017
+      authentication-database: admin
+      auto-index-creation: true
+  kafka:
+    bootstrap-servers: localhost:9094
+    producer:
+      acks: all
+      retries: 3
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        enable.idempotence: true
+        max.in.fight.request.per.connection: 5
+        retry.backoff.ms: 1000
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+open:
+  api:
+    version: v1.0.0
+    serverUrl: http://localhost:8062
+    serverName: Product Service
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90

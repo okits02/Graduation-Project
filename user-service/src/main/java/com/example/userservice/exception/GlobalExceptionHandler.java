@@ -14,8 +14,6 @@ import java.util.Objects;
 @ControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
-
-
     @ExceptionHandler(value = RuntimeException.class)
      ResponseEntity<ApiResponse> handlingRuntimeException(RuntimeException e) {
         log.error("Exception occurred", e);

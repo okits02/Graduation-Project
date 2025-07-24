@@ -1,0 +1,52 @@
+server:
+  port: 8061
+  servlet:
+    context-path: /profile-service
+
+spring:
+  application:
+    name: profile-service
+  neo4j:
+    uri: bolt://localhost:7687
+    authentication:
+      username: neo4j
+      password: admin123
+    connection:
+      pool:
+        max-connection-lifetime: 1h
+        max-connection-pool-size: 50
+        min-connection-pool-size: 10
+  kafka:
+    bootstrap-servers: localhost:9094
+    consumer:
+      group-id: profile-group
+      auto-offer-reset: latest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      properties:
+        string.json.trusted.packages: "*"
+        max.poll.interval.ms: 300000
+        session.timeout.ms: 10000
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+open:
+  api:
+    version: v1.0.0
+    serverUrl: http://localhost:8061
+    serverName: Profile Service
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
