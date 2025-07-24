@@ -4,6 +4,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.Set;
 
 @Data
@@ -19,7 +20,10 @@ public class ApplyPromotionEventDTO {
     String descriptions;
     BigDecimal discountPercent;
     BigDecimal fixedAmount;
+    String applyTo;
     Boolean active;
     Set<String> productIdList;
     Set<String> categoryNameList;
+    Date createAt;
+    Date updateAt;
 }

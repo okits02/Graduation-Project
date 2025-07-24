@@ -9,9 +9,25 @@ import org.springframework.kafka.config.TopicBuilder;
 public class KafkaConfig {
     @Bean
     public NewTopic promotionTopic(){
-        return TopicBuilder.name("promotion-event")
+        return TopicBuilder.name("promotion-create-event")
                 .replicas(3)
                 .partitions(12)
+                .build();
+    }
+
+    @Bean
+    public NewTopic promotionUpdateTopic() {
+        return TopicBuilder.name("promotion-update-event")
+                .replicas(3)
+                .partitions(10)
+                .build();
+    }
+
+    @Bean
+    public NewTopic promotionDeleteTopic(){
+        return TopicBuilder.name("promotion-delete-event")
+                .replicas(3)
+                .partitions(5)
                 .build();
     }
 

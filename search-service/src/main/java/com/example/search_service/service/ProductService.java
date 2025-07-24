@@ -7,6 +7,7 @@ import com.example.search_service.Repository.ProductsRepository;
 import com.example.search_service.exceptions.AppException;
 import com.example.search_service.exceptions.ErrorCode;
 import com.example.search_service.mapper.ProductsMapper;
+import com.example.search_service.mapper.PromotionMapper;
 import com.example.search_service.model.Products;
 import com.example.search_service.model.Promotion;
 import com.example.search_service.viewmodel.dto.ApplyPromotionEventDTO;
@@ -36,6 +37,7 @@ public class ProductService {
     private final ProductsMapper productsMapper;
     private final ElasticsearchOperations elasticsearchOperations;
     private final ElasticsearchClient elasticsearchClient;
+    private final PromotionMapper promotionMapper;
 
 
     public void createProduct(ProductRequest request) {
@@ -85,6 +87,24 @@ public class ProductService {
                         )
                 )
                 .build();
+        SearchHits<Products> searchHits = elasticsearchOperations.search(nativeQuery, Products.class);
+        Set<Promotion> newPromotion = new HashSet<>();
+        if(!searchHits.isEmpty()) {
+            for(SearchHit<Products> hit : searchHits) {
+                Products products1 =  hit.getContent();
+                for(Promotion pro : products1.getPromotions()) {
+                    if(pro.getApplyTo() != null)
+                    {
+                        if(pro.getApplyTo().equals("Category") && pro.getActive().equals(Boolean.TRUE)) {
+                            newPromotion.add(pro);
+                        }
+                    }
+                }
+                break;
+            }
+        }
+        products.setPromotions(newPromotion);
+        products.calculatorSellPrice();
         productsRepository.save(products);
     }
 
@@ -104,9 +124,12 @@ public class ProductService {
                 .id(request.getId())
                 .name(request.getName())
                 .descriptions(request.getDescriptions())
+                .applyTo(request.getApplyTo())
                 .discountPercent(request.getDiscountPercent())
                 .fixedAmount(request.getFixedAmount())
                 .active(request.getActive())
+                .createAt(request.getCreateAt())
+                .updateAt(request.getUpdateAt())
                 .build();
         if(request.getProductIdList() != null) {
             createPromotionByProductId(promotion, request.getProductIdList());
@@ -115,6 +138,46 @@ public class ProductService {
             createPromotionByCategoryId(promotion, request.getCategoryNameList());
         }
         log.info("create promotion successfully");
+    }
+
+    public void updatePromotion(ApplyPromotionEventDTO request) {
+        List<BulkOperation> operations = new ArrayList<>();
+        NativeQuery nativeQuery = NativeQuery.builder()
+                .withQuery(q -> q
+                        .bool(b -> b
+                                .must(m -> m
+                                        .nested(nes -> nes
+                                                .path("promotions")
+                                                .query(query -> query.term(t -> t
+                                                        .field("promotions.id")
+                                                        .value(request.getId())
+                                                        )
+                                                )
+                                        )
+                                )
+                        )
+                )
+                .build();
+        SearchHits<Products> searchHits = elasticsearchOperations.search(nativeQuery, Products.class);
+        for(SearchHit<Products> hit : searchHits) {
+            Products product = hit.getContent();
+            if(product.getPromotions() != null) {
+                for (Promotion pro : product.getPromotions()) {
+                    if(pro.getId().equals(request.getId())) {
+                        promotionMapper.updatePromotion(pro, request);
+                    }
+                }
+                product.calculatorSellPrice();
+                BulkOperation bulkOperation = BulkOperation.of(b -> b
+                        .update(u -> u
+                                .index("product")
+                                .id(product.getId())
+                                .action(a -> a.doc(product)
+                                )
+                        )
+                );
+            }
+        }
     }
 
     public void createPromotionByProductId(Promotion promotion, Set<String> listProductId) throws IOException {

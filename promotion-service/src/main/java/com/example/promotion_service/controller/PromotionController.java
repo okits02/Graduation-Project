@@ -18,6 +18,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.util.Date;
+
 import static com.example.promotion_service.enums.UsageType.LIMITED;
 
 @RestController
@@ -46,8 +49,9 @@ public class PromotionController {
                 .fixedAmount(promotion.getFixedAmount())
                 .productIdList(promotion.getPromotionApplyTo().getProductId())
                 .categoryNameList(promotion.getPromotionApplyTo().getCategoryName())
+                .createAt(new Date())
                 .build();
-        kafkaTemplate.send("promotion-event", promotionEvent).whenComplete(
+        kafkaTemplate.send("promotion-create-event", promotionEvent).whenComplete(
                 (result, ex) -> {
             if (ex != null)
             {
@@ -83,8 +87,10 @@ public class PromotionController {
                 .fixedAmount(promotionResponse.getFixedAmount())
                 .productIdList(promotionResponse.getPromotionApplyTo().getProductId())
                 .categoryNameList(promotionResponse.getPromotionApplyTo().getCategoryName())
+                .createAt(promotionResponse.getCreateAt())
+                .updateAt(promotionResponse.getUpdateAt())
                 .build();
-        kafkaTemplate.send("promotion-event", promotionEvent).whenComplete(
+        kafkaTemplate.send("promotion-update-event", promotionEvent).whenComplete(
                 (result, ex) -> {
             if(ex != null)
             {

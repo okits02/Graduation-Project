@@ -50,6 +50,9 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Products createProduct(ProductRequest request) {
         Products newProducts = productMapper.toProduct(request);
+        if(productRepository.existsByName(request.getName())) {
+            throw new AppException(ErrorCode.PRODUCT_EXISTS);
+        }
         String generatedId = new ObjectId().toHexString();
         newProducts.setId(generatedId);
         return productRepository.save(newProducts);

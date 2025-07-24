@@ -6,9 +6,12 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 @Data
 @Builder
+@Setter
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Promotion {
@@ -26,4 +29,8 @@ public class Promotion {
     BigDecimal fixedAmount;
     @Field(type = FieldType.Boolean)
     Boolean active;
+    @Field(type = FieldType.Date)
+    Date createAt;
+    @Field(type = FieldType.Date)
+    Date updateAt;
 }

@@ -117,6 +117,7 @@ public class PromotionServiceImpl implements PromotionService {
         }
         promotion.setPromotionApplyTo(promotionApplyTo);
         promotionMapper.updatePromotion(promotion, request);
+        promotion.setUpdateAt(new Date());
         return  promotionMapper.toPromotionResponse(promotionRepository.save(promotion));
     }
 
