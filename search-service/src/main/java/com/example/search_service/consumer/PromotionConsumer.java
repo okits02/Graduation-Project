@@ -43,8 +43,8 @@ public class PromotionConsumer {
     }
 
     @KafkaListener(topics = "promotion-update-event",
-            containerFactory = "updateStatusPromotionKafkaListenerContainerFactory")
-    public void updatePromotionConsumer(String updatePromotionEvent) throws JsonProcessingException {
+            containerFactory = "updatePromotionKafkaListenerContainerFactory")
+    public void updatePromotionConsumer(String updatePromotionEvent) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         ApplyPromotionEventDTO applyPromotionEventDTO = null;
         try {

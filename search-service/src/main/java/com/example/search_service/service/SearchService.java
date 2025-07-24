@@ -3,6 +3,7 @@ package com.example.search_service.service;
 import co.elastic.clients.elasticsearch._types.aggregations.StringTermsAggregate;
 import co.elastic.clients.elasticsearch._types.aggregations.StringTermsBucket;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import co.elastic.clients.json.JsonData;
 import com.example.search_service.constant.SortType;
 import com.example.search_service.model.Products;
 import com.example.search_service.viewmodel.ProductGetListVM;
@@ -147,21 +148,17 @@ public class SearchService {
         }
     }
 
-    private void extractRange(Number min, Number max, String productField, BoolQuery.Builder b)
-    {
+    private void extractRange(Number min, Number max, String productField, BoolQuery.Builder b) {
         if (min != null || max != null) {
             b.must(q -> q
                     .range(r -> r
-                            .number(n -> n
-                                    .field(productField)
-                                    .gte(min != null ? min.doubleValue() : null)
-                                    .lte(max != null ? max.doubleValue() : null)
-                            )
+                            .field(productField)
+                            .gte(min != null ? JsonData.of(min) : null)
+                            .lte(max != null ? JsonData.of(max) : null)
                     )
             );
         }
     }
-
     private Map<String, Map<String, Long>> getAggregations(SearchHits<Products> searchHits)
     {
         List<org.springframework.data.elasticsearch.client.elc.Aggregation> aggregations = new ArrayList<>();

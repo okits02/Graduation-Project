@@ -84,7 +84,7 @@
 		<dependency>
 			<groupId>org.elasticsearch</groupId>
 			<artifactId>elasticsearch</artifactId>
-			<version>8.18.2</version>
+			<version>8.13.4</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.data</groupId>
@@ -93,7 +93,7 @@
 		<dependency>
 			<groupId>co.elastic.clients</groupId>
 			<artifactId>elasticsearch-java</artifactId>
-			<version>8.18.2</version>
+			<version>8.13.4</version>
 		</dependency>
 	</dependencies>
 	<dependencyManagement>

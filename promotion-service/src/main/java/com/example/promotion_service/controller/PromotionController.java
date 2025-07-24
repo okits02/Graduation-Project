@@ -88,7 +88,7 @@ public class PromotionController {
                 .productIdList(promotionResponse.getPromotionApplyTo().getProductId())
                 .categoryNameList(promotionResponse.getPromotionApplyTo().getCategoryName())
                 .createAt(promotionResponse.getCreateAt())
-                .updateAt(promotionResponse.getUpdateAt())
+                .updateAt(new Date())
                 .build();
         kafkaTemplate.send("promotion-update-event", promotionEvent).whenComplete(
                 (result, ex) -> {

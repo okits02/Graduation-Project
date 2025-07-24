@@ -2,7 +2,12 @@ package com.example.search_service.service;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.FieldValue;
+import co.elastic.clients.elasticsearch._types.InlineScript;
 import co.elastic.clients.elasticsearch.core.BulkResponse;
+import co.elastic.clients.elasticsearch.core.UpdateByQueryRequest;
+import co.elastic.clients.elasticsearch._types.Script;
+import co.elastic.clients.json.JsonData;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.example.search_service.Repository.ProductsRepository;
 import com.example.search_service.exceptions.AppException;
 import com.example.search_service.exceptions.ErrorCode;
@@ -17,8 +22,6 @@ import lombok.RequiredArgsConstructor;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
@@ -140,7 +143,8 @@ public class ProductService {
         log.info("create promotion successfully");
     }
 
-    public void updatePromotion(ApplyPromotionEventDTO request) {
+    /*
+    public void updatePromotion(ApplyPromotionEventDTO request) throws IOException {
         List<BulkOperation> operations = new ArrayList<>();
         NativeQuery nativeQuery = NativeQuery.builder()
                 .withQuery(q -> q
@@ -176,9 +180,98 @@ public class ProductService {
                                 )
                         )
                 );
+                operations.add(bulkOperation);
             }
         }
+        if (!operations.isEmpty()) {
+            BulkRequest bulkRequest = BulkRequest.of(b -> b.operations(operations));
+
+            BulkResponse bulkResponse = elasticsearchClient.bulk(bulkRequest);
+            if (bulkResponse.errors()) {
+                throw new IOException("Bulk update promotions failed: " + bulkResponse.toString());
+            } else {
+                System.out.println("Updated promotions for " + operations.size() + " products.");
+            }
+        } else {
+            System.out.println("No products found for given product IDs.");
+        }
     }
+     */
+
+    public void updatePromotion(ApplyPromotionEventDTO request) throws IOException {
+        Query nestedQuery = Query.of(q -> q
+                .nested(n -> n
+                        .path("promotions")
+                        .query(innerQ -> innerQ
+                                .term(t -> t
+                                        .field("promotions.id")
+                                        .value(request.getId())
+                                )
+                        )
+                )
+        );
+
+        String scriptSource = """
+        for(def promo : ctx._source.promotions){
+            if(promo.id == params.promotionId){
+                if(params.newName != null) promo.name = params.newName;
+                if(params.newDescriptions != null) promo.descriptions = params.newDescriptions;
+                if(params.newDiscountPercent != null) promo.discountPercent = params.newDiscountPercent;
+                if(params.newFixedAmount != null) promo.fixedAmount = params.newFixedAmount;
+                if(params.newActive != null) promo.active = params.newActive;
+                if(params.newUpdateAt != null) promo.updateAt = params.newUpdateAt;
+                break;
+            }
+        }
+
+        if(ctx._source.listPrice != null && ctx._source.promotions != null){
+            double discount = 0.0;
+            double fixedAmount = 0.0;
+            for (def promo : ctx._source.promotions){
+                if(promo.discountPercent != null && promo.discountPercent > 0){
+                    discount += promo.discountPercent/100.0;
+                }
+                if(promo.fixedAmount != null && promo.fixedAmount > 0){
+                    fixedAmount += promo.fixedAmount;
+                }
+            }
+            double sellPrice = ctx._source.listPrice;
+            if(discount > 0){
+                sellPrice = sellPrice * (1 - discount);
+            }
+            if(fixedAmount > 0){
+                sellPrice = sellPrice - fixedAmount;
+            }
+            ctx._source.sellPrice = sellPrice;
+        }
+        """;
+
+        Map<String, JsonData> params = new HashMap<>();
+        params.put("promotionId", JsonData.of(request.getId()));
+        params.put("newName", JsonData.of(request.getName()));
+        params.put("newDescriptions", JsonData.of(request.getDescriptions()));
+        params.put("newDiscountPercent", JsonData.of(request.getDiscountPercent()));
+        params.put("newFixedAmount", JsonData.of(request.getFixedAmount()));
+        params.put("newActive", JsonData.of(request.getActive()));
+        params.put("newUpdateAt", JsonData.of(request.getUpdateAt()));
+
+        Script script = Script.of(s -> s
+                .inline(in -> in
+                        .lang("painless")
+                        .source(scriptSource)
+                        .params(params)
+                )
+        );
+
+        UpdateByQueryRequest req = UpdateByQueryRequest.of(b -> b
+                .index("product")
+                .query(nestedQuery) // ✅ Đã thêm query
+                .script(script)
+        );
+
+        elasticsearchClient.updateByQuery(req);
+    }
+
 
     public void createPromotionByProductId(Promotion promotion, Set<String> listProductId) throws IOException {
         List<BulkOperation> operations = new ArrayList<>();
