@@ -132,6 +132,18 @@ public class PromotionController {
     ResponseEntity<ApiResponse<?>> deletePromotion(@PathVariable String promotionId){
         try {
             promotionService.deletePromotion(promotionId);
+            PromotionEvent promotionEvent = PromotionEvent.builder()
+                    .id(promotionId)
+                    .build();
+            kafkaTemplate.send("promotion-delete-event", promotionEvent).whenComplete(
+                    (result, ex) -> {
+                        if(ex != null)
+                        {
+                            System.err.println("Failed to send message" + ex.getMessage());
+                        }else {
+                            System.err.println("send message successfully" + result.getProducerRecord());
+                        }
+                    });
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResponse.builder()
                     .code(204)
                     .message("User deleted successfully")

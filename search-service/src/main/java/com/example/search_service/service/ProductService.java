@@ -92,18 +92,15 @@ public class ProductService {
                 .build();
         SearchHits<Products> searchHits = elasticsearchOperations.search(nativeQuery, Products.class);
         Set<Promotion> newPromotion = new HashSet<>();
+        SearchHit<Products> hit = searchHits.getSearchHit(0);
         if(!searchHits.isEmpty()) {
-            for(SearchHit<Products> hit : searchHits) {
-                Products products1 =  hit.getContent();
-                for(Promotion pro : products1.getPromotions()) {
-                    if(pro.getApplyTo() != null)
-                    {
-                        if(pro.getApplyTo().equals("Category") && pro.getActive().equals(Boolean.TRUE)) {
-                            newPromotion.add(pro);
-                        }
+            Products products1 =  hit.getContent();
+            for(Promotion pro : products1.getPromotions()) {
+                if(pro.getApplyTo() != null) {
+                    if (pro.getApplyTo().equals("Category") && pro.getActive().equals(Boolean.TRUE)) {
+                        newPromotion.add(pro);
                     }
                 }
-                break;
             }
         }
         products.setPromotions(newPromotion);
@@ -247,13 +244,13 @@ public class ProductService {
         """;
 
         Map<String, JsonData> params = new HashMap<>();
-        params.put("promotionId", JsonData.of(request.getId()));
-        params.put("newName", JsonData.of(request.getName()));
-        params.put("newDescriptions", JsonData.of(request.getDescriptions()));
-        params.put("newDiscountPercent", JsonData.of(request.getDiscountPercent()));
-        params.put("newFixedAmount", JsonData.of(request.getFixedAmount()));
-        params.put("newActive", JsonData.of(request.getActive()));
-        params.put("newUpdateAt", JsonData.of(request.getUpdateAt()));
+        if(request.getId() != null) params.put("promotionId", JsonData.of(request.getId()));
+        if(request.getName() != null) params.put("newName", JsonData.of(request.getName()));
+        if(request.getDescriptions() != null) params.put("newDescriptions", JsonData.of(request.getDescriptions()));
+        if(request.getDiscountPercent() != null) params.put("newDiscountPercent", JsonData.of(request.getDiscountPercent()));
+        if(request.getFixedAmount() != null) params.put("newFixedAmount", JsonData.of(request.getFixedAmount()));
+        if(request.getActive() != null) params.put("newActive", JsonData.of(request.getActive()));
+        if(request.getUpdateAt() != null) params.put("newUpdateAt", JsonData.of(request.getUpdateAt()));
 
         Script script = Script.of(s -> s
                 .inline(in -> in
@@ -409,5 +406,66 @@ public class ProductService {
                     .build();
             elasticsearchClient.bulk(bulkRequest);
         }
+    }
+
+    public void deletePromotion(ApplyPromotionEventDTO request) throws IOException {
+        String promotionId = request.getId();
+        if(promotionId == null) {
+            throw new AppException(ErrorCode.ID_OF_PROMOTION_NOT_VALID);
+        }
+        Query query = Query.of(q -> q
+                .nested(n -> n
+                        .path("promotions")
+                        .query(q1 -> q1
+                                .term(t -> t
+                                        .field("promotions.id")
+                                        .value(promotionId)
+                                )
+                        )
+                )
+        );
+
+        String scripSource = """
+                for(def promo : ctx_source.promotions){
+                    if(ctx_source.promotions != null){
+                    ctx_source.promotions.removeIf(promo -> promo.id == params.target_id);
+                    }
+                    break;
+                }
+                
+                if(ctx_source.listPrice != null && ctx_source.promotions != null){
+                    double discount = 0.0;
+                    double fixedAmount = 0.0;
+                    for(def promo : ctx_source.promotions){
+                        if(promo.discountPercent != null && promo.discountPercent > 0) discount += promo.discountPercent;
+                        if(promo.fixedAmount != null && promo.fixedAmount > 0) fixedAmount += promo.fixedAmount;
+                    }
+                    double listPrice = ctx_source.listPrice;
+                    if(discount > 0){
+                        listPrice = listPrice * (1 - discount);
+                    }
+                    if(fixedAmount > 0){
+                        listPrice = listPrice - fixedAmount;
+                    }
+                    ctx_source.sellPrice = listPrice;
+                }
+                """;
+
+        Map<String, JsonData> params = new HashMap<>();
+        if(request.getId() != null) params.put("target_id", JsonData.of(promotionId));
+        Script script = Script.of(s -> s
+                .inline(in -> in
+                        .lang("painless")
+                        .source(scripSource)
+                        .params(params)
+                )
+        );
+        UpdateByQueryRequest req = UpdateByQueryRequest.of(b -> b
+                .index("product")
+                .query(query) // ✅ Đã thêm query
+                .script(script)
+        );
+
+        elasticsearchClient.updateByQuery(req);
     }
 }
