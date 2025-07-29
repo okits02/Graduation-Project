@@ -2,7 +2,6 @@ package com.example.search_service.service;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.FieldValue;
-import co.elastic.clients.elasticsearch._types.InlineScript;
 import co.elastic.clients.elasticsearch.core.BulkResponse;
 import co.elastic.clients.elasticsearch.core.UpdateByQueryRequest;
 import co.elastic.clients.elasticsearch._types.Script;
@@ -44,9 +43,9 @@ public class ProductService {
 
 
     public void createProduct(ProductRequest request) {
-        if(productsRepository.existsById(request.getId())) {
+        /*if(productsRepository.existsById(request.getId())) {
             throw new AppException(ErrorCode.PRODUCT_EXISTS);
-        }
+        }*/
         Products products = productsMapper.toProducts(request);
         NativeQuery nativeQuery = NativeQuery.builder()
                 .withQuery(query -> query
@@ -92,15 +91,18 @@ public class ProductService {
                 .build();
         SearchHits<Products> searchHits = elasticsearchOperations.search(nativeQuery, Products.class);
         Set<Promotion> newPromotion = new HashSet<>();
-        SearchHit<Products> hit = searchHits.getSearchHit(0);
         if(!searchHits.isEmpty()) {
-            Products products1 =  hit.getContent();
-            for(Promotion pro : products1.getPromotions()) {
-                if(pro.getApplyTo() != null) {
-                    if (pro.getApplyTo().equals("Category") && pro.getActive().equals(Boolean.TRUE)) {
-                        newPromotion.add(pro);
+            for(SearchHit<Products> hit : searchHits) {
+                Products products1 =  hit.getContent();
+                for(Promotion pro : products1.getPromotions()) {
+                    if(pro.getApplyTo() != null)
+                    {
+                        if(pro.getApplyTo().equals("Category") && pro.getActive().equals(Boolean.TRUE)) {
+                            newPromotion.add(pro);
+                        }
                     }
                 }
+                break;
             }
         }
         products.setPromotions(newPromotion);
@@ -252,13 +254,11 @@ public class ProductService {
         if(request.getActive() != null) params.put("newActive", JsonData.of(request.getActive()));
         if(request.getUpdateAt() != null) params.put("newUpdateAt", JsonData.of(request.getUpdateAt()));
 
-        Script script = Script.of(s -> s
-                .inline(in -> in
-                        .lang("painless")
-                        .source(scriptSource)
-                        .params(params)
-                )
-        );
+        Script script = new Script.Builder()
+                .source(scriptSource)
+                .lang("painless")
+                .params(params)
+                .build();
 
         UpdateByQueryRequest req = UpdateByQueryRequest.of(b -> b
                 .index("product")
@@ -426,40 +426,50 @@ public class ProductService {
         );
 
         String scripSource = """
-                for(def promo : ctx_source.promotions){
-                    if(ctx_source.promotions != null){
-                    ctx_source.promotions.removeIf(promo -> promo.id == params.target_id);
-                    }
+                for (def promo : ctx._source.promotions) {
+                  if (promo.id == params.promotionId) {
+                    if (params.newName != null) promo.name = params.newName;
+                    if (params.newDescriptions != null) promo.descriptions = params.newDescriptions;
+                    if (params.newDiscountPercent != null) promo.discountPercent = params.newDiscountPercent;
+                    if (params.newFixedAmount != null) promo.fixedAmount = params.newFixedAmount;
+                    if (params.newActive != null) promo.active = params.newActive;
+                    if (params.newUpdateAt != null) promo.updateAt = params.newUpdateAt;
                     break;
+                  }
                 }
                 
-                if(ctx_source.listPrice != null && ctx_source.promotions != null){
-                    double discount = 0.0;
-                    double fixedAmount = 0.0;
-                    for(def promo : ctx_source.promotions){
-                        if(promo.discountPercent != null && promo.discountPercent > 0) discount += promo.discountPercent;
-                        if(promo.fixedAmount != null && promo.fixedAmount > 0) fixedAmount += promo.fixedAmount;
+                if (ctx._source.listPrice != null && ctx._source.promotions != null) {
+                  double discount = 0.0;
+                  double fixedAmount = 0.0;
+                  for (def promo : ctx._source.promotions) {
+                    if (promo.active == true) {
+                      if (promo.discountPercent != null && promo.discountPercent > 0) {
+                        discount += promo.discountPercent / 100.0;
+                      }
+                      if (promo.fixedAmount != null && promo.fixedAmount > 0) {
+                        fixedAmount += promo.fixedAmount;
+                      }
                     }
-                    double listPrice = ctx_source.listPrice;
-                    if(discount > 0){
-                        listPrice = listPrice * (1 - discount);
-                    }
-                    if(fixedAmount > 0){
-                        listPrice = listPrice - fixedAmount;
-                    }
-                    ctx_source.sellPrice = listPrice;
+                  }
+                  double sellPrice = ctx._source.listPrice;
+                  if (discount > 0) {
+                    sellPrice = sellPrice * (1 - discount);
+                  }
+                  if (fixedAmount > 0) {
+                    sellPrice = sellPrice - fixedAmount;
+                  }
+                  ctx._source.sellPrice = sellPrice;
                 }
                 """;
 
         Map<String, JsonData> params = new HashMap<>();
         if(request.getId() != null) params.put("target_id", JsonData.of(promotionId));
-        Script script = Script.of(s -> s
-                .inline(in -> in
-                        .lang("painless")
-                        .source(scripSource)
-                        .params(params)
-                )
-        );
+        Script script = new Script.Builder()
+                .source(scripSource)
+                .lang("painless")
+                .params(params)
+                .build();
+
         UpdateByQueryRequest req = UpdateByQueryRequest.of(b -> b
                 .index("product")
                 .query(query) // ✅ Đã thêm query

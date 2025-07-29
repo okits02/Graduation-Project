@@ -13,11 +13,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ProductConsumer {
     private final ProductService productService;
 
@@ -34,6 +36,7 @@ public class ProductConsumer {
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Cannot deserialize ProductEvent: " + e.getMessage(), e);
         }
+        log.info("Consumer received message: {}", productEvent);
         ProductRequest productRequest = ProductRequest.builder()
                 .id(productEventDTO.getId())
                 .name(productEventDTO.getName())
@@ -48,6 +51,8 @@ public class ProductConsumer {
                 .createAt(productEventDTO.getCreateAt())
                 .updateAt(productEventDTO.getUpdateAt())
                 .build();
+        log.info("Kafka message received: {}", productRequest);
+        log.info("Received ID: {}", productRequest.getId());
         productService.createProduct(productRequest);
     }
 

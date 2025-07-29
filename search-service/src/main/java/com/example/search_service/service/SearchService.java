@@ -3,6 +3,7 @@ package com.example.search_service.service;
 import co.elastic.clients.elasticsearch._types.aggregations.StringTermsAggregate;
 import co.elastic.clients.elasticsearch._types.aggregations.StringTermsBucket;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
 import co.elastic.clients.json.JsonData;
 import com.example.search_service.constant.SortType;
 import com.example.search_service.model.Products;
@@ -31,6 +32,7 @@ import java.util.Map;
 @Slf4j
 public class SearchService {
     private final ElasticsearchOperations elasticsearchOperations;
+    private RangeQuery.Builder ;
 
     public ProductGetListVM searchProductAdvance(String keyword,
                                                  Integer page,
@@ -149,14 +151,13 @@ public class SearchService {
     }
 
     private void extractRange(Number min, Number max, String productField, BoolQuery.Builder b) {
-        if (min != null || max != null) {
-            b.must(q -> q
-                    .range(r -> r
-                            .field(productField)
-                            .gte(min != null ? JsonData.of(min) : null)
-                            .lte(max != null ? JsonData.of(max) : null)
-                    )
-            );
+        if(min != null || max != null)
+        {
+            b.must(m -> m.range(r -> r
+                    .field(productField)
+                    .gte(min != null ? JsonData.fromJson(min.toString()) : null)
+                    .lte(max != null ? JsonData.fromJson(max.toString()) : null)
+            ));
         }
     }
     private Map<String, Map<String, Long>> getAggregations(SearchHits<Products> searchHits)

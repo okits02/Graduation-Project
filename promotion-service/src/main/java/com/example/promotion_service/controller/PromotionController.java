@@ -145,7 +145,7 @@ public class PromotionController {
                         }
                     });
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResponse.builder()
-                    .code(204)
+                    .code(200)
                     .message("User deleted successfully")
                     .build());
         } catch (AppException e) {
