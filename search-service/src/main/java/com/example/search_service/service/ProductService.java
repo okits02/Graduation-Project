@@ -89,24 +89,25 @@ public class ProductService {
                         )
                 )
                 .build();
-        SearchHits<Products> searchHits = elasticsearchOperations.search(nativeQuery, Products.class);
-        Set<Promotion> newPromotion = new HashSet<>();
-        if(!searchHits.isEmpty()) {
-            for(SearchHit<Products> hit : searchHits) {
-                Products products1 =  hit.getContent();
-                for(Promotion pro : products1.getPromotions()) {
-                    if(pro.getApplyTo() != null)
-                    {
-                        if(pro.getApplyTo().equals("Category") && pro.getActive().equals(Boolean.TRUE)) {
-                            newPromotion.add(pro);
+        if(elasticsearchOperations.indexOps(Products.class).exists()) {
+            SearchHits<Products> searchHits = elasticsearchOperations.search(nativeQuery, Products.class);
+            Set<Promotion> newPromotion = new HashSet<>();
+            if (!searchHits.isEmpty()) {
+                for (SearchHit<Products> hit : searchHits) {
+                    Products products1 = hit.getContent();
+                    for (Promotion pro : products1.getPromotions()) {
+                        if (pro.getApplyTo() != null) {
+                            if (pro.getApplyTo().equals("Category") && pro.getActive().equals(Boolean.TRUE)) {
+                                newPromotion.add(pro);
+                            }
                         }
                     }
+                    break;
                 }
-                break;
             }
+            products.setPromotions(newPromotion);
+            products.calculatorSellPrice();
         }
-        products.setPromotions(newPromotion);
-        products.calculatorSellPrice();
         productsRepository.save(products);
     }
 
@@ -426,16 +427,8 @@ public class ProductService {
         );
 
         String scripSource = """
-                for (def promo : ctx._source.promotions) {
-                  if (promo.id == params.promotionId) {
-                    if (params.newName != null) promo.name = params.newName;
-                    if (params.newDescriptions != null) promo.descriptions = params.newDescriptions;
-                    if (params.newDiscountPercent != null) promo.discountPercent = params.newDiscountPercent;
-                    if (params.newFixedAmount != null) promo.fixedAmount = params.newFixedAmount;
-                    if (params.newActive != null) promo.active = params.newActive;
-                    if (params.newUpdateAt != null) promo.updateAt = params.newUpdateAt;
-                    break;
-                  }
+                if(ctx._source.promotions != null){
+                    ctx._source.promotions.removeIf(p -> p.id == params.target_id)
                 }
                 
                 if (ctx._source.listPrice != null && ctx._source.promotions != null) {
