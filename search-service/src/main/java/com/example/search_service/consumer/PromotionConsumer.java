@@ -43,8 +43,8 @@ public class PromotionConsumer {
     }
 
     @KafkaListener(topics = "promotion-update-event",
-            containerFactory = "updateStatusPromotionKafkaListenerContainerFactory")
-    public void updatePromotionConsumer(String updatePromotionEvent) throws JsonProcessingException {
+            containerFactory = "updatePromotionKafkaListenerContainerFactory")
+    public void updatePromotionConsumer(String updatePromotionEvent) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         ApplyPromotionEventDTO applyPromotionEventDTO = null;
         try {
@@ -54,4 +54,19 @@ public class PromotionConsumer {
         }
         productService.updatePromotion(applyPromotionEventDTO);
     }
-}
+
+    @KafkaListener(topics = "promotion-delete-event",
+            containerFactory = "deletePromotionKafkaListenerContainerFactory")
+    public void deletePromotionFactory(String deletePromotionEvent) throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        ApplyPromotionEventDTO applyPromotionEventDTO = null;
+        try{
+            applyPromotionEventDTO = objectMapper.readValue(deletePromotionEvent, ApplyPromotionEventDTO.class);
+        }catch (JsonMappingException e){
+            throw new RuntimeException(e);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        productService.deletePromotion(applyPromotionEventDTO);
+    }
+    }
