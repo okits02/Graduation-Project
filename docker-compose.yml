@@ -50,7 +50,7 @@ services:
     container_name: mongodb
     restart: unless-stopped
     ports:
-      - 27017:27017
+      - "27017:27017"
     volumes:
       - mongo:/data
     environment:
@@ -67,7 +67,7 @@ services:
     container_name: mongo_express
     restart: always
     ports:
-      - 8081:8081
+      - "8081:8081"
     environment:
       - ME_CONFIG_MONGODB_ADMINUSERNAME=root
       - ME_CONFIG_MONGODB_ADMINPASSWORD=root
@@ -86,7 +86,7 @@ services:
     networks:
       - es-net
     ports:
-      - 9200:9200
+      - "9200:9200"
     mem_limit: 2g
     cpus: 2
   kibana:
@@ -99,7 +99,32 @@ services:
     depends_on:
       - elasticsearch
     ports:
-      - 5601:5601
+      - "5601:5601"
+    mem_limit: 1g
+    cpus: 1
+
+  postgres:
+    image: postgres:17
+    container_name: graduation-project-postgres-1
+    restart: always
+    shm_size: 128mb
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: Graduation_Project
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    mem_limit: 1g
+    cpus: 1
+
+  adminer:
+    image: adminer
+    ports:
+      - "8080:8080"
     mem_limit: 1g
     cpus: 1
 
@@ -109,6 +134,7 @@ networks:
   mongo-net:
     driver: bridge
 volumes:
+  pgdata:
   neo4j_data:
   neo4j_logs:
   neo4j_import:
