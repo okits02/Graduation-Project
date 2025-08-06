@@ -17,6 +17,7 @@ public class Rating {
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
     String content;
+    Double ratingScore;
     String productId;
     String productName;
     String lastName;
