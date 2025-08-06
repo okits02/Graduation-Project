@@ -7,6 +7,7 @@ spring:
     name: product-service
   data:
     mongodb:
+      database: product_db
       username: root
       password: root
       host: localhost
