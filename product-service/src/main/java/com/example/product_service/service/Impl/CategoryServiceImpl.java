@@ -15,14 +15,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -49,19 +47,33 @@ public class CategoryServiceImpl implements CategoryService {
         category.setDescription(request.getDescription());
         category.setParentId(request.getParentId());
         Category newCategory = categoryRepository.save(category);
-        Optional<Category> parentCate = categoryRepository.findById(newCategory.getParentId());
-        Set<String> childCate = parentCate.get().getChildrenId();
-        childCate.add(newCategory.getId());
-        parentCate.get().setChildrenId(childCate);
-        categoryRepository.save(parentCate.get());
+        if (StringUtils.hasText(newCategory.getParentId())) {
+            Optional<Category> parentCateOptional = categoryRepository.findById(newCategory.getParentId());
+            if (parentCateOptional.isPresent()) {
+                Category parentCate = parentCateOptional.get();
+                Set<String> childCate = parentCate.getChildrenId();
+                if (childCate == null) {
+                    childCate = new HashSet<>();
+                }
+                childCate.add(newCategory.getId());
+                parentCate.setChildrenId(childCate);
+                categoryRepository.save(parentCate);
+            } else {
+                // Optional: Handle case where parentId is invalid (e.g., throw custom exception)
+                throw new IllegalArgumentException("Parent category with ID " + newCategory.getParentId() + " not found");
+            }
+        }
+
         log.info("category: {}", newCategory);
         return newCategory;
     }
 
     @Override
     public CategoryResponse updateCate(CategoryRequest request) {
-        Category category = categoryRepository.findById(request.getId()).orElseThrow(() ->
-                new AppException(ErrorCode.CATE_NOT_EXISTS));
+        Category category = categoryRepository.findByName(request.getName());
+        if(category != null){
+            throw new AppException(ErrorCode.CATE_EXISTS);
+        }
         categoryMapper.updateCategory(category, request);
         category.setParentId(request.getParentId());
         return categoryMapper.toCategoryResponse(categoryRepository.save(category));
