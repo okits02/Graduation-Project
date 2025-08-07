@@ -25,7 +25,7 @@ public class ProductResponse {
     Float discount;
     String thumbNail;
     List<String> imageList;
-    List<String> listCategory;
+    List<CategoryResponse> listCategory;
     Map<String, String> specifications;
     LocalDate createAt;
     LocalDate updateAt;

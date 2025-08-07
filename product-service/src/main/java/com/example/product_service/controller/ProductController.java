@@ -4,6 +4,7 @@ import com.example.product_service.dto.PageResponse;
 import com.example.product_service.dto.request.ProductRequest;
 import com.example.product_service.dto.request.ProductUpdateRequest;
 import com.example.product_service.dto.response.ApiResponse;
+import com.example.product_service.dto.response.CategoryResponse;
 import com.example.product_service.dto.response.ProductResponse;
 import com.example.product_service.exceptions.AppException;
 import com.example.product_service.exceptions.ErrorCode;
@@ -28,6 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequiredArgsConstructor
@@ -144,14 +146,8 @@ public class ProductController {
 
     private CreateProductEvent createEventProduct(Products product)
     {
-        String currentCateId = product.getCategoryId();
-        List<String> categoryId = categoryService.getCategoryHierarchy(currentCateId);
-        List<String> categories = new ArrayList<>();
-        for(String cateId : categoryId){
-            Category category = categoryRepository.findById(cateId).orElseThrow(()
-                    -> new AppException(ErrorCode.CATE_NOT_EXISTS));
-            categories.add(category.getName());
-        }
+        Set<String> currentCateId = product.getCategoryId();
+        List<CategoryResponse> categoryList = categoryService.getCategoryHierarchy(currentCateId);
         CreateProductEvent createProductEvent = CreateProductEvent.builder()
                 .id(product.getId())
                 .name(product.getName())
@@ -163,7 +159,7 @@ public class ProductController {
                 .sold(product.getSold())
                 .discount(product.getDiscount())
                 .imageList(product.getImageList())
-                .categories(categories)
+                .categories(categoryList)
                 .specifications(product.getSpecifications())
                 .createAt(product.getCreateAt())
                 .updateAt(product.getUpdateAt())

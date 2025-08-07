@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Document(collection = "products")
 @Data
@@ -40,7 +41,7 @@ public class Products {
     String thumbNail;
     @Field("images")
     List<String> imageList;
-    String categoryId;
+    Set<String> categoryId;
     Map<String, String> specifications;
     @CreatedDate
     @Field("create_at")

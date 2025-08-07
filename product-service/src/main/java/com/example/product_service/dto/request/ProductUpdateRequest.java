@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Data
 @Builder
@@ -24,5 +25,5 @@ public class ProductUpdateRequest {
     String thumbNail;
     List<String> imageList;
     Map<String, String> specifications;
-    String categoryId;
+    Set<String> categoryId;
 }
