@@ -7,6 +7,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.util.Set;
+
 @Document(collection = "categories")
 @Data
 @Builder
@@ -20,8 +22,12 @@ public class Category {
     String name;
     @Field("description")
     String description;
+    @Field("special")
+    boolean special;
     @Field("image_url")
     String imageUrl;
     @Field("parent_category_id")
     String parentId;
+    @Field("children_category_id")
+    Set<String> childrenId;
 }

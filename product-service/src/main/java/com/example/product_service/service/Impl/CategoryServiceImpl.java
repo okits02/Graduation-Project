@@ -22,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -48,6 +49,11 @@ public class CategoryServiceImpl implements CategoryService {
         category.setDescription(request.getDescription());
         category.setParentId(request.getParentId());
         Category newCategory = categoryRepository.save(category);
+        Optional<Category> parentCate = categoryRepository.findById(newCategory.getParentId());
+        Set<String> childCate = parentCate.get().getChildrenId();
+        childCate.add(newCategory.getId());
+        parentCate.get().setChildrenId(childCate);
+        categoryRepository.save(parentCate.get());
         log.info("category: {}", newCategory);
         return newCategory;
     }
@@ -62,17 +68,26 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public List<String> getCategoryHierarchy(String categoryId) {
-        List<String> categoryHierarchy = new ArrayList<>();
-        String currentId = categoryId;
-        while (currentId!=null && !currentId.isEmpty())
+    public List<CategoryResponse> getCategoryHierarchy(Set<String> categoryId) {
+        List<CategoryResponse> categoryHierarchy = new ArrayList<>();
+        Set<String> categoryList = categoryId;
+        if (categoryList!=null && !categoryList.isEmpty())
         {
-            Optional<Category> categoryOptional = categoryRepository.findById(currentId);
-            if(categoryOptional.isPresent()) {
-                categoryHierarchy.add(categoryOptional.get().getId());
-                currentId = categoryOptional.get().getParentId();
-            }else {
-                break;
+            for(String id : categoryList) {
+                Optional<Category> categoryOptional = categoryRepository.findById(id);
+                categoryHierarchy.add(categoryMapper.toCategoryResponse(categoryOptional.get()));
+                if(categoryOptional.get().getParentId() != null){
+                    String parentId = categoryOptional.get().getParentId();
+                    while (parentId != null && !parentId.isEmpty()){
+                        Optional<Category> categoryParent = categoryRepository.findById(parentId);
+                        if(categoryParent.isPresent()){
+                            categoryHierarchy.add(categoryMapper.toCategoryResponse(categoryParent.get()));
+                            parentId = categoryParent.get().getParentId();
+                        }else {
+                            break;
+                        }
+                    }
+                }
             }
         }
         return categoryHierarchy;
