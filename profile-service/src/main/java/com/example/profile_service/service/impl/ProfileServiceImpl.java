@@ -2,10 +2,7 @@ package com.example.profile_service.service.impl;
 
 import com.example.profile_service.dto.request.ProfileRequest;
 import com.example.profile_service.dto.request.ProfileUpdateRequest;
-import com.example.profile_service.dto.response.ApiResponse;
-import com.example.profile_service.dto.response.GetUserIdResponse;
-import com.example.profile_service.dto.response.PageResponse;
-import com.example.profile_service.dto.response.ProfileResponse;
+import com.example.profile_service.dto.response.*;
 import com.example.profile_service.entity.UserAddress;
 import com.example.profile_service.entity.UserProfile;
 import com.example.profile_service.exception.AppException;
@@ -125,6 +122,20 @@ public class ProfileServiceImpl implements ProfileService {
         }
         userProfile.setAddress(null);
         profileRepository.save(userProfile);
+    }
+
+    @Override
+    public CustomerVM getProfileForRating() {
+        String userId = getUserId();
+        UserProfile userProfile = profileRepository.findByUserId(userId);
+        if(userProfile == null){
+            throw new AppException(ErrorCode.PROFILE_NOT_EXITS);
+        }
+        CustomerVM customerVM = CustomerVM.builder()
+                .firstName(userProfile.getFirstName())
+                .lastName(userProfile.getLastName())
+                .build();
+        return customerVM;
     }
 
     @Override
