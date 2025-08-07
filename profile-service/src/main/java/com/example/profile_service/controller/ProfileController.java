@@ -3,6 +3,7 @@ package com.example.profile_service.controller;
 import com.example.profile_service.dto.request.ProfileRequest;
 import com.example.profile_service.dto.request.ProfileUpdateRequest;
 import com.example.profile_service.dto.response.ApiResponse;
+import com.example.profile_service.dto.response.CustomerVM;
 import com.example.profile_service.dto.response.PageResponse;
 import com.example.profile_service.dto.response.ProfileResponse;
 import com.example.profile_service.service.ProfileService;
@@ -115,6 +116,14 @@ public class ProfileController {
     {
         return ResponseEntity.ok(ApiResponse.<PageResponse<ProfileResponse>>builder()
                         .result(profileService.getAllProfile(page, size))
+                .build());
+    }
+
+    @GetMapping("/rating/getProfile")
+    public ResponseEntity<ApiResponse<CustomerVM>> getProfileForRating(){
+        return ResponseEntity.ok(ApiResponse.<CustomerVM>builder()
+                        .result(profileService.getProfileForRating())
+                        .code(200)
                 .build());
     }
 }
