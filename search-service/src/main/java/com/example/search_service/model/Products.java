@@ -24,6 +24,8 @@ public class Products {
     @Field(type = FieldType.Text)
     String name;
     @Field(type = FieldType.Text)
+    String color;
+    @Field(type = FieldType.Text)
     String description;
     @Field(type = FieldType.Double)
     BigDecimal listPrice;

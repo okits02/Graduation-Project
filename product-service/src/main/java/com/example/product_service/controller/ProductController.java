@@ -131,7 +131,7 @@ public class ProductController {
     }
 
     @Operation(summary = "get product by id")
-    @GetMapping("/{product_id}")
+    @GetMapping("/{productId}")
     ApiResponse<ProductResponse> getById(@PathVariable String productId)
     {
         try{

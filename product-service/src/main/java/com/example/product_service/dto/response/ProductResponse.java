@@ -16,6 +16,7 @@ import java.util.Map;
 public class ProductResponse {
     String id;
     String name;
+    String color;
     String description;
     BigDecimal listPrice;
     BigDecimal sellPrice;

@@ -22,6 +22,7 @@ import java.util.Map;
 public class CreateProductEvent {
     String id;
     String name;
+    String color;
     String description;
     BigDecimal listPrice;
     Integer quantity;

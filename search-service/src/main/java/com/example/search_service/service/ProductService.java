@@ -16,6 +16,7 @@ import com.example.search_service.model.Products;
 import com.example.search_service.model.Promotion;
 import com.example.search_service.viewmodel.dto.ApplyPromotionEventDTO;
 import com.example.search_service.viewmodel.dto.StatusPromotionDTO;
+import com.example.search_service.viewmodel.dto.request.CategoryRequest;
 import com.example.search_service.viewmodel.dto.request.ProductRequest;
 import lombok.RequiredArgsConstructor;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
@@ -61,7 +62,10 @@ public class ProductService {
                                                                                 .terms(terms -> terms
                                                                                         .value(products.getCategories()
                                                                                                 .stream()
-                                                                                                .map(FieldValue::of)
+                                                                                                .map(
+                                                                                                        CategoryRequest
+                                                                                                                ->
+                                                                                                                FieldValue.of(CategoryRequest.getName()))
                                                                                                 .toList()
                                                                                         )
                                                                                 )

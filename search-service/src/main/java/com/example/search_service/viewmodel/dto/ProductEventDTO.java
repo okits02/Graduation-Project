@@ -1,5 +1,6 @@
 package com.example.search_service.viewmodel.dto;
 
+import com.example.search_service.viewmodel.dto.request.CategoryRequest;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -7,6 +8,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Data
 @Builder
@@ -18,6 +20,7 @@ import java.util.Map;
 public class ProductEventDTO {
     String id;
     String name;
+    String color;
     String description;
     BigDecimal listPrice;
     BigDecimal sellPrice;
@@ -26,7 +29,7 @@ public class ProductEventDTO {
     Integer sold;
     Float discount;
     List<String> imageList;
-    List<String> categories;
+    List<CategoryRequest> categories;
     Map<String, String> specifications;
     LocalDate createAt;
     LocalDate updateAt;

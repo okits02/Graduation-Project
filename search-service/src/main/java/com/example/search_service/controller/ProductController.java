@@ -23,8 +23,9 @@ public class ProductController {
             )
     {
         return ResponseEntity.ok(searchService
-                .searchProductAdvance(request.getKeyword(), page - 1, size, request.getCategory(),
-                        request.getAttributes(), request.getMinPrice(), request.getMaxPrice(), request.getSortType()));
+                .searchProductAdvance(request.getKeyword(), page - 1, size,
+                        request.getCategory(), request.getAttributes(), request.getMinPrice(), request.getMaxPrice(),
+                        request.getSortType()));
     }
 
     @GetMapping("/search_suggest")

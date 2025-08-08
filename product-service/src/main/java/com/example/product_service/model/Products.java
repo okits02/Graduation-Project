@@ -25,6 +25,8 @@ public class Products {
     String id;
     @Field("name_product")
     String name;
+    @Field("color")
+    String color;
     @Field("description")
     String description;
     @Field("list_price")

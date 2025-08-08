@@ -14,6 +14,7 @@ import java.util.Map;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SearchRequest {
     String keyword;
+    String color;
     List<String> category;
     List<Map<String, String>> attributes;
     Double minPrice;

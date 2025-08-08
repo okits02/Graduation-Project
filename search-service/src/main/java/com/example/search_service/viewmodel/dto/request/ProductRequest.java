@@ -16,13 +16,14 @@ import java.util.Map;
 public class ProductRequest {
     String id;
     String name;
+    String color;
     String description;
     BigDecimal listPrice;
     Integer quantity;
     double avgRating;
     Integer sold;
     List<String> imageList;
-    List<String> categories;
+    List<CategoryRequest> categories;
     Map<String, String> specifications;
     LocalDate createAt;
     LocalDate updateAt;

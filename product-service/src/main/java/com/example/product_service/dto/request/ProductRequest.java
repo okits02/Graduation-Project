@@ -17,6 +17,7 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductRequest {
     String name;
+    String color;
     String description;
     BigDecimal listPrice;
     Integer quantity;

@@ -20,6 +20,7 @@ import java.util.Map;
 public class ProductGetVM {
     String id;
     String name;
+    String color;
     String description;
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     BigDecimal listPrice;
