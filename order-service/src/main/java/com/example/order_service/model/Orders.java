@@ -12,6 +12,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serial;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "orders")
@@ -42,11 +43,10 @@ public class Orders extends AbstractMappedEntity{
     @Column(name = "order_fee", columnDefinition = "decimal")
     private Double orderFee;
 
-    @Column(name = "product_id")
-    private Integer productId;
+    @Column(name = "is_checkout")
+    private boolean isCheckout;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "cart_id")
-    private Cart cart;
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> items;
 
 }
