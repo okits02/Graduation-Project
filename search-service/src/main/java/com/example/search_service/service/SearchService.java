@@ -194,4 +194,5 @@
             List<Products> products = result.stream().map(SearchHit::getContent).toList();
             return new ProductNameGetListVm(products.stream().map(ProductNameGetVm::fromModel).toList());
         }
+
     }

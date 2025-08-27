@@ -1,7 +1,7 @@
 package com.okits02.cart_service.exceptions;
 
-import com.example.search_service.exceptions.AppException;
-import com.example.search_service.viewmodel.dto.ApiResponse;
+import com.okits02.cart_service.exceptions.AppException;
+import com.okits02.cart_service.dto.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;

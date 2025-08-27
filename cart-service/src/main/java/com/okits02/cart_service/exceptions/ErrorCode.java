@@ -7,9 +7,8 @@ import org.springframework.http.HttpStatusCode;
 @Getter
 public enum ErrorCode {
     UNAUTHENTICATED(40300, "Unauthenticated!", HttpStatus.UNAUTHORIZED),
-    PRODUCT_EXISTS(40100, "Product is exists in search!", HttpStatus.BAD_REQUEST),
-    PRODUCT_NOT_EXISTS(40200, "Product is not exists in search!", HttpStatus.BAD_REQUEST),
-    ID_OF_PROMOTION_NOT_VALID(40600, "Promotion id on message is Empty!", HttpStatus.BAD_REQUEST)
+    USER_DOES_NOT_HAVE_CART(40401, "User does not have a cart", HttpStatus.BAD_REQUEST),
+    CART_ITEM_NOT_EXISTS(40501, "Item does not exists in cart", HttpStatus.BAD_REQUEST);
     ;
     private final int code;
     private final String message;

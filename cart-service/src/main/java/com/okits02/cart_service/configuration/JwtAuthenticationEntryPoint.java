@@ -1,7 +1,7 @@
 package com.okits02.cart_service.configuration;
 
-import com.example.search_service.exceptions.ErrorCode;
-import com.example.search_service.viewmodel.dto.ApiResponse;
+import com.okits02.cart_service.exceptions.ErrorCode;
+import com.okits02.cart_service.dto.response.ApiResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

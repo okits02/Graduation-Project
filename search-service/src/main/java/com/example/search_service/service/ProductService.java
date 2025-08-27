@@ -14,6 +14,8 @@ import com.example.search_service.mapper.ProductsMapper;
 import com.example.search_service.mapper.PromotionMapper;
 import com.example.search_service.model.Products;
 import com.example.search_service.model.Promotion;
+import com.example.search_service.viewmodel.ProductDetailsVM;
+import com.example.search_service.viewmodel.ProductGetVM;
 import com.example.search_service.viewmodel.dto.ApplyPromotionEventDTO;
 import com.example.search_service.viewmodel.dto.StatusPromotionDTO;
 import com.example.search_service.viewmodel.dto.request.ProductRequest;
@@ -28,7 +30,6 @@ import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.lang.annotation.Native;
 import java.util.*;
 
 @Service
@@ -470,5 +471,14 @@ public class ProductService {
         );
 
         elasticsearchClient.updateByQuery(req);
+    }
+
+    public ProductDetailsVM getDetailsProduct(String productId){
+        Optional<Products> products = productsRepository.findById(productId);
+        if(products.isEmpty()){
+            throw new AppException(ErrorCode.PRODUCT_NOT_EXISTS);
+        }
+        ProductDetailsVM productDetailsVM = ProductDetailsVM.fromEntity(products.get());
+        return productDetailsVM;
     }
 }

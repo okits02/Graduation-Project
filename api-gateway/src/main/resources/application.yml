@@ -64,6 +64,13 @@ spring:
           filters:
             - StripPrefix=2
 
+        - id: cart-service
+          uri: lb://cart-service
+          predicates:
+              - Path=${app.api-prefix}/cart-service/**
+          filters:
+              - StripPrefix=2
+
 springdoc:
   swagger-ui:
     urls:
