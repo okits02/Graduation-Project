@@ -1,7 +1,11 @@
 package com.example.search_service.controller;
 
+import com.example.search_service.service.ProductService;
+import com.example.search_service.viewmodel.ProductDetailsVM;
 import com.example.search_service.viewmodel.ProductGetListVM;
+import com.example.search_service.viewmodel.ProductGetVM;
 import com.example.search_service.viewmodel.ProductNameGetListVm;
+import com.example.search_service.viewmodel.dto.ApiResponse;
 import com.example.search_service.viewmodel.dto.request.SearchRequest;
 import lombok.RequiredArgsConstructor;
 
@@ -14,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class ProductController {
     private final SearchService searchService;
+    private final ProductService productService;
 
     @PostMapping("/catalog-search")
     public ResponseEntity<ProductGetListVM> searchAdvance(
@@ -32,5 +37,13 @@ public class ProductController {
     public ResponseEntity<ProductNameGetListVm> productSearchAutoComplete(@RequestParam String keyword)
     {
         return ResponseEntity.ok(searchService.autoCompleteProductName(keyword));
+    }
+
+    @GetMapping("/internal/get-product/{productId}")
+    public ResponseEntity<ApiResponse<ProductDetailsVM>> getDetailsProduct(@PathVariable String productId){
+        return ResponseEntity.ok(ApiResponse.<ProductDetailsVM>builder()
+                .code(200)
+                .result(productService.getDetailsProduct(productId))
+                .build());
     }
 }
