@@ -88,16 +88,7 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public CartResponse update(CartUpdateRequest request) {
-        ServletRequestAttributes servletRequestAttributes =
-                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
-
-        var userResponse = userClient.getUserId(authHeader);
-        if (userResponse == null || userResponse.getCode() != 200) {
-            throw new RuntimeException("User does not exist");
-        }
-
-        String userId = userResponse.getResult().getUserId();
+        String userId = getUserId();
 
         Cart cart = cartRepository.findByUserId(userId);
         if(cart == null){
@@ -129,17 +120,7 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public CartResponse removeItem(CartDeleteItemRequest request) {
-        ServletRequestAttributes servletRequestAttributes =
-                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
-
-        var userResponse = userClient.getUserId(authHeader);
-        if (userResponse == null || userResponse.getCode() != 200) {
-            throw new RuntimeException("User does not exist");
-        }
-
-        String userId = userResponse.getResult().getUserId();
-
+        String userId = getUserId();
         Cart cart = cartRepository.findByUserId(userId);
         if(cart == null){
             throw new AppException(ErrorCode.USER_DOES_NOT_HAVE_CART);
@@ -166,17 +147,7 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public CartResponse getCart() {
-        ServletRequestAttributes servletRequestAttributes =
-                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
-
-        var userResponse = userClient.getUserId(authHeader);
-        if (userResponse == null || userResponse.getCode() != 200) {
-            throw new RuntimeException("User does not exist");
-        }
-
-        String userId = userResponse.getResult().getUserId();
-
+        String userId = getUserId();
         Cart cart = cartRepository.findByUserId(userId);
         List<CartItemResponse> cartItemResponses = cart.getItems().stream()
                 .map(item -> CartItemResponse.builder()
@@ -194,6 +165,40 @@ public class CartServiceImpl implements CartService {
                 .cartId(cart.getCartId())
                 .items(cartItemResponses)
                 .build();
+    }
+
+    @Override
+    public CartItemResponse getCartItem(String cartItemId) {
+        String userId = getUserId();
+        Cart cart = cartRepository.findByUserId(userId);
+        if(cart == null){
+            throw new AppException(ErrorCode.USER_DOES_NOT_HAVE_CART);
+        }
+        Optional<CartItem> cartItem = cartItemRepository.findByIdAndCart(cart, cartItemId);
+        if(cartItem.get() == null){
+            throw new AppException(ErrorCode.CART_ITEM_NOT_EXISTS);
+        }
+        return CartItemResponse.builder()
+                .cartItemId(cartItem.get().getCartItemId())
+                .productId(cartItem.get().getProductId())
+                .productName(cartItem.get().getProductName())
+                .quantity(cartItem.get().getQuantity())
+                .listPrice(cartItem.get().getListPrice())
+                .sellPrice(cartItem.get().getSellPrice())
+                .addedAt(cartItem.get().getAddedAt())
+                .build();
+    }
+
+    private String getUserId(){
+        ServletRequestAttributes servletRequestAttributes =
+                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+
+        var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
+        var userResponse = userClient.getUserId(authHeader);
+        if (userResponse == null || userResponse.getCode() != 200) {
+            throw new RuntimeException("User does not exist");
+        }
+        return userResponse.getResult().getUserId();
     }
 
     private CartItem createItems(String token, Cart cart, String productId, Integer quantity){
