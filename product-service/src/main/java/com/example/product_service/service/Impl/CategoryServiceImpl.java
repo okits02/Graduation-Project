@@ -72,7 +72,7 @@ public class CategoryServiceImpl implements CategoryService {
         }
         categoryMapper.updateCategory(category.orElse(null), request);
         category.get().setParentId(request.getParentId());
-        CategoryResponse categoryResponse = categoryMapper.toCategoryResponse(Optional.of(categoryRepository.save(category.get())));
+        CategoryResponse categoryResponse = categoryMapper.toCategoryResponse(categoryRepository.save(category.get()));
         return categoryResponse;
     }
 
