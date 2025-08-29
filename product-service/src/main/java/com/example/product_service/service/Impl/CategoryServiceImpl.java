@@ -13,12 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 
@@ -70,13 +66,14 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public CategoryResponse updateCate(CategoryRequest request) {
-        Category category = categoryRepository.findByName(request.getName());
-        if(category != null){
+        Optional<Category> category = categoryRepository.findById(request.getId());
+        if(category.isEmpty()){
             throw new AppException(ErrorCode.CATE_EXISTS);
         }
-        categoryMapper.updateCategory(category, request);
-        category.setParentId(request.getParentId());
-        return categoryMapper.toCategoryResponse(categoryRepository.save(category));
+        categoryMapper.updateCategory(category.orElse(null), request);
+        category.get().setParentId(request.getParentId());
+        CategoryResponse categoryResponse = categoryMapper.toCategoryResponse(Optional.of(categoryRepository.save(category.get())));
+        return categoryResponse;
     }
 
     @Override

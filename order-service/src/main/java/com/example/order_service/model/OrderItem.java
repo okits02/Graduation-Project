@@ -26,6 +26,9 @@ public class OrderItem {
     @Column(name = "product_id")
     private String productId;
 
+    @Column(name = "name_product")
+    private String productName;
+
     @Column(name = "quantity")
     private Integer quantity;
 
@@ -38,8 +41,6 @@ public class OrderItem {
     @Column(name = "total_price", precision = 10, scale = 2)
     private BigDecimal totalPrice;
 
-    @Column(name = "name_product")
-    private String productName;
 
     public void calculatorSellPrice(){
         if(sellPrice == null || quantity == null) return;

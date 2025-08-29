@@ -1,5 +1,6 @@
 package com.example.order_service.model;
 
+import com.example.order_service.enums.Status;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -11,6 +12,7 @@ import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serial;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -41,12 +43,30 @@ public class Orders extends AbstractMappedEntity{
     private String orderDesc;
 
     @Column(name = "order_fee", columnDefinition = "decimal")
-    private Double orderFee;
+    private BigDecimal orderFee;
 
-    @Column(name = "is_checkout")
-    private boolean isCheckout;
+    @Column(name = "order_status")
+    private Status orderStatus;
+
+    @Column(name = "street")
+    private String street;
+
+    @Column(name = "city")
+    private String city;
+
+    @Column(name = "postal_code")
+    private String postalCode;
+
+    @Column(name = "address_type")
+    private String addressType;
+
+    @Column(name = "phone_number")
+    private String phoneNumber;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items;
 
+    public void CalculatorFee(){
+
+    }
 }
