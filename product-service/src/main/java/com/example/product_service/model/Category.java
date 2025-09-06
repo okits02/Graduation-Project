@@ -7,6 +7,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -30,5 +31,5 @@ public class Category {
     @Field("parent_category_id")
     String parentId;
     @Field("children_category_id")
-    Set<String> childrenId;
+    Set<String> childrenId = new HashSet<>();
 }

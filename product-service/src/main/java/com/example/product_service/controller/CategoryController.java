@@ -1,5 +1,6 @@
 package com.example.product_service.controller;
 
+import com.example.product_service.dto.PageResponse;
 import com.example.product_service.dto.request.CategoryRequest;
 import com.example.product_service.dto.response.ApiResponse;
 import com.example.product_service.dto.response.CategoryResponse;
@@ -58,19 +59,19 @@ public class CategoryController {
 
     @Operation(summary = "get all category")
     @GetMapping("/getAll")
-    ResponseEntity<ApiResponse<Page<CategoryResponse>>> getAllCate(@RequestParam(defaultValue = "1") int page,
-                                                                   @RequestParam(defaultValue = "10") int size)
+    ResponseEntity<ApiResponse<PageResponse<CategoryResponse>>> getAllCate(@RequestParam(defaultValue = "1") int page,
+                                                                           @RequestParam(defaultValue = "10") int size)
     {
         if(page <= 0 || size <= 0)
         {
             return ResponseEntity.badRequest().body(
-                    ApiResponse.<Page<CategoryResponse>>builder()
+                    ApiResponse.<PageResponse<CategoryResponse>>builder()
                             .code(400)
                             .message("Page index must be non-negative and size must be greater than zero")
                             .build());
         }
         return ResponseEntity.ok(
-                ApiResponse.<Page<CategoryResponse>>builder()
+                ApiResponse.<PageResponse<CategoryResponse>>builder()
                         .code(200)
                         .result(categoryService.finAll(page - 1, size))
                         .build());
@@ -91,7 +92,7 @@ public class CategoryController {
 
     @Operation(summary = "admin delete category",
             security = @SecurityRequirement(name = "bearerAuth"))
-    @DeleteMapping("/{categoryId}")
+    @DeleteMapping("/delete/{categoryId}")
     @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<CategoryResponse> deleteById(@PathVariable String categoryId)
     {

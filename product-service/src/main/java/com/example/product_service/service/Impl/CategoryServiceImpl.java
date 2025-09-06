@@ -1,5 +1,6 @@
 package com.example.product_service.service.Impl;
 
+import com.example.product_service.dto.PageResponse;
 import com.example.product_service.dto.request.CategoryRequest;
 import com.example.product_service.dto.response.CategoryResponse;
 import com.example.product_service.exceptions.AppException;
@@ -25,9 +26,15 @@ public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
     @Override
-    public Page<CategoryResponse> finAll(int Page, int Size) {
+    public PageResponse<CategoryResponse> finAll(int Page, int Size) {
         Pageable pageable = PageRequest.of(Page, Size);
-        return categoryRepository.findAll(pageable).map(categoryMapper::toCategoryResponse);
+        var pageData = categoryRepository.findAll(pageable);
+        return PageResponse.<CategoryResponse>builder()
+                .currentPage(Page)
+                .pageSize(pageData.getSize())
+                .totalElements(pageData.getTotalElements())
+                .data(pageData.getContent().stream().map(categoryMapper::toCategoryResponse).toList())
+                .build();
     }
 
     @Override
@@ -104,6 +111,33 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public void deleteCateById(String categoryId) {
+        Category category = categoryRepository.findById(categoryId).orElseThrow(()
+                -> new AppException(ErrorCode.CATE_NOT_EXISTS));
+        List<String> allDescendants = getAllDescendantIds(category);
+        if(category.getParentId() != null){
+            Category parent = categoryRepository.findById(category.getParentId()).orElseThrow(() ->
+                    new AppException(ErrorCode.CATE_NOT_EXISTS));
+            parent.getChildrenId().remove(categoryId);
+            categoryRepository.save(parent);
+        }
+        for(String childId : allDescendants){
+            categoryRepository.deleteById(childId);
+        }
         categoryRepository.deleteById(categoryId);
+
+
+    }
+    private List<String> getAllDescendantIds(Category category){
+        List<String> result = new ArrayList<>();
+        if(category.getChildrenId() != null || !category.getChildrenId().isEmpty())
+        {
+        for(String childId : category.getChildrenId()){
+            Category child = categoryRepository.findById(childId).orElseThrow(() ->
+                    new AppException(ErrorCode.CATE_NOT_EXISTS));
+            result.addAll(getAllDescendantIds(child));
+            result.add(childId);
+        }
+        }
+        return result;
     }
 }

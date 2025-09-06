@@ -18,6 +18,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.util.Date;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -55,6 +58,7 @@ public class ProductServiceImpl implements ProductService {
         }
         String generatedId = new ObjectId().toHexString();
         newProducts.setId(generatedId);
+        newProducts.setCreateAt(LocalDate.now());
         return productRepository.save(newProducts);
     }
 

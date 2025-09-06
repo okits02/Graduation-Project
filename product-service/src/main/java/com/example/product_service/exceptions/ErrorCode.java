@@ -11,7 +11,8 @@ public enum ErrorCode {
     PRODUCT_NOT_EXISTS(1004, "Product not exists!", HttpStatus.BAD_REQUEST),
     CATE_NOT_EXISTS(1006, "Category not exists!", HttpStatus.BAD_REQUEST),
     CATE_EXISTS(1008, "Cate exists!", HttpStatus.BAD_REQUEST),
-    IMAGE_NOT_EXISTS(1010, "Image is not exists", HttpStatus.BAD_REQUEST);
+    IMAGE_NOT_EXISTS(1010, "Image is not exists", HttpStatus.BAD_REQUEST),
+    CANNOT_DELETE_WITH_CHILDREN(1012, "Can not delete with childrent", HttpStatus.BAD_REQUEST);
     private final int code;
     private final String message;
     private final HttpStatusCode httpStatusCode;
