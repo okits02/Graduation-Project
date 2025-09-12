@@ -6,10 +6,10 @@ import com.example.product_service.dto.request.ProductUpdateRequest;
 import com.example.product_service.dto.response.ProductResponse;
 import com.example.product_service.exceptions.AppException;
 import com.example.product_service.exceptions.ErrorCode;
+import com.example.product_service.helper.ProductMappingHelper;
 import com.example.product_service.mapper.ProductMapper;
 import com.example.product_service.model.Products;
 import com.example.product_service.repository.ProductRepository;
-import com.example.product_service.service.CategoryService;
 import com.example.product_service.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +27,7 @@ import java.util.Date;
 public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
-    private final CategoryService categoryService;
+    private final ProductMappingHelper productMappingHelper;
 
     @Override
     public PageResponse<ProductResponse> getAll(int page, int size) {
@@ -37,7 +37,7 @@ public class ProductServiceImpl implements ProductService {
                 .currentPage(page)
                 .pageSize(pageData.getSize())
                 .totalElements(pageData.getTotalElements())
-                .data(pageData.getContent().stream().map(productMapper::toProductResponse).toList())
+                .data(pageData.getContent().stream().map(productMappingHelper::map).toList())
                 .build();
     }
 
@@ -45,8 +45,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponse getById(String productId) {
         Products product = productRepository.findById(productId)
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTS));
-        ProductResponse productResponse = productMapper.toProductResponse(product);
-        productResponse.setListCategory(categoryService.getCategoryHierarchy(product.getCategoryId()));
+        ProductResponse productResponse = productMappingHelper.map(product);
         return productResponse;
     }
 

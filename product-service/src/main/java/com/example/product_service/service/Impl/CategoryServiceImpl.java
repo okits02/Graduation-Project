@@ -7,7 +7,9 @@ import com.example.product_service.exceptions.AppException;
 import com.example.product_service.exceptions.ErrorCode;
 import com.example.product_service.mapper.CategoryMapper;
 import com.example.product_service.model.Category;
+import com.example.product_service.model.Products;
 import com.example.product_service.repository.CategoryRepository;
+import com.example.product_service.repository.ProductRepository;
 import com.example.product_service.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +27,7 @@ import java.util.*;
 public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
+    private final ProductRepository productRepository;
     @Override
     public PageResponse<CategoryResponse> finAll(int Page, int Size) {
         Pageable pageable = PageRequest.of(Page, Size);
@@ -122,10 +125,10 @@ public class CategoryServiceImpl implements CategoryService {
         }
         for(String childId : allDescendants){
             categoryRepository.deleteById(childId);
+            removeCateInProduct(childId);
         }
+        removeCateInProduct(categoryId);
         categoryRepository.deleteById(categoryId);
-
-
     }
     private List<String> getAllDescendantIds(Category category){
         List<String> result = new ArrayList<>();
@@ -139,5 +142,12 @@ public class CategoryServiceImpl implements CategoryService {
         }
         }
         return result;
+    }
+    private void removeCateInProduct(String CateIds){
+        List<Products> productsList = productRepository.findByCategoryId(CateIds);
+        for(var products : productsList){
+            products.getCategoryId().remove(CateIds);
+            productRepository.save(products);
+        }
     }
 }

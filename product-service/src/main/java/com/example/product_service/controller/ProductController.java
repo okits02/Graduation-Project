@@ -8,6 +8,7 @@ import com.example.product_service.dto.response.CategoryResponse;
 import com.example.product_service.dto.response.ProductResponse;
 import com.example.product_service.exceptions.AppException;
 import com.example.product_service.exceptions.ErrorCode;
+import com.example.product_service.helper.ProductMappingHelper;
 import com.example.product_service.kafka.CreateProductEvent;
 import com.example.product_service.kafka.DeleteProductEvent;
 import com.example.product_service.mapper.ProductMapper;
@@ -43,14 +44,13 @@ public class ProductController {
     ProductService productService;
     ProductMapper productMapper;
     CategoryService categoryService;
-    CategoryRepository categoryRepository;
-    ProductRepository productRepository;
+    ProductMappingHelper productMappingHelper;
     KafkaTemplate<String, Object> kafkaTemplate;
 
     @Operation(summary = "admin create product", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/create")
     @PreAuthorize("hasRole('ADMIN')")
-    ApiResponse<Products> createProduct(
+    ApiResponse<ProductResponse> createProduct(
             @RequestBody ProductRequest request)
     {
         try{
@@ -66,13 +66,13 @@ public class ProductController {
                             System.err.println("send message successfully" + result.getProducerRecord());
                         }
                     });
-            return ApiResponse.<Products>builder()
+            return ApiResponse.<ProductResponse>builder()
                     .code(200)
-                    .result(product)
+                    .result(productMappingHelper.map(product))
                     .build();
         }catch (AppException e)
         {
-            return ApiResponse.<Products>builder()
+            return ApiResponse.<ProductResponse>builder()
                     .code(e.getErrorCode().getCode())
                     .message(e.getMessage())
                     .build();
@@ -97,7 +97,7 @@ public class ProductController {
                             System.err.println("send message successfully" + result.getProducerRecord());
                         }
                     });
-            ProductResponse productResponse = productMapper.toProductResponse(product);
+            ProductResponse productResponse = productMappingHelper.map(product);
             return ApiResponse.<ProductResponse>builder()
                     .code(200)
                     .result(productResponse)
@@ -149,7 +149,7 @@ public class ProductController {
     }
 
     @Operation(summary = "admin delete product", security = @SecurityRequirement(name = "bearerAuth"))
-    @DeleteMapping("/{product_id}")
+    @DeleteMapping("/{productId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<?>> deleteProduct(@PathVariable String productId)
     {

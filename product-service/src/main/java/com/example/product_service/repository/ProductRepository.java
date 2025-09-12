@@ -8,9 +8,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 
+import java.util.List;
+
 public interface ProductRepository extends MongoRepository<Products, String> {
     Page<Products> findAll(Pageable pageable);
 
     @Query(value = "{'name' : ?0}", exists = true)
     boolean existsByName(String name);
+
+    @Query(value = "{'categoryId' : ?0}")
+    List<Products> findByCategoryId(String categoryId);
 }
