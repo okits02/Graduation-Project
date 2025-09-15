@@ -5,6 +5,7 @@ import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch.core.BulkResponse;
 import co.elastic.clients.elasticsearch.core.UpdateByQueryRequest;
 import co.elastic.clients.elasticsearch._types.Script;
+import co.elastic.clients.elasticsearch.core.UpdateByQueryResponse;
 import co.elastic.clients.json.JsonData;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.example.search_service.Repository.ProductsRepository;
@@ -20,6 +21,7 @@ import com.example.search_service.viewmodel.dto.ApplyPromotionEventDTO;
 import com.example.search_service.viewmodel.dto.StatusPromotionDTO;
 import com.example.search_service.viewmodel.dto.request.CategoryRequest;
 import com.example.search_service.viewmodel.dto.request.ProductRequest;
+import jakarta.json.Json;
 import lombok.RequiredArgsConstructor;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
@@ -28,6 +30,7 @@ import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.scripting.ScriptSource;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -475,6 +478,45 @@ public class ProductService {
         );
 
         elasticsearchClient.updateByQuery(req);
+    }
+
+    public long removeCateInProduct(List<String> categoryId){
+        String scriptSource = """
+            if (ctx._source.categories != null) {
+                ctx._source.categories.removeIf(c -> params.ids.contains(c.id));
+            }
+        """;
+        Map<String, JsonData> params = new HashMap<>();
+        params.put("ids", JsonData.of(categoryId));
+        var script = new Script.Builder()
+                .source(scriptSource)
+                .lang("painless")
+                .params(params)
+                .build();
+        UpdateByQueryRequest request = UpdateByQueryRequest.of(u -> u
+                .index("product")
+                .query(q -> q
+                        .nested(n -> n
+                                .path("categories")
+                                .query(inner -> inner
+                                        .terms(t -> t
+                                                .field("categories.id")
+                                                .terms(terms -> terms
+                                                        .value(categoryId.stream().map(FieldValue::of).toList())
+                                                )
+                                        )
+                                )
+                        )
+                )
+                .script(script)
+        );
+        try{
+            UpdateByQueryResponse response = elasticsearchClient.updateByQuery(request);
+            log.info("Da update {} documents khi xoa categories: {}", response.updated(), categoryId);
+            return response.updated();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public ProductDetailsVM getDetailsProduct(String productId){

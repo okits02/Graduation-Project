@@ -1,7 +1,9 @@
 package com.example.product_service.service.Impl;
 
 import com.example.product_service.dto.PageResponse;
+import com.example.product_service.dto.RemoveCategoryRequest;
 import com.example.product_service.dto.request.CategoryRequest;
+import com.example.product_service.dto.response.ApiResponse;
 import com.example.product_service.dto.response.CategoryResponse;
 import com.example.product_service.exceptions.AppException;
 import com.example.product_service.exceptions.ErrorCode;
@@ -10,6 +12,7 @@ import com.example.product_service.model.Category;
 import com.example.product_service.model.Products;
 import com.example.product_service.repository.CategoryRepository;
 import com.example.product_service.repository.ProductRepository;
+import com.example.product_service.repository.httpsClient.SearchClient;
 import com.example.product_service.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +31,7 @@ public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
     private final ProductRepository productRepository;
+    private final SearchClient searchClient;
     @Override
     public PageResponse<CategoryResponse> finAll(int Page, int Size) {
         Pageable pageable = PageRequest.of(Page, Size);
@@ -128,6 +132,17 @@ public class CategoryServiceImpl implements CategoryService {
             removeCateInProduct(childId);
         }
         removeCateInProduct(categoryId);
+        allDescendants.add(categoryId);
+        RemoveCategoryRequest request = RemoveCategoryRequest.builder()
+                .listCateIds(allDescendants)
+                .build();
+        var response = searchClient.removeCate(request);
+        ApiResponse<Long> apiResponse = response.getBody();
+        if(apiResponse.getCode() == 200){
+            log.info(apiResponse.getMessage());
+        }else {
+            log.info("Remove cate on search failed!");
+        }
         categoryRepository.deleteById(categoryId);
     }
     private List<String> getAllDescendantIds(Category category){

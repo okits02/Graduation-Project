@@ -13,6 +13,9 @@ import com.example.search_service.service.SearchService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/search")
 @RequiredArgsConstructor
@@ -45,5 +48,18 @@ public class ProductController {
                 .code(200)
                 .result(productService.getDetailsProduct(productId))
                 .build());
+    }
+
+    @PutMapping("/internal/categories/remove")
+    public ResponseEntity<ApiResponse<Long>> removeCategoriesFromProducts(
+            @RequestBody List<String> categoryIds
+    ){
+        long update = productService.removeCateInProduct(categoryIds);
+        return ResponseEntity.ok(ApiResponse.<Long>builder()
+                        .code(200)
+                        .result(update)
+                        .message("Remove categories from products successfully")
+                .build()
+        );
     }
 }
