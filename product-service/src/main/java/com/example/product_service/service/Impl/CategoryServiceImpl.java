@@ -121,7 +121,7 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = categoryRepository.findById(categoryId).orElseThrow(()
                 -> new AppException(ErrorCode.CATE_NOT_EXISTS));
         List<String> allDescendants = getAllDescendantIds(category);
-        if(category.getParentId() != null){
+        if(category.getParentId() != null && !category.getParentId().isEmpty()){
             Category parent = categoryRepository.findById(category.getParentId()).orElseThrow(() ->
                     new AppException(ErrorCode.CATE_NOT_EXISTS));
             parent.getChildrenId().remove(categoryId);
@@ -134,7 +134,7 @@ public class CategoryServiceImpl implements CategoryService {
         removeCateInProduct(categoryId);
         allDescendants.add(categoryId);
         RemoveCategoryRequest request = RemoveCategoryRequest.builder()
-                .listCateIds(allDescendants)
+                .categoryIds(allDescendants)
                 .build();
         var response = searchClient.removeCate(request);
         ApiResponse<Long> apiResponse = response.getBody();

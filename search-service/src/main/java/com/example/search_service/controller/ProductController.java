@@ -6,6 +6,7 @@ import com.example.search_service.viewmodel.ProductGetListVM;
 import com.example.search_service.viewmodel.ProductGetVM;
 import com.example.search_service.viewmodel.ProductNameGetListVm;
 import com.example.search_service.viewmodel.dto.ApiResponse;
+import com.example.search_service.viewmodel.dto.request.RemoveCategoryIdsRequest;
 import com.example.search_service.viewmodel.dto.request.SearchRequest;
 import lombok.RequiredArgsConstructor;
 
@@ -52,9 +53,9 @@ public class ProductController {
 
     @PutMapping("/internal/categories/remove")
     public ResponseEntity<ApiResponse<Long>> removeCategoriesFromProducts(
-            @RequestBody List<String> categoryIds
-    ){
-        long update = productService.removeCateInProduct(categoryIds);
+            @RequestBody RemoveCategoryIdsRequest request
+            ){
+        long update = productService.removeCateInProduct(request.getCategoryIds());
         return ResponseEntity.ok(ApiResponse.<Long>builder()
                         .code(200)
                         .result(update)
