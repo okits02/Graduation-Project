@@ -11,5 +11,5 @@ import java.util.Optional;
 @Mapper(componentModel = "spring")
 public interface UserMapper {
     Users toUser(UserCreationRequest request);
-    UserResponse toUserResponse(Optional<Users> user);
+    UserResponse toUserResponse(Users user);
 }

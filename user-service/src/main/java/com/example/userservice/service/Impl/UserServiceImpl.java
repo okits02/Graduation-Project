@@ -1,6 +1,7 @@
 package com.example.userservice.service.Impl;
 
 import com.example.userservice.constant.PredefinedRole;
+import com.example.userservice.dto.PageResponse;
 import com.example.userservice.dto.request.ForgotPasswordRequest;
 import com.example.userservice.dto.request.UserCreationRequest;
 import com.example.userservice.dto.response.UserIdResponse;
@@ -20,6 +21,8 @@ import com.example.userservice.service.UserService;
 import com.example.userservice.service.VerificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -135,7 +138,7 @@ public class UserServiceImpl implements UserService {
         {
             throw new AppException(ErrorCode.USER_NOT_EXITS);
         }
-        return userMapper.toUserResponse(user);
+        return userMapper.toUserResponse(user.get());
     }
 
     @Override
@@ -166,6 +169,18 @@ public class UserServiceImpl implements UserService {
                 -> new AppException(ErrorCode.USER_NOT_EXITS));
         return UserIdResponse.builder()
                 .userId(users.getId())
+                .build();
+    }
+
+    @Override
+    public PageResponse<UserResponse> getAll(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        var pageData = userRepository.findAll(pageable);
+        return PageResponse.<UserResponse>builder()
+                .currentPage(page)
+                .pageSize(pageData.getSize())
+                .totalElements(pageData.getTotalElements())
+                .Data(pageData.getContent().stream().map(userMapper::toUserResponse).toList())
                 .build();
     }
 }

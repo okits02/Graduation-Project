@@ -1,5 +1,6 @@
 package com.example.userservice.controller;
 
+import com.example.userservice.dto.PageResponse;
 import com.example.userservice.dto.request.*;
 import com.example.userservice.dto.response.ApiResponse;
 import com.example.userservice.dto.response.UserIdResponse;
@@ -279,5 +280,37 @@ public class UserController {
                     .message(e.getMessage())
                     .build());
         }
+    }
+
+    @GetMapping("/get-user/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<?>> getUserById(@PathVariable String userId){
+        try{
+            return ResponseEntity.ok(ApiResponse.builder()
+                    .code(200)
+                    .message("get user successfully!")
+                    .result(userService.getUserById(userId))
+                    .build());
+        }catch (AppException e){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.builder()
+                    .code(e.getErrorCode().getCode())
+                    .message(e.getMessage())
+                    .build());
+        }
+    }
+
+    @GetMapping("/get-all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<PageResponse<?>>> getAllUser(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size
+    ){
+
+        return ResponseEntity.ok(ApiResponse.<PageResponse<?>>builder()
+                .code(200)
+                .message("get all users information successfully!")
+                .result(userService.getAll(page - 1
+                        , size))
+                .build());
     }
 }
