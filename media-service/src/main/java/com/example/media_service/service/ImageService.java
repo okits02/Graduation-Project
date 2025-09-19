@@ -7,10 +7,10 @@ import java.io.IOException;
 import java.util.List;
 
 public interface ImageService {
-    public String url(MultipartFile multipartFile, String name) throws IOException;
     public ProductImageResponse imageProduct(MultipartFile thumbNailFile,
                                              List<MultipartFile> imageProductFile,
-                                             String name) throws IOException;
-    public void deleteImage(String imgUrl);
-    public String getPublicId(String imgUrl);
+                                             String productId) throws IOException;
+    public String imageCategory(MultipartFile thumbNailFile, String categoryId) throws IOException;
+    public void deleteImageByProductId(String productId);
+    public void deleteByUrl(String url);
 }

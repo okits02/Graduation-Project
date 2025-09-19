@@ -13,10 +13,9 @@ import java.util.Date;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserResponse {
     String username;
-    String firstName;
-    String lastName;
     String email;
     String phone;
+    String firstName;
+    String lastName;
     Role role;
-    Date dob;
 }

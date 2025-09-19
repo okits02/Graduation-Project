@@ -30,6 +30,8 @@ public class ProductMappingHelper {
                 .description(products.getDescription())
                 .sold(products.getSold())
                 .listPrice(products.getListPrice())
+                .thumbNail(products.getThumbNail())
+                .avgRating(products.getAvgRating())
                 .imageList(products.getImageList())
                 .quantity(products.getQuantity())
                 .specifications(products.getSpecifications())

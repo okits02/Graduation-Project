@@ -1,4 +1,4 @@
-server:
+  server:
   port: 8067
   servlet:
     context-path: /rating-service
