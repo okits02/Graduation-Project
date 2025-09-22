@@ -2,11 +2,15 @@ package com.example.media_service.service.Impl;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.example.media_service.dto.response.ListMediaResponse;
+import com.example.media_service.dto.response.MediaResponse;
 import com.example.media_service.dto.response.ProductImageResponse;
+import com.example.media_service.enums.MediaOwnerType;
 import com.example.media_service.enums.MediaPurpose;
 import com.example.media_service.enums.MediaType;
 import com.example.media_service.exception.AppException;
 import com.example.media_service.exception.ErrorCode;
+import com.example.media_service.mapper.MediaMapper;
 import com.example.media_service.model.Media;
 import com.example.media_service.repository.MediaRepository;
 import com.example.media_service.service.ImageService;
@@ -24,41 +28,54 @@ import java.util.Map;
 public class ImageServiceImpl implements ImageService {
     private final Cloudinary cloudinary;
     private final MediaRepository mediaRepository;
+    private final MediaMapper mediaMapper;
 
     @Override
-    public ProductImageResponse imageProduct(MultipartFile thumbNailFile,
-                                             List<MultipartFile> imageProductFile,
-                                             String productId) throws IOException {
+    public ListMediaResponse imageProduct(MultipartFile thumbNailFile,
+                                          List<MultipartFile> imageProductFile,
+                                          String productId) throws IOException {
         String thumbnailUrl = "";
         List<String> imageProductUrl = new ArrayList<>();
-        if(thumbNailFile != null) {
-            Media thumbnail = uploadAndSave(thumbNailFile, productId, true);
+        List<MediaResponse> responses = new ArrayList<>();
+        if (thumbNailFile != null) {
+            Media thumbnail = uploadAndSave(thumbNailFile, productId, MediaOwnerType.PRODUCT, MediaPurpose.THUMBNAIL);
+            responses.add(mediaMapper.toMediaResponse(mediaRepository.save(thumbnail)));
             thumbnailUrl = thumbnail.getUrl();
-            mediaRepository.save(thumbnail);
         }
         for (MultipartFile file : imageProductFile) {
-            Media image = uploadAndSave(file, productId, false);
-            String url = image.getUrl();
-            imageProductUrl.add(url);
-            mediaRepository.save(image);
+            Media image = uploadAndSave(file, productId, MediaOwnerType.PRODUCT, MediaPurpose.GALLERY);
+            responses.add(mediaMapper.toMediaResponse(mediaRepository.save(image)));
+            imageProductUrl.add(image.getUrl());
         }
-        ProductImageResponse productImageResponse = ProductImageResponse.builder()
-                .urlThumbnail(thumbnailUrl)
-                .imageUrl(imageProductUrl)
+
+        return ListMediaResponse.builder()
+                .mediaResponseList(responses)
                 .build();
-        return productImageResponse;
     }
 
     @Override
-    public String imageCategory(MultipartFile thumbNailFile, String categoryId) throws IOException {
-        Media media = uploadAndSave(thumbNailFile, categoryId, true);
+    public MediaResponse imageCategory(MultipartFile thumbNailFile, String categoryId) throws IOException {
+        Media media = uploadAndSave(thumbNailFile, categoryId, MediaOwnerType.CATEGORY, MediaPurpose.THUMBNAIL);
+        return mediaMapper.toMediaResponse(mediaRepository.save(media));
+    }
+
+    @Override
+    public MediaResponse videoProduct(MultipartFile videoFile, String productId) throws IOException {
+        Media media = uploadAndSave(videoFile, productId, MediaOwnerType.PRODUCT, MediaPurpose.GALLERY);
         mediaRepository.save(media);
-        return media.getUrl();
+        return MediaResponse.builder()
+                .id(media.getId())
+                .ownerId(media.getOwnerId())
+                .ownerType(media.getOwnerType())
+                .url(media.getUrl())
+                .mediaType(media.getMediaType())
+                .mediaPurpose(media.getMediaPurpose())
+                .build();
     }
 
     @Override
-    public void deleteImageByProductId(String productId) {
-        List<Media> medias = mediaRepository.findByProductId(productId);
+    public void deleteByOwnerId(String ownerId, MediaOwnerType mediaOwnerType) {
+        List<Media> medias = mediaRepository.findByOwnerIdAndOwnerType(ownerId, mediaOwnerType);
         if(medias.isEmpty()){
             throw new AppException(ErrorCode.CAN_NOT_FIND_MEDIA_BY_PRODUCT);
         }
@@ -70,6 +87,25 @@ public class ImageServiceImpl implements ImageService {
             }
         }
         mediaRepository.deleteAll(medias);
+    }
+
+    @Override
+    public ListMediaResponse getMedia(String ownerId, MediaOwnerType mediaOwnerType) {
+        List<Media> medias = mediaRepository.findByOwnerIdAndOwnerType(ownerId, mediaOwnerType);
+        List<MediaResponse> mediaResponses = medias.stream()
+                .map(media -> MediaResponse.builder()
+                        .id(media.getId())
+                        .ownerId(media.getOwnerId())
+                        .ownerType(media.getOwnerType())
+                        .url(media.getUrl())
+                        .mediaType(media.getMediaType())
+                        .mediaPurpose(media.getMediaPurpose())
+                        .build())
+                .toList();
+
+        return ListMediaResponse.builder()
+                .mediaResponseList(mediaResponses)
+                .build();
     }
 
     @Override
@@ -88,20 +124,26 @@ public class ImageServiceImpl implements ImageService {
     }
 
 
-    private Media uploadAndSave(MultipartFile multipartFile, String productId, boolean isThumbnail) throws IOException
+
+    private Media uploadAndSave(MultipartFile multipartFile,
+                                String ownerId,
+                                MediaOwnerType ownerType,
+                                MediaPurpose purpose) throws IOException
     {
-        var uploadResult = cloudinary.uploader().upload(multipartFile.getBytes(),
-                ObjectUtils.asMap("folder", "product/" + productId));
+        Map uploadResult = cloudinary.uploader().upload(
+                multipartFile.getBytes(),
+                ObjectUtils.asMap("folder", ownerType.name().toLowerCase() + "/" + ownerId));
         String url = uploadResult.get("secure_url").toString();
         String publicId = uploadResult.get("public_id").toString();
         String resourceType = uploadResult.get("resource_type").toString();
 
         Media media = Media.builder()
-                .productId(productId)
+                .ownerId(ownerId)
+                .ownerType(ownerType)
                 .publicId(publicId)
                 .url(url)
                 .mediaType(MediaType.valueOf(resourceType.toUpperCase()))
-                .mediaPurpose(MediaPurpose.valueOf(isThumbnail ? "THUMBNAIL" : "GALLERY"))
+                .mediaPurpose(purpose)
                 .build();
         return media;
     }

@@ -6,6 +6,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -17,7 +18,7 @@ public class CategoryResponse {
     String id;
     String name;
     String description;
-    String imageUrl;
+    List<MediaResponse> mediaResponse;
     String parentId;
     Set<String> childrenId;
 }

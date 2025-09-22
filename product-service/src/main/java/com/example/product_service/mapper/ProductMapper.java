@@ -12,6 +12,5 @@ import java.util.Optional;
 @Mapper(componentModel = "spring")
 public interface ProductMapper {
     Products toProduct(ProductRequest request);
-    ProductResponse toProductResponse(Products products);
     void updateProduct(@MappingTarget Products products, ProductUpdateRequest productRequest);
 }

@@ -184,7 +184,6 @@ public class ProductController {
                 .quantity(product.getQuantity())
                 .avgRating(product.getAvgRating())
                 .sold(product.getSold())
-                .imageList(product.getImageList())
                 .categories(categoryList)
                 .specifications(product.getSpecifications())
                 .createAt(product.getCreateAt())

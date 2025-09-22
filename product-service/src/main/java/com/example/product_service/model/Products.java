@@ -36,10 +36,6 @@ public class Products {
     double avgRating;
     @Field("sold_quantity")
     Integer sold;
-    @Field("thumb_nail")
-    String thumbNail;
-    @Field("images")
-    List<String> imageList;
     Set<String> categoryId;
     Map<String, String> specifications;
     @CreatedDate

@@ -26,8 +26,6 @@ public class Category {
     String description;
     @Field("special")
     boolean special;
-    @Field("image_url")
-    String imageUrl;
     @Field("parent_category_id")
     String parentId;
     @Field("children_category_id")

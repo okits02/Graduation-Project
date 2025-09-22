@@ -17,6 +17,5 @@ public class  CategoryRequest {
     String name;
     String description;
     boolean special;
-    String imageUrl;
     String parentId;
 }

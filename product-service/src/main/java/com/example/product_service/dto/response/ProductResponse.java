@@ -25,7 +25,7 @@ public class  ProductResponse {
     Integer sold;
     Float discount;
     String thumbNail;
-    List<String> imageList;
+    List<MediaResponse> mediaList;
     List<CategoryResponse> listCategory;
     Map<String, String> specifications;
     LocalDate createAt;

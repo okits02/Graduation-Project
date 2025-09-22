@@ -7,6 +7,7 @@ import com.example.product_service.dto.response.ApiResponse;
 import com.example.product_service.dto.response.CategoryResponse;
 import com.example.product_service.exceptions.AppException;
 import com.example.product_service.exceptions.ErrorCode;
+import com.example.product_service.helper.CategoryMappingHelper;
 import com.example.product_service.mapper.CategoryMapper;
 import com.example.product_service.model.Category;
 import com.example.product_service.model.Products;
@@ -32,6 +33,7 @@ public class CategoryServiceImpl implements CategoryService {
     private final CategoryMapper categoryMapper;
     private final ProductRepository productRepository;
     private final SearchClient searchClient;
+    private final CategoryMappingHelper categoryMappingHelper;
     @Override
     public PageResponse<CategoryResponse> finAll(int Page, int Size) {
         Pageable pageable = PageRequest.of(Page, Size);
@@ -40,7 +42,7 @@ public class CategoryServiceImpl implements CategoryService {
                 .currentPage(Page)
                 .pageSize(pageData.getSize())
                 .totalElements(pageData.getTotalElements())
-                .data(pageData.getContent().stream().map(categoryMapper::toCategoryResponse).toList())
+                .data(pageData.getContent().stream().map(categoryMappingHelper::map).toList())
                 .build();
     }
 
@@ -48,7 +50,7 @@ public class CategoryServiceImpl implements CategoryService {
     public CategoryResponse findById(String categoryId) {
         Category category = categoryRepository.findById(categoryId).orElseThrow(()->
                 new AppException(ErrorCode.CATE_NOT_EXISTS));
-        return categoryMapper.toCategoryResponse(category);
+        return categoryMappingHelper.map(category);
     }
 
     @Override
