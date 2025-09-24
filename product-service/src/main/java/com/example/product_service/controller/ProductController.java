@@ -5,7 +5,10 @@ import com.example.product_service.dto.request.ProductRequest;
 import com.example.product_service.dto.request.ProductUpdateRequest;
 import com.example.product_service.dto.response.ApiResponse;
 import com.example.product_service.dto.response.CategoryResponse;
+import com.example.product_service.dto.response.MediaResponse;
 import com.example.product_service.dto.response.ProductResponse;
+import com.example.product_service.enums.MediaOwnerType;
+import com.example.product_service.enums.MediaPurpose;
 import com.example.product_service.exceptions.AppException;
 import com.example.product_service.exceptions.ErrorCode;
 import com.example.product_service.helper.ProductMappingHelper;
@@ -16,6 +19,7 @@ import com.example.product_service.model.Category;
 import com.example.product_service.model.Products;
 import com.example.product_service.repository.CategoryRepository;
 import com.example.product_service.repository.ProductRepository;
+import com.example.product_service.repository.httpsClient.MediaClient;
 import com.example.product_service.service.CategoryService;
 import com.example.product_service.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -42,7 +46,7 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProductController {
     ProductService productService;
-    ProductMapper productMapper;
+    MediaClient mediaClient;
     CategoryService categoryService;
     ProductMappingHelper productMappingHelper;
     KafkaTemplate<String, Object> kafkaTemplate;

@@ -22,7 +22,6 @@ public class ProductRequest {
     Integer quantity;
     double avgRating;
     Integer sold;
-    List<String> imageList;
     List<CategoryRequest> categories;
     Map<String, String> specifications;
     LocalDate createAt;

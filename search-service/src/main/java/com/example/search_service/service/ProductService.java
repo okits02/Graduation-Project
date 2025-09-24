@@ -16,12 +16,10 @@ import com.example.search_service.mapper.PromotionMapper;
 import com.example.search_service.model.Products;
 import com.example.search_service.model.Promotion;
 import com.example.search_service.viewmodel.ProductDetailsVM;
-import com.example.search_service.viewmodel.ProductGetVM;
 import com.example.search_service.viewmodel.dto.ApplyPromotionEventDTO;
 import com.example.search_service.viewmodel.dto.StatusPromotionDTO;
-import com.example.search_service.viewmodel.dto.request.CategoryRequest;
+import com.example.search_service.viewmodel.dto.request.ApplyThumbnailRequest;
 import com.example.search_service.viewmodel.dto.request.ProductRequest;
-import jakarta.json.Json;
 import lombok.RequiredArgsConstructor;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
@@ -30,7 +28,6 @@ import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
-import org.springframework.scripting.ScriptSource;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -515,6 +512,31 @@ public class ProductService {
             log.info("Da update {} documents khi xoa categories: {}", response.updated(), categoryId);
             return response.updated();
         } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void AppyThumbnailToProduct(ApplyThumbnailRequest request){
+        if(request == null || request.getProductId() == null || request.getProductId().isBlank()
+                || request.getUrl() == null || request.getUrl().isBlank()){
+            throw new AppException(ErrorCode.INVALID_REQUEST);
+        }
+        try{
+            boolean exists = elasticsearchClient.exists(e -> e
+                    .index("product")
+                    .id(request.getProductId()))
+                    .value();
+
+            if(!exists){
+                throw new AppException(ErrorCode.PRODUCT_NOT_EXISTS);
+            }
+            elasticsearchClient.update(u -> u
+                    .index("prodcut")
+                    .id(request.getProductId())
+                    .doc(Map.of("thumbnail", request.getUrl())),
+                    Products.class
+            );
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }

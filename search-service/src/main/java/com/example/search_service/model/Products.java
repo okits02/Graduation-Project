@@ -39,8 +39,8 @@ public class Products {
     double avgRating;
     @Field(type = FieldType.Integer)
     Integer sold;
-    @Field(type = FieldType.Keyword)
-    List<String> imageList;
+    @Field(type = FieldType.Text)
+    String thumbnail;
     @Field(type = FieldType.Nested)
     List<Category> categories;
     @Field(type = FieldType.Nested)

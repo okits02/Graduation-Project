@@ -4,7 +4,9 @@ import com.example.search_service.Repository.ProductsRepository;
 import com.example.search_service.mapper.ProductsMapper;
 import com.example.search_service.model.Products;
 import com.example.search_service.service.ProductService;
+import com.example.search_service.viewmodel.dto.ApplyThumbnailEventDTO;
 import com.example.search_service.viewmodel.dto.ProductEventDTO;
+import com.example.search_service.viewmodel.dto.request.ApplyThumbnailRequest;
 import com.example.search_service.viewmodel.dto.request.CategoryRequest;
 import com.example.search_service.viewmodel.dto.request.DeleteProductEventDTO;
 import com.example.search_service.viewmodel.dto.request.ProductRequest;
@@ -49,7 +51,6 @@ public class ProductConsumer {
                 .quantity(productEventDTO.getQuantity())
                 .avgRating(productEventDTO.getAvgRating())
                 .sold(productEventDTO.getSold())
-                .imageList(productEventDTO.getImageList())
                 .categories(productEventDTO.getCategories())
                 .specifications(productEventDTO.getSpecifications())
                 .createAt(productEventDTO.getCreateAt())
@@ -77,7 +78,6 @@ public class ProductConsumer {
                 .quantity(productEventDTO.getQuantity())
                 .avgRating(productEventDTO.getAvgRating())
                 .sold(productEventDTO.getSold())
-                .imageList(productEventDTO.getImageList())
                 .categories(productEventDTO.getCategories())
                 .specifications(productEventDTO.getSpecifications())
                 .createAt(productEventDTO.getCreateAt())
@@ -96,5 +96,18 @@ public class ProductConsumer {
         DeleteProductEventDTO deleteProductEventDTO = null;
         deleteProductEventDTO = objectMapper.readValue(productEvent, DeleteProductEventDTO.class);
         productService.deleteProduct(deleteProductEventDTO.getProductId());
+    }
+
+    @KafkaListener(topics = "product-apply-thumbnail-event",
+            containerFactory = "applyThumbnailKafkaListenerContainerFactory")
+    public void consumerApplyThumbnail(String applyThumbnailEvent) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        ApplyThumbnailEventDTO applyThumbnailEventDTO = null;
+        applyThumbnailEventDTO = objectMapper.readValue(applyThumbnailEvent, ApplyThumbnailEventDTO.class);
+        productService.AppyThumbnailToProduct(ApplyThumbnailRequest.builder()
+                .productId(applyThumbnailEventDTO.getProductId())
+                .url(applyThumbnailEventDTO.getUrl())
+                .build());
     }
 }
