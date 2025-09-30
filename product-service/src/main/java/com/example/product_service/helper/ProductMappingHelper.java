@@ -43,6 +43,7 @@ public class ProductMappingHelper {
                 .sold(products.getSold())
                 .listPrice(products.getListPrice())
                 .avgRating(products.getAvgRating())
+                .videoUrl(products.getVideoUrl())
                 .mediaList(listMedia)
                 .quantity(products.getQuantity())
                 .specifications(products.getSpecifications())

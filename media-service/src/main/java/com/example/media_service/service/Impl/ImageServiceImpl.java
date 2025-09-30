@@ -60,16 +60,21 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public MediaResponse videoProduct(MultipartFile videoFile, String productId) throws IOException {
-        Media media = uploadAndSave(videoFile, productId, MediaOwnerType.PRODUCT, MediaPurpose.GALLERY);
-        mediaRepository.save(media);
+    public MediaResponse changeThumbnail(String oldThumbnailUrl, MultipartFile newThumbnail, String productId)
+            throws IOException {
+        deleteByUrl(oldThumbnailUrl);
+        var exists = mediaRepository.existsByOwnerIdAndMediaPurpose(productId, MediaPurpose.THUMBNAIL);
+        if(exists){
+            throw new AppException(ErrorCode.THUMBNAIL_EXISTS);
+        }
+        Media thumbnailMedia = uploadAndSave(newThumbnail, productId, MediaOwnerType.PRODUCT, MediaPurpose.THUMBNAIL);
         return MediaResponse.builder()
-                .id(media.getId())
-                .ownerId(media.getOwnerId())
-                .ownerType(media.getOwnerType())
-                .url(media.getUrl())
-                .mediaType(media.getMediaType())
-                .mediaPurpose(media.getMediaPurpose())
+                .id(thumbnailMedia.getId())
+                .ownerId(thumbnailMedia.getOwnerId())
+                .ownerType(thumbnailMedia.getOwnerType())
+                .url(thumbnailMedia.getUrl())
+                .mediaType(thumbnailMedia.getMediaType())
+                .mediaPurpose(thumbnailMedia.getMediaPurpose())
                 .build();
     }
 

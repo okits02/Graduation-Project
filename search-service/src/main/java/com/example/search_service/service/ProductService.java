@@ -531,7 +531,7 @@ public class ProductService {
                 throw new AppException(ErrorCode.PRODUCT_NOT_EXISTS);
             }
             elasticsearchClient.update(u -> u
-                    .index("prodcut")
+                    .index("product")
                     .id(request.getProductId())
                     .doc(Map.of("thumbnail", request.getUrl())),
                     Products.class

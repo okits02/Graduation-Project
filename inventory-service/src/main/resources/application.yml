@@ -6,15 +6,10 @@ spring:
   application:
     name: inventory-service
   datasource:
-    url: "jdbc:mysql://localhost:3306/inventory_db?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC"
-    username: "root"
-    password: "root"
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    hikari:
-      maximum-pool-size: 10
-      minimum-idle: 5
-      idle-timeout: 300000
-      connection-timeout: 20000
+    url: "jdbc:postgresql://localhost:5432/inventory_db"
+    username: "admin"
+    password: "admin123"
+    driver-class-name: org.postgresql.Driver
     jpa:
       hibernate:
         ddl-auto: update
@@ -22,7 +17,7 @@ spring:
       properties:
         hibernate:
           format_sql: true
-          dialect: org.hibernate.dialect.MySQL8Dialect
+          dialect: org.hibernate.dialect.PostgreSQLDialect
 
 springdoc:
   swagger-ui:

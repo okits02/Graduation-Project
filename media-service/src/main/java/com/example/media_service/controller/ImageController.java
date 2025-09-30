@@ -59,15 +59,26 @@ public class ImageController {
                 .result(listMediaResponse)
                 .build());
     }
-
-    @PostMapping("/product/video")
-    public ResponseEntity<ApiResponse<MediaResponse>> uploadVide(
-            @RequestBody VideoProductPostRequest request
-            ) throws IOException {
+    @PostMapping("/product/change-thumbnail")
+    public ResponseEntity<ApiResponse<MediaResponse>> changeThumbnail(
+            @ModelAttribute ChangeThumbnailRequest request
+    ) throws IOException {
+        MediaResponse mediaResponse = imageService.changeThumbnail(request.getOldThumbnailUrl(),
+                request.getNewThumbnail(), request.getProductId());
+        ApplyThumbnailEvent applyThumbnailEvent = createEvent(mediaResponse.getOwnerId(), mediaResponse.getUrl());
+        kafkaTemplate.send("product-apply-thumbnail-event", applyThumbnailEvent).whenComplete(
+                (result, ex) -> {
+                    if(ex != null)
+                    {
+                        System.err.println("Failed to send message" + ex.getMessage());
+                    }else {
+                        System.err.println("send message successfully" + result.getProducerRecord());
+                    }
+                });
         return ResponseEntity.ok(ApiResponse.<MediaResponse>builder()
                 .code(200)
-                .message("create video successfully")
-                .result(imageService.videoProduct(request.getVideoProduct(), request.getProductId()))
+                .message("Chang photo thumbnail successfully")
+                .result(mediaResponse)
                 .build());
     }
 

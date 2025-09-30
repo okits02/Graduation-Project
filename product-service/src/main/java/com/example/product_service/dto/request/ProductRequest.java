@@ -22,6 +22,7 @@ public class ProductRequest {
     BigDecimal listPrice;
     Integer quantity;
     Integer sold;
+    String videoUrl;
     double avgRating;
     Set<String> categoryId;
     Map<String, String> specifications;

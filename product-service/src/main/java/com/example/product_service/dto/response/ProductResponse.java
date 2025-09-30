@@ -23,6 +23,7 @@ public class  ProductResponse {
     Integer quantity;
     double avgRating;
     Integer sold;
+    String videoUrl;
     Float discount;
     String thumbNail;
     List<MediaResponse> mediaList;
