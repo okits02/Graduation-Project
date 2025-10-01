@@ -5,23 +5,26 @@ import com.okits02.inventory_service.dto.request.IsInStockRequest;
 import com.okits02.inventory_service.dto.response.InventoryResponse;
 import com.okits02.inventory_service.exceptions.AppException;
 import com.okits02.inventory_service.exceptions.ErrorCode;
+import com.okits02.inventory_service.kafka.ChangeStatusStockEvent;
 import com.okits02.inventory_service.mapper.InventoryMapper;
 import com.okits02.inventory_service.model.Inventory;
 import com.okits02.inventory_service.repository.InventoryRepository;
 import com.okits02.inventory_service.service.InventoryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
-
-import java.text.BreakIterator;
 
 @Service
 @RequiredArgsConstructor
 public class InventoryServiceImpl implements InventoryService {
     private final InventoryRepository inventoryRepository;
     private final InventoryMapper inventoryMapper;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+
     @Override
     public InventoryResponse save(InventoryRequest request) {
         Inventory inventory = inventoryMapper.toInventory(request);
+        productStockEvent(request.getProductId(), true);
         return inventoryMapper.toInventoryResponse(inventoryRepository.save(inventory));
     }
 
@@ -30,6 +33,9 @@ public class InventoryServiceImpl implements InventoryService {
         Inventory inventory = inventoryRepository.findByProductId(request.getProductId());
         if(inventory == null){
             throw new AppException(ErrorCode.PRODUCT_NOT_EXISTS);
+        }
+        if(request.getQuantity() == 0){
+            productStockEvent(request.getProductId(), false);
         }
         inventoryMapper.updateInventory(inventory, request);
         return inventoryMapper.toInventoryResponse(inventoryRepository.save(inventory));
@@ -53,6 +59,7 @@ public class InventoryServiceImpl implements InventoryService {
         if(inventory == null){
             throw new AppException(ErrorCode.PRODUCT_NOT_EXISTS);
         }
+        productStockEvent(productId, false);
         inventoryRepository.delete(inventory);
     }
 
@@ -71,7 +78,13 @@ public class InventoryServiceImpl implements InventoryService {
         if(inventory == null){
             throw new AppException(ErrorCode.PRODUCT_NOT_EXISTS);
         }
-        inventory.setQuantity(inventory.getQuantity() - quantity);
+        if(quantity >= inventory.getQuantity()){
+            inventory.setQuantity(0);
+            productStockEvent(productId, false);
+        }else {
+            inventory.setQuantity(inventory.getQuantity() - quantity);
+        }
+
         return inventoryRepository.save(inventory);
     }
 
@@ -81,8 +94,26 @@ public class InventoryServiceImpl implements InventoryService {
         if(inventory == null){
             throw new AppException(ErrorCode.PRODUCT_NOT_EXISTS);
         }
+        if(inventory.getQuantity() == 0){
+            productStockEvent(productId, true);
+        }
         inventory.setQuantity(inventory.getQuantity() + quantity);
         return inventoryRepository.save(inventory);
     }
 
+    private void productStockEvent(String productId, Boolean isInStock){
+        ChangeStatusStockEvent event = ChangeStatusStockEvent.builder()
+                .productId(productId)
+                .isStock(isInStock)
+                .build();
+        kafkaTemplate.send("change-status-event", event).whenComplete(
+                (result, ex) ->{
+                    if (ex != null)
+                    {
+                        System.err.println("Failed to send message" + ex.getMessage());
+                    } else {
+                        System.err.println("send message successfully" + result.getProducerRecord());
+                    }
+                });
+    }
 }

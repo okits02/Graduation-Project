@@ -71,7 +71,6 @@ public class UserController {
                 System.err.println("send message successfully" + result.getProducerRecord());
             }
         });
-
         UserResponse userResponse = UserResponse.builder()
                 .username(users.getUsername())
                 .firstName(request.getFirstName())

@@ -36,6 +36,8 @@ public class Products {
     double avgRating;
     @Field("sold_quantity")
     Integer sold;
+    @Field("in_stock")
+    Boolean inStock;
     @Field("video_url")
     String videoUrl;
     Set<String> categoryId;

@@ -5,6 +5,7 @@ import com.example.product_service.model.Products;
 import org.springframework.data.domain.Page;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 
@@ -18,4 +19,8 @@ public interface ProductRepository extends MongoRepository<Products, String> {
 
     @Query(value = "{'categoryId' : ?0}")
     List<Products> findByCategoryId(String categoryId);
+
+    @Modifying
+    @Query("{ '_id': ?0 }")
+    void updateStockById(String productId, boolean inStock);
 }

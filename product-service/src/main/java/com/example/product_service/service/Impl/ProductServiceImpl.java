@@ -75,4 +75,12 @@ public class ProductServiceImpl implements ProductService {
     public void DeleteProduct(String productId) {
         productRepository.deleteById(productId);
     }
+
+    @Override
+    public void changeStatusInStock(String productId, Boolean inStock) {
+        Products products = productRepository.findById(productId).orElseThrow(()->
+                new AppException(ErrorCode.PRODUCT_NOT_EXISTS));
+        productRepository.updateStockById(productId, inStock);
+    }
+
 }

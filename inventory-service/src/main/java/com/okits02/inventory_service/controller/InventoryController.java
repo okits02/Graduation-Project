@@ -4,11 +4,9 @@ import com.okits02.inventory_service.dto.request.InventoryRequest;
 import com.okits02.inventory_service.dto.request.IsInStockRequest;
 import com.okits02.inventory_service.dto.response.ApiResponse;
 import com.okits02.inventory_service.dto.response.InventoryResponse;
-import com.okits02.inventory_service.kafka.ChangeStatusIsStockEvent;
 import com.okits02.inventory_service.model.Inventory;
 import com.okits02.inventory_service.service.InventoryService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -16,24 +14,11 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class InventoryController {
     private final InventoryService inventoryService;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @PostMapping("/create")
     public ApiResponse<InventoryResponse> save(
             @RequestBody InventoryRequest request
             ){
-        ChangeStatusIsStockEvent event = ChangeStatusIsStockEvent.builder()
-                .isStock(true)
-                .build();
-        kafkaTemplate.send("change-status-event", event).whenComplete(
-                (result, ex) -> {
-                    if(ex != null){
-                        System.err.println("Failed to send message" + ex.getMessage());
-                    }else{
-                        System.err.println("send message successfully" + ex.getMessage());
-                    }
-                }
-        );
         return ApiResponse.<InventoryResponse>builder()
                 .code(200)
                 .message("Add product to inventory successfully!")
@@ -56,7 +41,6 @@ public class InventoryController {
     public ApiResponse<?> delete(
             @PathVariable String productId
     ){
-        inventoryService.delete(productId);
         return ApiResponse.builder()
                 .code(200)
                 .message("Remove product in Inventory successfully!")
