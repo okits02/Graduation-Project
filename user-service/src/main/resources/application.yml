@@ -1,4 +1,4 @@
-server:
+  mserver:
   port: 8060
   servlet:
     context-path: /user-service

@@ -48,7 +48,7 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
-    public void Delete(String productId) {
+    public void delete(String productId) {
         Inventory inventory = inventoryRepository.findByProductId(productId);
         if(inventory == null){
             throw new AppException(ErrorCode.PRODUCT_NOT_EXISTS);
@@ -66,14 +66,23 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
-    public void decreaseStock(String productId, int quantity) {
-
+    public Inventory decreaseStock(String productId, int quantity) {
+        Inventory inventory = inventoryRepository.findByProductId(productId);
+        if(inventory == null){
+            throw new AppException(ErrorCode.PRODUCT_NOT_EXISTS);
+        }
+        inventory.setQuantity(inventory.getQuantity() - quantity);
+        return inventoryRepository.save(inventory);
     }
 
     @Override
-    public void increaseStock(String productId, int quantity) {
-
+    public Inventory increaseStock(String productId, int quantity) {
+        Inventory inventory = inventoryRepository.findByProductId(productId);
+        if(inventory == null){
+            throw new AppException(ErrorCode.PRODUCT_NOT_EXISTS);
+        }
+        inventory.setQuantity(inventory.getQuantity() + quantity);
+        return inventoryRepository.save(inventory);
     }
-
 
 }
