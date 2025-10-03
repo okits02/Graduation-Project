@@ -105,7 +105,7 @@ public class ImageController {
                 .build());
     }
 
-    @DeleteMapping("/delete-by-ownerI")
+    @DeleteMapping("/delete/ownerId")
     public ResponseEntity<ApiResponse<?>> deleteByOwnerId(
             @RequestBody DeleteMediaRequest request
             ){
@@ -116,7 +116,7 @@ public class ImageController {
                 .build());
     }
 
-    @DeleteMapping("/delete-by-url")
+    @DeleteMapping("/delete/url")
     public ResponseEntity<ApiResponse<?>> deleteUrl(
         @RequestBody DeleteMediaByUrlRequest request
     ){

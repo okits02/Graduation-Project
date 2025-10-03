@@ -47,10 +47,7 @@ public class InventoryServiceImpl implements InventoryService {
         if(inventory == null){
             throw new AppException(ErrorCode.PRODUCT_NOT_EXISTS);
         }
-        if(request.getQuantity() < inventory.getQuantity()){
-            return true;
-        }
-        return false;
+        return request.getQuantity() <= inventory.getQuantity();
     }
 
     @Override

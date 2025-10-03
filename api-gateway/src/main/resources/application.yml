@@ -64,6 +64,13 @@ spring:
           filters:
             - StripPrefix=2
 
+        - id: inventory-service
+          uri: lb://inventory-service
+          predicates:
+            - Path=${app.api-prefix}/inventory-service/**
+          filters:
+            - StripPrefix=2
+
         - id: cart-service
           uri: lb://cart-service
           predicates:

@@ -84,14 +84,18 @@ public class ImageServiceImpl implements ImageService {
         if(medias.isEmpty()){
             throw new AppException(ErrorCode.CAN_NOT_FIND_MEDIA_BY_PRODUCT);
         }
-        for (var media : medias){
-            try{
-                cloudinary.uploader().destroy(media.getPublicId(), ObjectUtils.asMap("resource_type"));
+        for (var media : medias) {
+            try {
+                String resourceType = media.getMediaType().name().toLowerCase();
+                Map result = cloudinary.uploader().destroy(
+                        media.getPublicId(),
+                        ObjectUtils.asMap("resource_type", resourceType)
+                );
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new RuntimeException("Failed to delete from Cloudinary: " + e.getMessage(), e);
             }
         }
-        mediaRepository.deleteAll(medias);
+        mediaRepository.deleteAllInBatch(medias);
     }
 
     @Override
