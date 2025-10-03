@@ -23,9 +23,12 @@ public class InventoryServiceImpl implements InventoryService {
 
     @Override
     public InventoryResponse save(InventoryRequest request) {
-        Inventory inventory = inventoryMapper.toInventory(request);
+        if(inventoryRepository.existsByProductId(request.getProductId())){
+            throw new AppException(ErrorCode.PRODUCT_EXISTS);
+        }
+        Inventory newInventory = inventoryMapper.toInventory(request);
         productStockEvent(request.getProductId(), true);
-        return inventoryMapper.toInventoryResponse(inventoryRepository.save(inventory));
+        return inventoryMapper.toInventoryResponse(inventoryRepository.save(newInventory));
     }
 
     @Override
@@ -101,7 +104,7 @@ public class InventoryServiceImpl implements InventoryService {
     private void productStockEvent(String productId, Boolean isInStock){
         ChangeStatusStockEvent event = ChangeStatusStockEvent.builder()
                 .productId(productId)
-                .isStock(isInStock)
+                .inStock(isInStock)
                 .build();
         kafkaTemplate.send("change-status-event", event).whenComplete(
                 (result, ex) ->{

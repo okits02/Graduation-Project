@@ -1,6 +1,6 @@
 package com.example.product_service.consumer;
 
-import com.example.product_service.dto.ChangeInStockEvent;
+import com.example.product_service.dto.ChangeStatusStockEvent;
 import com.example.product_service.service.ProductService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -18,9 +18,9 @@ public class productStockConsumer {
         containerFactory = "changeIsStockKafkaListenerContainerFactory")
     public void consumerChangeInStock(String productEvent){
         ObjectMapper objectMapper = new ObjectMapper();
-        ChangeInStockEvent changeInStockEvent = null;
+        ChangeStatusStockEvent changeInStockEvent = null;
         try {
-            changeInStockEvent = objectMapper.readValue(productEvent, ChangeInStockEvent.class);
+            changeInStockEvent = objectMapper.readValue(productEvent, ChangeStatusStockEvent.class);
         } catch (JsonMappingException e) {
             throw new RuntimeException(e);
         } catch (JsonProcessingException e) {

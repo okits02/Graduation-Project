@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChangeInStockEvent {
+public class ChangeStatusStockEvent {
     String productId;
     Boolean inStock;
 }

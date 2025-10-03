@@ -57,6 +57,7 @@ public class ProductServiceImpl implements ProductService {
         }
         String generatedId = new ObjectId().toHexString();
         newProducts.setId(generatedId);
+        newProducts.setInStock(false);
         newProducts.setCreateAt(LocalDate.now());
         return productRepository.save(newProducts);
     }

@@ -26,6 +26,7 @@ public class  ProductResponse {
     String videoUrl;
     Float discount;
     String thumbNail;
+    Boolean inStock;
     List<MediaResponse> mediaList;
     List<CategoryResponse> listCategory;
     Map<String, String> specifications;

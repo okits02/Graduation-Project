@@ -42,6 +42,7 @@ public class ProductMappingHelper {
                 .description(products.getDescription())
                 .sold(products.getSold())
                 .listPrice(products.getListPrice())
+                .inStock(products.getInStock())
                 .avgRating(products.getAvgRating())
                 .videoUrl(products.getVideoUrl())
                 .mediaList(listMedia)
