@@ -26,6 +26,6 @@ public class productStockConsumer {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-
+        productService.changeStatusInStock(changeInStockEvent.getProductId(), changeInStockEvent.getInStock());
     }
 }

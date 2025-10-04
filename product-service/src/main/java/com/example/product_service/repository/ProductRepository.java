@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.mongodb.repository.Update;
 
 import java.util.List;
 
@@ -22,5 +23,7 @@ public interface ProductRepository extends MongoRepository<Products, String> {
 
     @Modifying
     @Query("{ '_id': ?0 }")
+    @Update("{ '$set': { 'inStock': ?1 } }")
     void updateStockById(String productId, boolean inStock);
+
 }

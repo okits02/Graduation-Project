@@ -37,8 +37,8 @@ public class InventoryServiceImpl implements InventoryService {
         if(inventory == null){
             throw new AppException(ErrorCode.PRODUCT_NOT_EXISTS);
         }
-        if(request.getQuantity() == 0){
-            productStockEvent(request.getProductId(), false);
+        if(inventory.getQuantity() == 0){
+            productStockEvent(request.getProductId(), true);
         }
         inventoryMapper.updateInventory(inventory, request);
         return inventoryMapper.toInventoryResponse(inventoryRepository.save(inventory));
@@ -78,10 +78,13 @@ public class InventoryServiceImpl implements InventoryService {
         if(inventory == null){
             throw new AppException(ErrorCode.PRODUCT_NOT_EXISTS);
         }
-        if(quantity >= inventory.getQuantity()){
+        if(quantity > inventory.getQuantity()){
+            throw new AppException(ErrorCode.PRODUCT_NOT_ENOUGH);
+        }
+        if(quantity == inventory.getQuantity()){
             inventory.setQuantity(0);
             productStockEvent(productId, false);
-        }else {
+        }else if(quantity < inventory.getQuantity()){
             inventory.setQuantity(inventory.getQuantity() - quantity);
         }
 
