@@ -19,8 +19,10 @@ public class ProductUpdateRequest {
     String description;
     double listPrice;
     Integer quantity;
+    String color;
     Integer sold;
     String thumbNail;
+    String videoUrl;
     List<String> imageList;
     Map<String, String> specifications;
     Set<String> categoryId;

@@ -38,31 +38,18 @@ public class Orders extends AbstractMappedEntity{
     @DateTimeFormat(pattern = AppConstant.LOCAL_DATE_TIME_FORMAT)
     @Column(name = "order_date")
     private  LocalDateTime orderDate;
-
     @Column(name = "order_desc")
     private String orderDesc;
-
     @Column(name = "order_fee", columnDefinition = "decimal")
     private BigDecimal orderFee;
-
     @Column(name = "order_status")
     private Status orderStatus;
-
-    @Column(name = "street")
-    private String street;
-
-    @Column(name = "city")
-    private String city;
-
-    @Column(name = "postal_code")
-    private String postalCode;
-
-    @Column(name = "address_type")
-    private String addressType;
-
-    @Column(name = "phone_number")
-    private String phoneNumber;
-
+    @Column(name = "user_id")
+    private String userId;
+    @Column(name = "payment_id")
+    private String paymentId;
+    @Column(name = "delivery_id")
+    private String deliveryId;
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items;
 

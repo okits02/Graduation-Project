@@ -13,6 +13,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Setter
@@ -29,8 +30,8 @@ public class OrderResponse implements Serializable {
     @JsonFormat(pattern = AppConstant.LOCAL_DATE_TIME_FORMAT, shape = JsonFormat.Shape.STRING)
     @DateTimeFormat(pattern = AppConstant.LOCAL_DATE_TIME_FORMAT)
     LocalDateTime orderDate;
-
     String orderDesc;
     Double orderFee;
-    String productId;
+    String userId;
+    List<OrderItemResponse> items;
 }

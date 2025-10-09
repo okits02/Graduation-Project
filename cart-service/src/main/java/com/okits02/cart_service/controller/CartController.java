@@ -60,10 +60,10 @@ public class CartController {
     }
 
     @GetMapping("/internal/get-cart-item/{cartItemId}")
-    public ApiResponse<CartResponse> getCartItem(@RequestParam String cartItemId){
-        return ApiResponse.<CartResponse>builder()
+    public ApiResponse<CartItemResponse> getCartItem(@RequestParam String cartItemId){
+        return ApiResponse.<CartItemResponse>builder()
                 .code(200)
-                .result()
+                .result(cartService.getCartItem(cartItemId))
                 .build();
     }
 }

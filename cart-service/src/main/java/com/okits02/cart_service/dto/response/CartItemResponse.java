@@ -18,5 +18,4 @@ public class CartItemResponse {
     private BigDecimal listPrice;
     private BigDecimal sellPrice;
     private LocalDateTime addedAt;
-
 }
