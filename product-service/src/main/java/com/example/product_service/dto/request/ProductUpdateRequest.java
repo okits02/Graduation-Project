@@ -18,7 +18,6 @@ public class ProductUpdateRequest {
     String name;
     String description;
     double listPrice;
-    Integer quantity;
     String color;
     Integer sold;
     String thumbNail;

@@ -46,7 +46,6 @@ public class ProductMappingHelper {
                 .avgRating(products.getAvgRating())
                 .videoUrl(products.getVideoUrl())
                 .mediaList(listMedia)
-                .quantity(products.getQuantity())
                 .specifications(products.getSpecifications())
                 .build();
     }

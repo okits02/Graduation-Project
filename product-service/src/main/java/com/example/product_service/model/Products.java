@@ -31,7 +31,6 @@ public class Products {
     String description;
     @Field("list_price")
     BigDecimal listPrice;
-    Integer quantity;
     @Field("avg_rating")
     double avgRating;
     @Field("sold_quantity")

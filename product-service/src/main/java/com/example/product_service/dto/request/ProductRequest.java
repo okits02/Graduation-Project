@@ -20,7 +20,6 @@ public class ProductRequest {
     String color;
     String description;
     BigDecimal listPrice;
-    Integer quantity;
     Integer sold;
     String videoUrl;
     double avgRating;

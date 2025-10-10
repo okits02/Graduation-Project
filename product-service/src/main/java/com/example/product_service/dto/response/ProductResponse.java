@@ -20,7 +20,6 @@ public class  ProductResponse {
     String description;
     BigDecimal listPrice;
     BigDecimal sellPrice;
-    Integer quantity;
     double avgRating;
     Integer sold;
     String videoUrl;
