@@ -4,12 +4,10 @@ import com.example.userservice.dto.request.*;
 import com.example.userservice.dto.response.AuthenticationResponse;
 import com.example.userservice.dto.response.ForgotPasswordResponse;
 import com.example.userservice.dto.response.IntrospectResponse;
-import com.example.userservice.enums.Roles;
-import com.example.userservice.exception.AppException;
-import com.example.userservice.exception.ErrorCode;
-import com.example.userservice.model.ForgotPassword;
+import com.example.userservice.exception.UserErrorCode;
+import com.okits02.common_lib.exception.AppException;
+import com.okits02.common_lib.exception.GlobalErrorCode;
 import com.example.userservice.model.InvalidateToken;
-import com.example.userservice.model.Role;
 import com.example.userservice.model.Users;
 import com.example.userservice.repository.InvalidateTokenRepository;
 import com.example.userservice.repository.UserRepository;
@@ -24,7 +22,6 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -35,8 +32,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.StringJoiner;
 import java.util.UUID;
-
-import static com.example.userservice.enums.Roles.ADMIN;
 
 @Service
 @CommonsLog
@@ -66,15 +61,15 @@ public class AuthenticationService {
     public AuthenticationResponse authenticate(AuthenticationRequest request)
     {
         var users = userRepository.findByUsername(request.getUsername()).orElseThrow(()
-                -> new AppException(ErrorCode.USER_NOT_EXITS));
+                -> new AppException(UserErrorCode.USER_NOT_EXISTS));
         boolean authenticate = passwordEncoder.matches(request.getPassword(), users.getPassword());
         boolean active = users.isActive();
         if (!authenticate) {
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
+            throw new AppException(GlobalErrorCode.UNAUTHENTICATED);
         }
 
         if (users.getRole().toString().equalsIgnoreCase("ADMIN") && !users.isActive()) {
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
+            throw new AppException(GlobalErrorCode.UNAUTHENTICATED);
         }
 
         var token = generateToken(users);
@@ -107,7 +102,7 @@ public class AuthenticationService {
         invalidateTokenRepository.save(invalidateToken);
         var username = signerJWT.getJWTClaimsSet().getSubject();
 
-        var user = userRepository.findByUsername(username).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXITS));
+        var user = userRepository.findByUsername(username).orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_EXISTS));
         var token = generateToken(user);
 
         return AuthenticationResponse.builder()
@@ -120,7 +115,7 @@ public class AuthenticationService {
     public ForgotPasswordResponse forgotPassword(ForgotPasswordRequest request)
     {
         Users users = userRepository.findByEmail(request.getEmail()).orElseThrow(()
-                -> new AppException(ErrorCode.USER_NOT_EXITS));
+                -> new AppException(UserErrorCode.USER_NOT_EXISTS));
         var token = generateResetToken(users);
         return ForgotPasswordResponse.builder()
                 .token(token)
@@ -161,9 +156,9 @@ public class AuthenticationService {
         Date expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
         var verified = signedJWT.verify(verifier);
 
-        if(!(verified && expiryTime.after(new Date()))) throw new AppException(ErrorCode.UNAUTHENTICATED);
+        if(!(verified && expiryTime.after(new Date()))) throw new AppException(GlobalErrorCode.UNAUTHENTICATED);
         if(invalidateTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID()))
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
+            throw new AppException(GlobalErrorCode.UNAUTHENTICATED);
         return signedJWT;
     }
 

@@ -1,12 +1,13 @@
 package com.example.userservice.controller;
 
-import com.example.userservice.dto.PageResponse;
+import com.example.userservice.exception.UserErrorCode;
+import com.okits02.common_lib.dto.PageResponse;
 import com.example.userservice.dto.request.*;
-import com.example.userservice.dto.response.ApiResponse;
+import com.okits02.common_lib.dto.ApiResponse;
 import com.example.userservice.dto.response.UserIdResponse;
 import com.example.userservice.dto.response.UserResponse;
-import com.example.userservice.exception.AppException;
-import com.example.userservice.exception.ErrorCode;
+import com.okits02.common_lib.exception.AppException;
+import com.okits02.common_lib.exception.GlobalErrorCode;
 import com.example.userservice.kafka.CreateProfileEvent;
 import com.example.userservice.kafka.NotificationEvent;
 import com.example.userservice.mapper.UserMapper;
@@ -21,13 +22,8 @@ import com.example.userservice.utils.OtpUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import io.swagger.v3.oas.annotations.tags.Tags;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.catalina.User;
-import org.apache.kafka.clients.admin.NewTopic;
-import org.apache.kafka.shaded.com.google.protobuf.Api;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -79,18 +75,11 @@ public class UserController {
                 .phone(request.getPhone())
                 .role(users.getRole())
                 .build();
-        try {
-            return ApiResponse.<UserResponse>builder()
-                    .code(200)
-                    .message("User Created")
-                    .result(userResponse)
-                    .build();
-        }catch (AppException e) {
-            return ApiResponse.<UserResponse>builder()
-                    .code(e.getErrorCode().getCode())
-                    .message(e.getMessage())
-                    .build();
-        }
+        return ApiResponse.<UserResponse>builder()
+                .code(200)
+                .message("User Created")
+                .result(userResponse)
+                .build();
     }
 
     @Operation(summary = "send otp",
@@ -99,12 +88,12 @@ public class UserController {
     ApiResponse<?> sendVerificationOTP(@RequestBody @Valid UserCreationRequest request)
     {
         Users users = userRepository.findByUsername(request.getUsername()).orElseThrow(()
-                -> new AppException(ErrorCode.USER_NOT_EXITS));
+                -> new AppException(UserErrorCode.USER_NOT_EXISTS));
         verificationService.sendverifyOtp(users);
         Optional<OTP> otp = verificationService.getOtpByUserId(users.getId());
         if(otp.isEmpty())
         {
-            throw new AppException(ErrorCode.OTP_NOT_EXISTS);
+            throw new AppException(UserErrorCode.OTP_NOT_EXISTS);
         }
         NotificationEvent notificationEvent = NotificationEvent.builder()
                 .channel("EMAIL")
@@ -132,7 +121,7 @@ public class UserController {
     public ApiResponse<?> sendForgotPasswordOTP(@RequestBody @Valid ForgotPasswordRequest request) {
         Optional<Users> optionalUser = userRepository.findByEmail(request.getEmail());
         if (optionalUser.isEmpty()) {
-            throw new AppException(ErrorCode.USER_NOT_EXITS);
+            throw new AppException(UserErrorCode.USER_NOT_EXISTS);
         }
         Users user = optionalUser.get();
 
@@ -141,7 +130,7 @@ public class UserController {
 
         Optional<ForgotPassword> optionalForgotPassword = forgotPasswordService.findByUserId(user.getId());
         if (optionalForgotPassword.isEmpty()) {
-            throw new AppException(ErrorCode.OTP_NOT_EXISTS);
+            throw new AppException(UserErrorCode.OTP_NOT_EXISTS);
         }
 
         NotificationEvent notificationEvent = NotificationEvent.builder()
@@ -172,7 +161,7 @@ public class UserController {
         try{
             var contex = SecurityContextHolder.getContext();
             String email = contex.getAuthentication().getName();
-            Users users = userRepository.findByEmail(email).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXITS));
+            Users users = userRepository.findByEmail(email).orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_EXISTS));
             log.info("user: {}", users);
             userService.forgotPassword(users, request.getNewPassword());
             return ResponseEntity.ok(ApiResponse.builder()

@@ -1,8 +1,7 @@
-package com.example.userservice.exception;
+package com.okits02.common_lib.exception;
 
-import com.example.userservice.dto.response.ApiResponse;
+import com.okits02.common_lib.dto.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -36,7 +35,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(value = AccessDeniedException.class)
     ResponseEntity<ApiResponse> handlingAccessDeniedException(AccessDeniedException e) {
-        ErrorCode errorCode = ErrorCode.UNAUTHORIZED;
+        ErrorCode errorCode = GlobalErrorCode.UNAUTHORIZED;
 
         return ResponseEntity.status(errorCode.getHttpStatusCode()).body(
                 ApiResponse.builder()

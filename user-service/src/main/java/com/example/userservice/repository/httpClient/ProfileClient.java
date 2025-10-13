@@ -1,6 +1,6 @@
 package com.example.userservice.repository.httpClient;
 
-import com.example.userservice.dto.response.ApiResponse;
+import com.okits02.common_lib.dto.ApiResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;

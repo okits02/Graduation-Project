@@ -1,7 +1,8 @@
 package com.example.userservice.service.Impl;
 
-import com.example.userservice.exception.AppException;
-import com.example.userservice.exception.ErrorCode;
+import com.example.userservice.exception.UserErrorCode;
+import com.okits02.common_lib.exception.AppException;
+import com.okits02.common_lib.exception.GlobalErrorCode;
 import com.example.userservice.model.OTP;
 import com.example.userservice.model.Users;
 import com.example.userservice.repository.OtpRepository;
@@ -11,7 +12,6 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.Date;
 import java.util.Optional;
@@ -36,7 +36,7 @@ public class VerificationServiceImpl implements VerificationService {
     @Override
     public OTP getOtpById(String otpId) {
         Optional<OTP> otp = Optional.ofNullable(otpRepository.findById(otpId)
-                .orElseThrow(() -> new AppException(ErrorCode.OTP_NOT_EXISTS)));
+                .orElseThrow(() -> new AppException(UserErrorCode.OTP_NOT_EXISTS)));
         return otp.get();
     }
 

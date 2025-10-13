@@ -1,7 +1,8 @@
 package com.example.userservice.service.Impl;
 
-import com.example.userservice.exception.AppException;
-import com.example.userservice.exception.ErrorCode;
+import com.example.userservice.exception.UserErrorCode;
+import com.okits02.common_lib.exception.AppException;
+import com.okits02.common_lib.exception.GlobalErrorCode;
 import com.example.userservice.model.ForgotPassword;
 import com.example.userservice.model.Users;
 import com.example.userservice.repository.ForgotPasswordRepository;
@@ -36,7 +37,7 @@ public class  ForgotPasswordServiceImpl implements ForgotPasswordService {
     @Override
     public ForgotPassword findById(String id) {
         return forgotPasswordRepository.findById(id).orElseThrow(() ->
-                new AppException(ErrorCode.OTP_NOT_EXISTS));
+                new AppException(UserErrorCode.OTP_NOT_EXISTS));
     }
 
     @Override

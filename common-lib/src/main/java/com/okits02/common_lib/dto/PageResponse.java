@@ -1,4 +1,4 @@
-package com.example.userservice.dto;
+package com.okits02.common_lib.dto;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -11,7 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class PageResponse <T>{
+public class PageResponse<T> {
     int currentPage;
     int totalPage;
     int pageSize;

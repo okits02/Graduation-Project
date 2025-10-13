@@ -1,7 +1,7 @@
 package com.example.userservice.configuration;
 
-import com.example.userservice.dto.response.ApiResponse;
-import com.example.userservice.exception.ErrorCode;
+import com.okits02.common_lib.dto.ApiResponse;
+import com.okits02.common_lib.exception.GlobalErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,14 +17,14 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
             throws IOException, ServletException {
-        ErrorCode errorCode = ErrorCode.UNAUTHENTICATED;
+        GlobalErrorCode globalErrorCode = GlobalErrorCode.UNAUTHENTICATED;
 
-        response.setStatus(errorCode.getHttpStatusCode().value());
+        response.setStatus(globalErrorCode.getHttpStatusCode().value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
         ApiResponse<?> apiResponse = ApiResponse.builder()
-                .code(errorCode.getCode())
-                .message(errorCode.getMessage())
+                .code(globalErrorCode.getCode())
+                .message(globalErrorCode.getMessage())
                 .build();
 
         ObjectMapper objectMapper = new ObjectMapper();

@@ -1,0 +1,6 @@
+server:
+  servlet:
+    context-path: /common-lib
+spring:
+  application:
+    name: common-library

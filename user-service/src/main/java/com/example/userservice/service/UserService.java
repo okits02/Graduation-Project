@@ -1,6 +1,6 @@
 package com.example.userservice.service;
 
-import com.example.userservice.dto.PageResponse;
+import com.okits02.common_lib.dto.PageResponse;
 import com.example.userservice.dto.request.ForgotPasswordRequest;
 import com.example.userservice.dto.request.UserCreationRequest;
 import com.example.userservice.dto.response.UserIdResponse;

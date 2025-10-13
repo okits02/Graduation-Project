@@ -4,8 +4,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
-@SpringBootApplication
 @EnableFeignClients
+@SpringBootApplication(scanBasePackages = {"com.example.userservice", "com.okits02.common_lib"})
 public class UserServiceApplication {
 
     public static void main(String[] args) {
