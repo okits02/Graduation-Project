@@ -181,7 +181,7 @@ public class UserServiceImpl implements UserService {
                 .currentPage(page)
                 .pageSize(pageData.getSize())
                 .totalElements(pageData.getTotalElements())
-                .Data(pageData.getContent().stream().map(userMapper::toUserResponse).toList())
+                .data(pageData.getContent().stream().map(userMapper::toUserResponse).toList())
                 .build();
     }
 }

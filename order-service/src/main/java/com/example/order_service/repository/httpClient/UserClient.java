@@ -1,6 +1,6 @@
 package com.example.order_service.repository.httpClient;
 
-import com.example.order_service.dto.response.ApiResponse;
+import com.okits02.common_lib.dto.ApiResponse;
 import com.example.order_service.dto.response.UserIdResponse;
 import feign.Headers;
 import org.springframework.cloud.openfeign.FeignClient;

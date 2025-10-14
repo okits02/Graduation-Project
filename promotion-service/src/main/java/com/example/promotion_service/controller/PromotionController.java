@@ -2,14 +2,13 @@ package com.example.promotion_service.controller;
 
 import com.example.promotion_service.dto.request.PromotionCreationRequest;
 import com.example.promotion_service.dto.request.PromotionUpdateRequest;
-import com.example.promotion_service.dto.response.ApiResponse;
-import com.example.promotion_service.dto.response.PageResponse;
+import com.okits02.common_lib.dto.ApiResponse;
+import com.okits02.common_lib.dto.PageResponse;
 import com.example.promotion_service.dto.response.PromotionResponse;
-import com.example.promotion_service.exception.AppException;
-import com.example.promotion_service.exception.ErrorCode;
+import com.okits02.common_lib.exception.AppException;
+import com.example.promotion_service.exception.PromotionErrorCode;
 import com.example.promotion_service.kafka.PromotionEvent;
 import com.example.promotion_service.kafka.StatusEvent;
-import com.example.promotion_service.model.Promotion;
 import com.example.promotion_service.services.PromotionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.util.Date;
 
 import static com.example.promotion_service.enums.UsageType.LIMITED;
@@ -36,7 +34,7 @@ public class PromotionController {
     {
         if (request.getUsageLimited() == 0)
             if (request.getUsageType().equals(LIMITED)) {
-                throw new AppException(ErrorCode.USAGE_LIMITED_NULL);
+                throw new AppException(PromotionErrorCode.USAGE_LIMITED_NULL);
             }
         PromotionResponse promotion = promotionService.createPromotion(request);
         PromotionEvent promotionEvent = PromotionEvent.builder()
@@ -64,7 +62,7 @@ public class PromotionController {
         return ResponseEntity.ok(ApiResponse.<PromotionResponse>builder()
                         .code(200)
                         .message("Create promotion successfully!")
-                        .Result(promotion)
+                        .result(promotion)
                         .build());
     }
 
@@ -74,7 +72,7 @@ public class PromotionController {
         {
             if(request.getUsageType().equals(LIMITED))
             {
-                throw new AppException(ErrorCode.USAGE_LIMITED_NULL);
+                throw new AppException(PromotionErrorCode.USAGE_LIMITED_NULL);
             }
         }
         PromotionResponse promotionResponse = promotionService.updatePromotion(request);
@@ -103,7 +101,7 @@ public class PromotionController {
         return  ResponseEntity.ok(ApiResponse.<PromotionResponse>builder()
                         .code(200)
                         .message("Update promotion successfully!")
-                        .Result(promotionResponse)
+                        .result(promotionResponse)
                         .build());
     }
 
@@ -112,7 +110,7 @@ public class PromotionController {
         return ResponseEntity.ok(ApiResponse.<PromotionResponse>builder()
                         .code(200)
                         .message("Get promotion successfully!")
-                        .Result(promotionService.getPromotion(promotionId))
+                        .result(promotionService.getPromotion(promotionId))
                         .build());
     }
 
@@ -124,7 +122,7 @@ public class PromotionController {
         return ResponseEntity.ok(ApiResponse.<PageResponse<PromotionResponse>>builder()
                         .code(200)
                         .message("Get all promotion successfully!")
-                        .Result(promotionService.getAllPromotion(page, size))
+                        .result(promotionService.getAllPromotion(page, size))
                 .build());
     }
 

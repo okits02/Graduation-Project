@@ -1,8 +1,9 @@
 package com.example.media_service.configuration;
 
-import com.example.media_service.dto.ApiResponse;
-import com.example.media_service.exception.ErrorCode;
+import com.okits02.common_lib.dto.ApiResponse;
+import com.example.media_service.exception.MediaErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.okits02.common_lib.exception.GlobalErrorCode;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -16,7 +17,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
-        ErrorCode errorCode = ErrorCode.UNAUTHENTICATED;
+        GlobalErrorCode errorCode = GlobalErrorCode.UNAUTHENTICATED;
 
         response.setStatus(errorCode.getHttpStatusCode().value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);

@@ -1,7 +1,8 @@
 package com.okits02.inventory_service.configurations;
 
-import com.okits02.inventory_service.dto.response.ApiResponse;
-import com.okits02.inventory_service.exceptions.ErrorCode;
+import com.okits02.common_lib.dto.ApiResponse;
+import com.okits02.common_lib.exception.GlobalErrorCode;
+import com.okits02.inventory_service.exceptions.InventoryErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,7 +18,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
             throws IOException, ServletException {
-        ErrorCode errorCode = ErrorCode.UNAUTHENTICATED;
+        GlobalErrorCode errorCode = GlobalErrorCode.UNAUTHENTICATED;
 
         response.setStatus(errorCode.getHttpStatusCode().value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);

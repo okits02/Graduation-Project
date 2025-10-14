@@ -3,7 +3,7 @@ package com.okits02.cart_service.controller;
 import com.okits02.cart_service.dto.request.CartDeleteItemRequest;
 import com.okits02.cart_service.dto.request.CartItemRequest;
 import com.okits02.cart_service.dto.request.CartUpdateRequest;
-import com.okits02.cart_service.dto.response.ApiResponse;
+import com.okits02.common_lib.dto.ApiResponse;
 import com.okits02.cart_service.dto.response.CartItemResponse;
 import com.okits02.cart_service.dto.response.CartResponse;
 import com.okits02.cart_service.mapper.CartItemMapper;

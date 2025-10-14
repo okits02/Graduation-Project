@@ -4,16 +4,14 @@ import com.example.profile_service.dto.request.AddressRequest;
 import com.example.profile_service.dto.response.AddressResponse;
 import com.example.profile_service.entity.UserAddress;
 import com.example.profile_service.entity.UserProfile;
-import com.example.profile_service.exception.AppException;
-import com.example.profile_service.exception.ErrorCode;
+import com.okits02.common_lib.exception.AppException;
+import com.example.profile_service.exception.ProfileErrorCode;
 import com.example.profile_service.mapper.AddressMapper;
 import com.example.profile_service.repository.AddressRepository;
 import com.example.profile_service.repository.ProfileRepository;
 import com.example.profile_service.service.AddressService;
 import com.example.profile_service.service.ProfileService;
-import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -45,7 +43,7 @@ public class AddressServiceImpl implements AddressService {
         UserProfile userProfile = profileRepository.findByUserId(userId);
         if(userProfile == null)
         {
-            throw new AppException(ErrorCode.PROFILE_NOT_EXITS);
+            throw new AppException(ProfileErrorCode.PROFILE_NOT_EXITS);
         }
         List<UserAddress> userAddressList = userProfile.getAddress();
         return addressMapper.toListAddress(userAddressList);
@@ -56,7 +54,7 @@ public class AddressServiceImpl implements AddressService {
         String userId = profileService.getUserId();
         UserProfile userProfile = profileRepository.findByUserId(userId);
         if (userProfile == null) {
-            throw new AppException(ErrorCode.PROFILE_NOT_EXITS);
+            throw new AppException(ProfileErrorCode.PROFILE_NOT_EXITS);
         }
 
         List<UserAddress> userAddressList = userProfile.getAddress();
@@ -71,7 +69,7 @@ public class AddressServiceImpl implements AddressService {
         }
 
         if (updatedAddress == null) {
-            throw new AppException(ErrorCode.ADDRESS_NOT_EXITS);
+            throw new AppException(ProfileErrorCode.ADDRESS_NOT_EXITS);
         }
 
         profileRepository.save(userProfile);

@@ -1,6 +1,6 @@
 package com.example.media_service.controller;
 
-import com.example.media_service.dto.ApiResponse;
+import com.okits02.common_lib.dto.ApiResponse;
 import com.example.media_service.dto.request.*;
 import com.example.media_service.dto.response.ListMediaResponse;
 import com.example.media_service.dto.response.MediaResponse;

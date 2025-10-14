@@ -1,10 +1,10 @@
 package com.example.product_service.controller;
 
-import com.example.product_service.dto.PageResponse;
+import com.okits02.common_lib.dto.PageResponse;
 import com.example.product_service.dto.request.CategoryRequest;
-import com.example.product_service.dto.response.ApiResponse;
+import com.okits02.common_lib.dto.ApiResponse;
 import com.example.product_service.dto.response.CategoryResponse;
-import com.example.product_service.exceptions.AppException;
+import com.okits02.common_lib.exception.AppException;
 import com.example.product_service.model.Category;
 import com.example.product_service.service.CategoryService;
 import io.swagger.v3.oas.annotations.Operation;

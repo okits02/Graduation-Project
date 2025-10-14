@@ -2,9 +2,9 @@ package com.example.profile_service.controller;
 
 import com.example.profile_service.dto.request.ProfileRequest;
 import com.example.profile_service.dto.request.ProfileUpdateRequest;
-import com.example.profile_service.dto.response.ApiResponse;
+import com.okits02.common_lib.dto.ApiResponse;
 import com.example.profile_service.dto.response.CustomerVM;
-import com.example.profile_service.dto.response.PageResponse;
+import com.okits02.common_lib.dto.PageResponse;
 import com.example.profile_service.dto.response.ProfileResponse;
 import com.example.profile_service.service.ProfileService;
 import io.swagger.v3.oas.annotations.Operation;

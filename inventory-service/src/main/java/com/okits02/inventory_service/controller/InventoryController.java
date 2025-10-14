@@ -2,7 +2,7 @@ package com.okits02.inventory_service.controller;
 
 import com.okits02.inventory_service.dto.request.InventoryRequest;
 import com.okits02.inventory_service.dto.request.IsInStockRequest;
-import com.okits02.inventory_service.dto.response.ApiResponse;
+import com.okits02.common_lib.dto.ApiResponse;
 import com.okits02.inventory_service.dto.response.InventoryResponse;
 import com.okits02.inventory_service.model.Inventory;
 import com.okits02.inventory_service.service.InventoryService;

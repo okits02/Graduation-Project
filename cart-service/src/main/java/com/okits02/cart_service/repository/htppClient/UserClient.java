@@ -1,6 +1,6 @@
 package com.okits02.cart_service.repository.htppClient;
 
-import com.okits02.cart_service.dto.response.ApiResponse;
+import com.okits02.common_lib.dto.ApiResponse;
 import com.okits02.cart_service.dto.response.GetUserIdResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;

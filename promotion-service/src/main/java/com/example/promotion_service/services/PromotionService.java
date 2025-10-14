@@ -2,7 +2,7 @@ package com.example.promotion_service.services;
 
 import com.example.promotion_service.dto.request.PromotionCreationRequest;
 import com.example.promotion_service.dto.request.PromotionUpdateRequest;
-import com.example.promotion_service.dto.response.PageResponse;
+import com.okits02.common_lib.dto.PageResponse;
 import com.example.promotion_service.dto.response.PromotionResponse;
 import com.example.promotion_service.model.Promotion;
 import org.springframework.http.ResponseEntity;

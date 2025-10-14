@@ -1,12 +1,12 @@
 package com.example.product_service.service.Impl;
 
-import com.example.product_service.dto.PageResponse;
+import com.okits02.common_lib.dto.PageResponse;
+import com.okits02.common_lib.dto.ApiResponse;
 import com.example.product_service.dto.RemoveCategoryRequest;
 import com.example.product_service.dto.request.CategoryRequest;
-import com.example.product_service.dto.response.ApiResponse;
 import com.example.product_service.dto.response.CategoryResponse;
-import com.example.product_service.exceptions.AppException;
-import com.example.product_service.exceptions.ErrorCode;
+import com.okits02.common_lib.exception.AppException;
+import com.example.product_service.exceptions.ProductErrorCode;
 import com.example.product_service.helper.CategoryMappingHelper;
 import com.example.product_service.mapper.CategoryMapper;
 import com.example.product_service.model.Category;
@@ -17,7 +17,6 @@ import com.example.product_service.repository.httpsClient.SearchClient;
 import com.example.product_service.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -49,7 +48,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public CategoryResponse findById(String categoryId) {
         Category category = categoryRepository.findById(categoryId).orElseThrow(()->
-                new AppException(ErrorCode.CATE_NOT_EXISTS));
+                new AppException(ProductErrorCode.CATE_NOT_EXISTS));
         return categoryMappingHelper.map(category);
     }
 
@@ -84,7 +83,7 @@ public class CategoryServiceImpl implements CategoryService {
     public CategoryResponse updateCate(CategoryRequest request) {
         Optional<Category> category = categoryRepository.findById(request.getId());
         if(category.isEmpty()){
-            throw new AppException(ErrorCode.CATE_EXISTS);
+            throw new AppException(ProductErrorCode.CATE_EXISTS);
         }
         categoryMapper.updateCategory(category.orElse(null), request);
         category.get().setParentId(request.getParentId());
@@ -121,11 +120,11 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public void deleteCateById(String categoryId) {
         Category category = categoryRepository.findById(categoryId).orElseThrow(()
-                -> new AppException(ErrorCode.CATE_NOT_EXISTS));
+                -> new AppException(ProductErrorCode.CATE_NOT_EXISTS));
         List<String> allDescendants = getAllDescendantIds(category);
         if(category.getParentId() != null && !category.getParentId().isEmpty()){
             Category parent = categoryRepository.findById(category.getParentId()).orElseThrow(() ->
-                    new AppException(ErrorCode.CATE_NOT_EXISTS));
+                    new AppException(ProductErrorCode.CATE_NOT_EXISTS));
             parent.getChildrenId().remove(categoryId);
             categoryRepository.save(parent);
         }
@@ -153,7 +152,7 @@ public class CategoryServiceImpl implements CategoryService {
         {
         for(String childId : category.getChildrenId()){
             Category child = categoryRepository.findById(childId).orElseThrow(() ->
-                    new AppException(ErrorCode.CATE_NOT_EXISTS));
+                    new AppException(ProductErrorCode.CATE_NOT_EXISTS));
             result.addAll(getAllDescendantIds(child));
             result.add(childId);
         }

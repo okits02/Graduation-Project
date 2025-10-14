@@ -1,6 +1,6 @@
 package com.example.notification_service.controller;
 
-import com.example.notification_service.dto.ApiResponse;
+import com.okits02.common_lib.dto.ApiResponse;
 import com.example.notification_service.model.Notification;
 import com.example.notification_service.service.NotificationConsumer;
 import lombok.RequiredArgsConstructor;

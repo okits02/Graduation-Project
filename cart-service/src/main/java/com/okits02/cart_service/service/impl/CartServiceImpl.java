@@ -1,16 +1,14 @@
 package com.okits02.cart_service.service.impl;
 
-import com.okits02.cart_service.dto.PageResponse;
 import com.okits02.cart_service.dto.ProductGetVM;
 import com.okits02.cart_service.dto.request.CartDeleteItemRequest;
 import com.okits02.cart_service.dto.request.CartItemRequest;
 import com.okits02.cart_service.dto.request.CartUpdateRequest;
 import com.okits02.cart_service.dto.response.CartItemResponse;
 import com.okits02.cart_service.dto.response.CartResponse;
-import com.okits02.cart_service.exceptions.AppException;
-import com.okits02.cart_service.exceptions.ErrorCode;
+import com.okits02.common_lib.exception.AppException;
+import com.okits02.cart_service.exceptions.CartErrorCode;
 import com.okits02.cart_service.mapper.CartItemMapper;
-import com.okits02.cart_service.mapper.CartMapper;
 import com.okits02.cart_service.model.Cart;
 import com.okits02.cart_service.model.CartItem;
 import com.okits02.cart_service.repository.CartItemRepository;
@@ -21,12 +19,10 @@ import com.okits02.cart_service.service.CartService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import javax.swing.text.html.Option;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -92,12 +88,12 @@ public class CartServiceImpl implements CartService {
 
         Cart cart = cartRepository.findByUserId(userId);
         if(cart == null){
-            throw new AppException(ErrorCode.USER_DOES_NOT_HAVE_CART);
+            throw new AppException(CartErrorCode.USER_DOES_NOT_HAVE_CART);
         }
         CartItem cartItem = cart.getItems().stream()
                 .filter(item -> item.getCartItemId().equals(request.getCartItemId()))
                 .findFirst()
-                .orElseThrow(() -> new AppException(ErrorCode.CART_ITEM_NOT_EXISTS));
+                .orElseThrow(() -> new AppException(CartErrorCode.CART_ITEM_NOT_EXISTS));
         cartItem.setQuantity(request.getQuantity());
         cart = cartRepository.save(cart);
         List<CartItemResponse> cartItemResponses = cart.getItems().stream()
@@ -123,7 +119,7 @@ public class CartServiceImpl implements CartService {
         String userId = getUserId();
         Cart cart = cartRepository.findByUserId(userId);
         if(cart == null){
-            throw new AppException(ErrorCode.USER_DOES_NOT_HAVE_CART);
+            throw new AppException(CartErrorCode.USER_DOES_NOT_HAVE_CART);
         }
         cart.getItems().removeIf(item -> request.getCartItemId().contains(item.getCartItemId()));
         cart = cartRepository.save(cart);
@@ -172,11 +168,11 @@ public class CartServiceImpl implements CartService {
         String userId = getUserId();
         Cart cart = cartRepository.findByUserId(userId);
         if(cart == null){
-            throw new AppException(ErrorCode.USER_DOES_NOT_HAVE_CART);
+            throw new AppException(CartErrorCode.USER_DOES_NOT_HAVE_CART);
         }
         Optional<CartItem> cartItem = cartItemRepository.findByIdAndCart(cart, cartItemId);
         if(cartItem.get() == null){
-            throw new AppException(ErrorCode.CART_ITEM_NOT_EXISTS);
+            throw new AppException(CartErrorCode.CART_ITEM_NOT_EXISTS);
         }
         return CartItemResponse.builder()
                 .cartItemId(cartItem.get().getCartItemId())

@@ -65,6 +65,11 @@
 			<version>3.37.0</version>
 			<scope>compile</scope>
 		</dependency>
+        <dependency>
+            <groupId>com.okits02</groupId>
+            <artifactId>common-lib</artifactId>
+            <version>1.0.0</version>
+        </dependency>
 	</dependencies>
 	<build>
 		<plugins>

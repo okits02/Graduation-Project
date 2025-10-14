@@ -3,8 +3,8 @@ package com.example.order_service.service.impl;
 import com.example.order_service.dto.request.OrderCreationRequest;
 import com.example.order_service.dto.request.OrderItemRequest;
 import com.example.order_service.dto.response.OrderResponse;
-import com.example.order_service.exceptions.AppException;
-import com.example.order_service.exceptions.ErrorCode;
+import com.okits02.common_lib.exception.AppException;
+import com.example.order_service.exceptions.OrderErrorCode;
 import com.example.order_service.mapper.OrderMapper;
 import com.example.order_service.model.OrderItem;
 import com.example.order_service.model.Orders;
@@ -21,7 +21,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -41,7 +40,7 @@ public class OrderServiceImpl implements OrderService {
         var response = userClient.getUserId(authHeader);
         String userId = null;
         if(response.getBody().getCode() != 200){
-            throw new AppException(ErrorCode.valueOf(response.getBody()));
+            throw new AppException(OrderErrorCode.valueOf(response.getBody()));
         }
         Orders orders = Orders.builder()
                 .orderDate(LocalDateTime.now())

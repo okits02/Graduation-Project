@@ -2,7 +2,7 @@ package com.example.profile_service.controller;
 
 import com.example.profile_service.dto.request.AddressRequest;
 import com.example.profile_service.dto.response.AddressResponse;
-import com.example.profile_service.dto.response.ApiResponse;
+import com.okits02.common_lib.dto.ApiResponse;
 import com.example.profile_service.service.AddressService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;

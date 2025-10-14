@@ -1,11 +1,11 @@
 package com.example.product_service.service.Impl;
 
-import com.example.product_service.dto.PageResponse;
+import com.okits02.common_lib.dto.PageResponse;
 import com.example.product_service.dto.request.ProductRequest;
 import com.example.product_service.dto.request.ProductUpdateRequest;
 import com.example.product_service.dto.response.ProductResponse;
-import com.example.product_service.exceptions.AppException;
-import com.example.product_service.exceptions.ErrorCode;
+import com.okits02.common_lib.exception.AppException;
+import com.example.product_service.exceptions.ProductErrorCode;
 import com.example.product_service.helper.ProductMappingHelper;
 import com.example.product_service.mapper.ProductMapper;
 import com.example.product_service.model.Products;
@@ -19,7 +19,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.Date;
 
 @Service
 @RequiredArgsConstructor
@@ -44,7 +43,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductResponse getById(String productId) {
         Products product = productRepository.findById(productId)
-                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTS));
+                .orElseThrow(() -> new AppException(ProductErrorCode.PRODUCT_NOT_EXISTS));
         ProductResponse productResponse = productMappingHelper.map(product);
         return productResponse;
     }
@@ -53,7 +52,7 @@ public class ProductServiceImpl implements ProductService {
     public Products createProduct(ProductRequest request) {
         Products newProducts = productMapper.toProduct(request);
         if(productRepository.existsByName(request.getName())) {
-            throw new AppException(ErrorCode.PRODUCT_EXISTS);
+            throw new AppException(ProductErrorCode.PRODUCT_EXISTS);
         }
         String generatedId = new ObjectId().toHexString();
         newProducts.setId(generatedId);
@@ -65,7 +64,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Products updateProduct(ProductUpdateRequest request) {
         Products products = productRepository.findById(request.getId()).orElseThrow(()->
-                new AppException(ErrorCode.PRODUCT_NOT_EXISTS));
+                new AppException(ProductErrorCode.PRODUCT_NOT_EXISTS));
         productMapper.updateProduct(products, request);
         products.setCategoryId(request.getCategoryId());
         productRepository.save(products);
@@ -80,7 +79,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public void changeStatusInStock(String productId, Boolean inStock) {
         Products products = productRepository.findById(productId).orElseThrow(()->
-                new AppException(ErrorCode.PRODUCT_NOT_EXISTS));
+                new AppException(ProductErrorCode.PRODUCT_NOT_EXISTS));
         productRepository.updateStockById(productId, inStock);
     }
 

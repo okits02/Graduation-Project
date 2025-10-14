@@ -2,11 +2,10 @@ package com.example.promotion_service.services.Impl;
 
 import com.example.promotion_service.dto.request.PromotionCreationRequest;
 import com.example.promotion_service.dto.request.PromotionUpdateRequest;
-import com.example.promotion_service.dto.response.PageResponse;
+import com.okits02.common_lib.dto.PageResponse;
 import com.example.promotion_service.dto.response.PromotionResponse;
-import com.example.promotion_service.enums.UsageType;
-import com.example.promotion_service.exception.AppException;
-import com.example.promotion_service.exception.ErrorCode;
+import com.okits02.common_lib.exception.AppException;
+import com.example.promotion_service.exception.PromotionErrorCode;
 import com.example.promotion_service.mapper.PromotionMapper;
 import com.example.promotion_service.model.Promotion;
 import com.example.promotion_service.model.PromotionApplyTo;
@@ -17,15 +16,11 @@ import com.example.promotion_service.utils.VoucherCodeUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.time.LocalDate;
 import java.util.*;
 
-import static com.example.promotion_service.enums.ApplyTo.Category;
-import static com.example.promotion_service.enums.ApplyTo.Product;
 import static com.example.promotion_service.enums.UsageType.LIMITED;
 
 @Service
@@ -39,7 +34,7 @@ public class PromotionServiceImpl implements PromotionService {
     public PromotionResponse createPromotion(PromotionCreationRequest request) {
         if(promotionRepository.existsByName(request.getName()))
         {
-            throw new AppException(ErrorCode.PROMOTION_EXISTS);
+            throw new AppException(PromotionErrorCode.PROMOTION_EXISTS);
         }
         Promotion promotion = promotionRepository.save(promotionMapper.toPromotion(request));
         PromotionApplyTo promotionApplyTo = new PromotionApplyTo();
@@ -50,7 +45,7 @@ public class PromotionServiceImpl implements PromotionService {
                     promotionApplyTo.setPromotion(promotion);
                     promotionApplyTo.setProductId(new HashSet<>(request.getProductId()));
                 }else{
-                    throw new AppException(ErrorCode.INVALID_PRODUCT_IDS);
+                    throw new AppException(PromotionErrorCode.INVALID_PRODUCT_IDS);
                 }
             }
 
@@ -59,7 +54,7 @@ public class PromotionServiceImpl implements PromotionService {
                     promotionApplyTo.setPromotion(promotion);
                     promotionApplyTo.setCategoryName(new HashSet<>(request.getCategoryName()));
                 }else{
-                    throw new AppException(ErrorCode.INVALID_CATEGORY_IDS);
+                    throw new AppException(PromotionErrorCode.INVALID_CATEGORY_IDS);
                 }
             }
         }
@@ -124,7 +119,7 @@ public class PromotionServiceImpl implements PromotionService {
     @Override
     public PromotionResponse getPromotion(String promotionId) {
         Promotion promotion = promotionRepository.findById(promotionId).orElseThrow(() ->
-                new AppException(ErrorCode.PROMOTION_NOT_EXISTS));
+                new AppException(PromotionErrorCode.PROMOTION_NOT_EXISTS));
         return promotionMapper.toPromotionResponse(promotion);
     }
 
@@ -135,15 +130,15 @@ public class PromotionServiceImpl implements PromotionService {
         return PageResponse.<PromotionResponse>builder()
                 .currentPage(page)
                 .pageSize(pageData.getSize())
-                .totalElement(pageData.getTotalElements())
-                .Data(pageData.getContent().stream().map(promotionMapper::toPromotionResponse).toList())
+                .totalElements(pageData.getTotalElements())
+                .data(pageData.getContent().stream().map(promotionMapper::toPromotionResponse).toList())
                 .build();
     }
 
     @Override
     public void deletePromotion(String promotionId) {
         Promotion promotion = promotionRepository.findById(promotionId).orElseThrow(() ->
-                new AppException(ErrorCode.PROMOTION_NOT_EXISTS));
+                new AppException(PromotionErrorCode.PROMOTION_NOT_EXISTS));
         applyToRepository.deleteById(promotion.getPromotionApplyTo().getId());
         promotionRepository.deleteById(promotionId);
     }

@@ -1,10 +1,12 @@
 package com.example.promotion_service.exception;
 
+import com.okits02.common_lib.exception.ErrorCode;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 
 @Getter
-public enum ErrorCode {
+public enum PromotionErrorCode implements ErrorCode {
     UNAUTHENTICATED(HttpStatus.BAD_REQUEST, 4001, "Unauthenticate in promotion-service!"),
     PROMOTION_EXISTS(HttpStatus.BAD_REQUEST, 4002, "Promotion is exists!"),
     PROMOTION_NOT_EXISTS(HttpStatus.BAD_REQUEST, 4007, "Can not find promotion with promotionId"),
@@ -14,13 +16,14 @@ public enum ErrorCode {
     USAGE_LIMITED_NULL(HttpStatus.BAD_REQUEST, 4006, "Usage limited can not null!")
     ;
 
-    ErrorCode(HttpStatus httpStatus, int code, String message) {
+    PromotionErrorCode(HttpStatus httpStatus, int code, String message) {
         this.code = code;
         this.message = message;
-        this.httpStatus = httpStatus;
+        this.httpStatusCode = httpStatus;
     }
 
     private int code;
     private String message;
-    private HttpStatus httpStatus;
+    private HttpStatusCode httpStatusCode;
+
 }

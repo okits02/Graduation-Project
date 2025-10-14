@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignClient;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.example.product_service", "com.okits02.common_lib"})
 @EnableFeignClients
 public class ProductServiceApplication {
 

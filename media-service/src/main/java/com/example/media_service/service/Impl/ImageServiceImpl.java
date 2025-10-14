@@ -4,12 +4,11 @@ import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.example.media_service.dto.response.ListMediaResponse;
 import com.example.media_service.dto.response.MediaResponse;
-import com.example.media_service.dto.response.ProductImageResponse;
 import com.example.media_service.enums.MediaOwnerType;
 import com.example.media_service.enums.MediaPurpose;
 import com.example.media_service.enums.MediaType;
-import com.example.media_service.exception.AppException;
-import com.example.media_service.exception.ErrorCode;
+import com.okits02.common_lib.exception.AppException;
+import com.example.media_service.exception.MediaErrorCode;
 import com.example.media_service.mapper.MediaMapper;
 import com.example.media_service.model.Media;
 import com.example.media_service.repository.MediaRepository;
@@ -65,7 +64,7 @@ public class ImageServiceImpl implements ImageService {
         deleteByUrl(oldThumbnailUrl);
         var exists = mediaRepository.existsByOwnerIdAndMediaPurpose(productId, MediaPurpose.THUMBNAIL);
         if(exists){
-            throw new AppException(ErrorCode.THUMBNAIL_EXISTS);
+            throw new AppException(MediaErrorCode.THUMBNAIL_EXISTS);
         }
         Media thumbnailMedia = uploadAndSave(newThumbnail, productId, MediaOwnerType.PRODUCT, MediaPurpose.THUMBNAIL);
         return MediaResponse.builder()
@@ -82,7 +81,7 @@ public class ImageServiceImpl implements ImageService {
     public void deleteByOwnerId(String ownerId, MediaOwnerType mediaOwnerType) {
         List<Media> medias = mediaRepository.findByOwnerIdAndOwnerType(ownerId, mediaOwnerType);
         if(medias.isEmpty()){
-            throw new AppException(ErrorCode.CAN_NOT_FIND_MEDIA_BY_PRODUCT);
+            throw new AppException(MediaErrorCode.CAN_NOT_FIND_MEDIA_BY_PRODUCT);
         }
         for (var media : medias) {
             try {
@@ -121,7 +120,7 @@ public class ImageServiceImpl implements ImageService {
     public void deleteByUrl(String url) {
         Media media = mediaRepository.findByUrl(url);
         if(media == null){
-            throw new AppException(ErrorCode.CAN_NOT_FIND_MEDIA_BY_URL);
+            throw new AppException(MediaErrorCode.CAN_NOT_FIND_MEDIA_BY_URL);
         }
         try {
             cloudinary.uploader().destroy(media.getPublicId(), ObjectUtils.asMap("resource_type",

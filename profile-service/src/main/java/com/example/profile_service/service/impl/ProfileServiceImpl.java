@@ -5,28 +5,25 @@ import com.example.profile_service.dto.request.ProfileUpdateRequest;
 import com.example.profile_service.dto.response.*;
 import com.example.profile_service.entity.UserAddress;
 import com.example.profile_service.entity.UserProfile;
-import com.example.profile_service.exception.AppException;
-import com.example.profile_service.exception.ErrorCode;
+import com.okits02.common_lib.exception.AppException;
+import com.okits02.common_lib.exception.GlobalErrorCode;
+import com.example.profile_service.exception.ProfileErrorCode;
 import com.example.profile_service.mapper.ProfileMapper;
 import com.example.profile_service.repository.AddressRepository;
 import com.example.profile_service.repository.ProfileRepository;
 import com.example.profile_service.repository.httpClient.UserServiceClient;
-import com.example.profile_service.service.AddressService;
 import com.example.profile_service.service.ProfileService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Profile;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.kafka.annotation.EnableKafka;
-import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import com.okits02.common_lib.dto.PageResponse;
+import com.okits02.common_lib.dto.ApiResponse;
 
 import java.util.List;
 
@@ -46,7 +43,7 @@ public class ProfileServiceImpl implements ProfileService {
         UserProfile userProfile = profileRepository.findByUserId(request.getUserId());
         if (userProfile != null)
         {
-            throw new AppException(ErrorCode.PROFILE_EXISTS);
+            throw new AppException(ProfileErrorCode.PROFILE_EXISTS);
         }
         UserProfile userProfile1 = profileMapper.toProfile(request);
         profileRepository.save(userProfile1);
@@ -59,7 +56,7 @@ public class ProfileServiceImpl implements ProfileService {
         UserProfile userProfile = profileRepository.findByUserId(userId);
         if(userProfile == null)
         {
-            throw new AppException(ErrorCode.PROFILE_NOT_EXITS);
+            throw new AppException(ProfileErrorCode.PROFILE_NOT_EXITS);
         }
         return profileMapper.toProfileResponse(userProfile);
     }
@@ -70,7 +67,7 @@ public class ProfileServiceImpl implements ProfileService {
         UserProfile userProfile = profileRepository.findByUserId(userId);
         if(userProfile == null)
         {
-            throw new AppException(ErrorCode.PROFILE_NOT_EXITS);
+            throw new AppException(ProfileErrorCode.PROFILE_NOT_EXITS);
         }
         profileMapper.updateProfile(userProfile, request);
         return profileMapper.toProfileResponse(profileRepository.save(userProfile));
@@ -81,7 +78,7 @@ public class ProfileServiceImpl implements ProfileService {
         UserProfile userProfile = profileRepository.findByUserId(userId);
         if(userProfile == null)
         {
-            throw  new AppException(ErrorCode.PROFILE_NOT_EXITS);
+            throw  new AppException(ProfileErrorCode.PROFILE_NOT_EXITS);
         }
         return profileMapper.toProfileResponse(userProfile);
     }
@@ -91,7 +88,7 @@ public class ProfileServiceImpl implements ProfileService {
         UserProfile userProfile = profileRepository.findByUserId(userId);
         if(userProfile == null)
         {
-            throw new AppException(ErrorCode.PROFILE_NOT_EXITS);
+            throw new AppException(ProfileErrorCode.PROFILE_NOT_EXITS);
         }
         profileMapper.updateProfile(userProfile, request);
         return profileMapper.toProfileResponse(profileRepository.save(userProfile));
@@ -104,7 +101,7 @@ public class ProfileServiceImpl implements ProfileService {
         return PageResponse.<ProfileResponse>builder()
                 .currentPage(page)
                 .pageSize(pageData.getSize())
-                .totalElement(pageData.getTotalElements())
+                .totalElements(pageData.getTotalElements())
                 .Data(pageData.getContent().stream().map(profileMapper::toProfileResponse).toList())
                 .build();
     }
@@ -113,7 +110,7 @@ public class ProfileServiceImpl implements ProfileService {
     public void DeleteProfile(String userId) {
         UserProfile userProfile = profileRepository.findByUserId(userId);
         if (userProfile == null) {
-            throw new AppException(ErrorCode.PROFILE_NOT_EXITS);
+            throw new AppException(ProfileErrorCode.PROFILE_NOT_EXITS);
         }
 
         List<UserAddress> addressList = userProfile.getAddress();
@@ -129,7 +126,7 @@ public class ProfileServiceImpl implements ProfileService {
         String userId = getUserId();
         UserProfile userProfile = profileRepository.findByUserId(userId);
         if(userProfile == null){
-            throw new AppException(ErrorCode.PROFILE_NOT_EXITS);
+            throw new AppException(ProfileErrorCode.PROFILE_NOT_EXITS);
         }
         CustomerVM customerVM = CustomerVM.builder()
                 .firstName(userProfile.getFirstName())

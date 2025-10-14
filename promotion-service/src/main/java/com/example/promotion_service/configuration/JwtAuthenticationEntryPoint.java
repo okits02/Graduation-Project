@@ -1,8 +1,9 @@
 package com.example.promotion_service.configuration;
 
-import com.example.promotion_service.dto.response.ApiResponse;
-import com.example.promotion_service.exception.ErrorCode;
+import com.okits02.common_lib.dto.ApiResponse;
+import com.example.promotion_service.exception.PromotionErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.okits02.common_lib.exception.GlobalErrorCode;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -17,9 +18,9 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
             throws IOException, ServletException {
-        ErrorCode errorCode = ErrorCode.UNAUTHENTICATED;
+        GlobalErrorCode errorCode = GlobalErrorCode.UNAUTHENTICATED;
 
-        response.setStatus(errorCode.getHttpStatus().value());
+        response.setStatus(errorCode.getHttpStatusCode().value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
         ApiResponse<?> apiResponse = ApiResponse.builder()

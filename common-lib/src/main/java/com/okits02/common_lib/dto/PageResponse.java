@@ -16,7 +16,6 @@ public class PageResponse<T> {
     int totalPage;
     int pageSize;
     Long totalElements;
-
     @Builder.Default
-    private List<T> Data = new ArrayList<>();
+    private List<T> data = new ArrayList<>();
 }

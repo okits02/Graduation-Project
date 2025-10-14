@@ -3,7 +3,7 @@ package com.example.profile_service.service;
 import com.example.profile_service.dto.request.ProfileRequest;
 import com.example.profile_service.dto.request.ProfileUpdateRequest;
 import com.example.profile_service.dto.response.CustomerVM;
-import com.example.profile_service.dto.response.PageResponse;
+import com.okits02.common_lib.dto.PageResponse;
 import com.example.profile_service.dto.response.ProfileResponse;
 import org.springframework.data.domain.Page;
 

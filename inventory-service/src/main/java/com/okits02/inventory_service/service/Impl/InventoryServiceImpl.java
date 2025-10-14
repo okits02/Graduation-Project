@@ -3,8 +3,8 @@ package com.okits02.inventory_service.service.Impl;
 import com.okits02.inventory_service.dto.request.InventoryRequest;
 import com.okits02.inventory_service.dto.request.IsInStockRequest;
 import com.okits02.inventory_service.dto.response.InventoryResponse;
-import com.okits02.inventory_service.exceptions.AppException;
-import com.okits02.inventory_service.exceptions.ErrorCode;
+import com.okits02.common_lib.exception.AppException;
+import com.okits02.inventory_service.exceptions.InventoryErrorCode;
 import com.okits02.inventory_service.kafka.ChangeStatusStockEvent;
 import com.okits02.inventory_service.mapper.InventoryMapper;
 import com.okits02.inventory_service.model.Inventory;
@@ -24,7 +24,7 @@ public class InventoryServiceImpl implements InventoryService {
     @Override
     public InventoryResponse save(InventoryRequest request) {
         if(inventoryRepository.existsByProductId(request.getProductId())){
-            throw new AppException(ErrorCode.PRODUCT_EXISTS);
+            throw new AppException(InventoryErrorCode.PRODUCT_EXISTS);
         }
         Inventory newInventory = inventoryMapper.toInventory(request);
         productStockEvent(request.getProductId(), true);
@@ -35,7 +35,7 @@ public class InventoryServiceImpl implements InventoryService {
     public InventoryResponse update(InventoryRequest request) {
         Inventory inventory = inventoryRepository.findByProductId(request.getProductId());
         if(inventory == null){
-            throw new AppException(ErrorCode.PRODUCT_NOT_EXISTS);
+            throw new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS);
         }
         if(inventory.getQuantity() == 0){
             productStockEvent(request.getProductId(), true);
@@ -48,7 +48,7 @@ public class InventoryServiceImpl implements InventoryService {
     public boolean checkIsStock(IsInStockRequest request) {
         Inventory inventory = inventoryRepository.findByProductId(request.getProductId());
         if(inventory == null){
-            throw new AppException(ErrorCode.PRODUCT_NOT_EXISTS);
+            throw new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS);
         }
         return request.getQuantity() <= inventory.getQuantity();
     }
@@ -57,7 +57,7 @@ public class InventoryServiceImpl implements InventoryService {
     public void delete(String productId) {
         Inventory inventory = inventoryRepository.findByProductId(productId);
         if(inventory == null){
-            throw new AppException(ErrorCode.PRODUCT_NOT_EXISTS);
+            throw new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS);
         }
         productStockEvent(productId, false);
         inventoryRepository.delete(inventory);
@@ -67,7 +67,7 @@ public class InventoryServiceImpl implements InventoryService {
     public InventoryResponse getByProductId(String productId) {
         Inventory inventory = inventoryRepository.findByProductId(productId);
         if(inventory == null){
-            throw new AppException(ErrorCode.PRODUCT_NOT_EXISTS);
+            throw new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS);
         }
         return inventoryMapper.toInventoryResponse(inventory);
     }
@@ -76,10 +76,10 @@ public class InventoryServiceImpl implements InventoryService {
     public Inventory decreaseStock(String productId, int quantity) {
         Inventory inventory = inventoryRepository.findByProductId(productId);
         if(inventory == null){
-            throw new AppException(ErrorCode.PRODUCT_NOT_EXISTS);
+            throw new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS);
         }
         if(quantity > inventory.getQuantity()){
-            throw new AppException(ErrorCode.PRODUCT_NOT_ENOUGH);
+            throw new AppException(InventoryErrorCode.PRODUCT_NOT_ENOUGH);
         }
         if(quantity == inventory.getQuantity()){
             inventory.setQuantity(0);
@@ -95,7 +95,7 @@ public class InventoryServiceImpl implements InventoryService {
     public Inventory increaseStock(String productId, int quantity) {
         Inventory inventory = inventoryRepository.findByProductId(productId);
         if(inventory == null){
-            throw new AppException(ErrorCode.PRODUCT_NOT_EXISTS);
+            throw new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS);
         }
         if(inventory.getQuantity() == 0){
             productStockEvent(productId, true);

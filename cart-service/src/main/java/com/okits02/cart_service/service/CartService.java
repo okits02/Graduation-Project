@@ -1,6 +1,5 @@
 package com.okits02.cart_service.service;
 
-import com.okits02.cart_service.dto.PageResponse;
 import com.okits02.cart_service.dto.request.CartDeleteItemRequest;
 import com.okits02.cart_service.dto.request.CartItemRequest;
 import com.okits02.cart_service.dto.request.CartUpdateRequest;
@@ -16,5 +15,4 @@ public interface CartService {
     public CartResponse removeItem(CartDeleteItemRequest request);
     public CartResponse getCart();
     public CartItemResponse getCartItem(String cartItemId);
-    public void 
 }

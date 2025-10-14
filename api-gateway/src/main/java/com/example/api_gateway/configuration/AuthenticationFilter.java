@@ -1,6 +1,6 @@
 package com.example.api_gateway.configuration;
 
-import com.example.api_gateway.dto.response.ApiResponse;
+import com.okits02.common_lib.dto.ApiResponse;
 import com.example.api_gateway.dto.response.IntrospectResponse;
 import com.example.api_gateway.service.IdentityService;
 import com.fasterxml.jackson.core.JsonProcessingException;

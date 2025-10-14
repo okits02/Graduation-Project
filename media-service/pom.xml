@@ -105,6 +105,11 @@
             <artifactId>kafka-clients</artifactId>
             <version>3.7.1</version>
         </dependency>
+        <dependency>
+            <groupId>com.okits02</groupId>
+            <artifactId>common-lib</artifactId>
+            <version>1.0.0</version>
+        </dependency>
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>

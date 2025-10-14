@@ -1,7 +1,6 @@
 package com.example.order_service.exceptions;
 
 import com.example.order_service.dto.response.ApiResponse;
-import com.example.order_service.exceptions.AppException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -27,12 +26,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value = AppException.class)
     ResponseEntity<ApiResponse<?>> handlingException(AppException e)
     {
-        ErrorCode errorCode = e.getErrorCode();
+        OrderErrorCode orderErrorCode = e.getOrderErrorCode();
         ApiResponse<?> apiResponse = new ApiResponse<>();
 
-        apiResponse.setCode(errorCode.getCode());
-        apiResponse.setMessage(errorCode.getMessage());
-        return ResponseEntity.status(errorCode.getHttpStatusCode()).body(apiResponse);
+        apiResponse.setCode(orderErrorCode.getCode());
+        apiResponse.setMessage(orderErrorCode.getMessage());
+        return ResponseEntity.status(orderErrorCode.getHttpStatusCode()).body(apiResponse);
     }
 
     @ExceptionHandler(value = MethodArgumentNotValidException.class)

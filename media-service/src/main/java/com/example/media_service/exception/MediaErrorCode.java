@@ -1,11 +1,12 @@
 package com.example.media_service.exception;
 
+import com.okits02.common_lib.exception.ErrorCode;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 
 @Getter
-public enum ErrorCode {
+public enum MediaErrorCode implements ErrorCode {
     UNAUTHENTICATED(1401, "Unauthenticated in media-service!", HttpStatus.BAD_REQUEST),
     UNAUTHORIZED(1402, "Unauthorized in media-service!", HttpStatus.BAD_REQUEST),
     CAN_NOT_FIND_MEDIA_BY_PRODUCT(1403, "Can not find media by productId!", HttpStatus.BAD_REQUEST),
@@ -15,7 +16,7 @@ public enum ErrorCode {
     private final String message;
     private final HttpStatusCode httpStatusCode;
 
-    ErrorCode(int code, String message, HttpStatusCode httpStatusCode) {
+    MediaErrorCode(int code, String message, HttpStatusCode httpStatusCode) {
         this.code = code;
         this.message = message;
         this.httpStatusCode = httpStatusCode;

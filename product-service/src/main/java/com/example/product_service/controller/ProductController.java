@@ -1,24 +1,16 @@
 package com.example.product_service.controller;
 
-import com.example.product_service.dto.PageResponse;
+import com.okits02.common_lib.dto.PageResponse;
 import com.example.product_service.dto.request.ProductRequest;
 import com.example.product_service.dto.request.ProductUpdateRequest;
-import com.example.product_service.dto.response.ApiResponse;
+import com.okits02.common_lib.dto.ApiResponse;
 import com.example.product_service.dto.response.CategoryResponse;
-import com.example.product_service.dto.response.MediaResponse;
 import com.example.product_service.dto.response.ProductResponse;
-import com.example.product_service.enums.MediaOwnerType;
-import com.example.product_service.enums.MediaPurpose;
-import com.example.product_service.exceptions.AppException;
-import com.example.product_service.exceptions.ErrorCode;
+import com.okits02.common_lib.exception.AppException;
 import com.example.product_service.helper.ProductMappingHelper;
 import com.example.product_service.kafka.CreateProductEvent;
 import com.example.product_service.kafka.DeleteProductEvent;
-import com.example.product_service.mapper.ProductMapper;
-import com.example.product_service.model.Category;
 import com.example.product_service.model.Products;
-import com.example.product_service.repository.CategoryRepository;
-import com.example.product_service.repository.ProductRepository;
 import com.example.product_service.repository.httpsClient.MediaClient;
 import com.example.product_service.service.CategoryService;
 import com.example.product_service.service.ProductService;
@@ -34,9 +26,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -185,7 +175,6 @@ public class ProductController {
                 .name(product.getName())
                 .description(product.getDescription())
                 .listPrice(product.getListPrice())
-                .quantity(product.getQuantity())
                 .avgRating(product.getAvgRating())
                 .sold(product.getSold())
                 .categories(categoryList)

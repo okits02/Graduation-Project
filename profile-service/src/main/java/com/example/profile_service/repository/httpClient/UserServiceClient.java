@@ -1,6 +1,6 @@
 package com.example.profile_service.repository.httpClient;
 
-import com.example.profile_service.dto.response.ApiResponse;
+import com.okits02.common_lib.dto.ApiResponse;
 import com.example.profile_service.dto.response.GetUserIdResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;

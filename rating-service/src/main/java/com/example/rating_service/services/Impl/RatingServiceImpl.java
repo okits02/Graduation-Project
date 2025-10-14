@@ -4,8 +4,8 @@ import com.example.rating_service.dto.CustomerVM;
 import com.example.rating_service.dto.request.ModifyRatingRequest;
 import com.example.rating_service.dto.request.RatingRequest;
 import com.example.rating_service.dto.response.RatingResponse;
-import com.example.rating_service.exception.AppException;
-import com.example.rating_service.exception.ErrorCode;
+import com.okits02.common_lib.exception.AppException;
+import com.example.rating_service.exception.RatingErrorCode;
 import com.example.rating_service.mapper.RatingMapper;
 import com.example.rating_service.model.Rating;
 import com.example.rating_service.repository.RatingRepository;
@@ -29,7 +29,7 @@ public class RatingServiceImpl implements RatingService {
     @Override
     public RatingResponse createRating(RatingRequest request) {
         if(ratingRepository.existsByCreatedByAndProductId(request.getCreateBy(), request.getProductId())){
-            throw new AppException(ErrorCode.RATING_EXISTS);
+            throw new AppException(RatingErrorCode.RATING_EXISTS);
         };
         ServletRequestAttributes servletRequestAttributes =
                 (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
