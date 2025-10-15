@@ -131,6 +131,15 @@ public class ImageController {
                 .build());
     }
 
+    @PutMapping("/{mediaId}/reorder")
+    public ResponseEntity<Void> reorderImage(
+            @PathVariable String mediaId,
+            @RequestParam int newPosition) {
+        imageService.changePosition(mediaId, newPosition);
+        return ResponseEntity.ok().build();
+    }
+
+
     private ApplyThumbnailEvent createEvent(String productId, String url){
         return ApplyThumbnailEvent.builder()
                 .productId(productId)

@@ -18,4 +18,5 @@ public class MediaResponse {
     String url;
     MediaPurpose mediaPurpose;
     MediaType mediaType;
+    Integer position;
 }

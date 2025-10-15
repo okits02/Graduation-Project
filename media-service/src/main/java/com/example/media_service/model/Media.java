@@ -30,6 +30,7 @@ public class Media {
     MediaType mediaType;
     @Enumerated(EnumType.STRING)
     MediaPurpose mediaPurpose;
+    Integer position;
     @CreationTimestamp
     LocalDateTime createAt;
     @UpdateTimestamp

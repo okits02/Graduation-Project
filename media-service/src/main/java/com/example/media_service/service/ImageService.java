@@ -15,8 +15,9 @@ public interface ImageService {
                                           String productId) throws IOException;
     public MediaResponse imageCategory(MultipartFile thumbNailFile, String categoryId) throws IOException;
     public MediaResponse changeThumbnail(String oldThumbnailUrl, MultipartFile newThumbnail, String productId) throws IOException;
+    public MediaResponse changeImageProduct(MultipartFile file, String productId, Integer position) throws IOException;
     public void deleteByOwnerId(String OwnerId, MediaOwnerType mediaOwnerType);
     public ListMediaResponse getMedia(String ownerId, MediaOwnerType mediaOwnerType);
-
+    public void changePosition(String mediaId, int newPosition);
     public void deleteByUrl(String url);
 }

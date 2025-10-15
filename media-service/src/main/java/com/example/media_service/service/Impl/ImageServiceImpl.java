@@ -13,6 +13,7 @@ import com.example.media_service.mapper.MediaMapper;
 import com.example.media_service.model.Media;
 import com.example.media_service.repository.MediaRepository;
 import com.example.media_service.service.ImageService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -39,10 +41,14 @@ public class ImageServiceImpl implements ImageService {
         if (thumbNailFile != null) {
             Media thumbnail = uploadAndSave(thumbNailFile, productId, MediaOwnerType.PRODUCT, MediaPurpose.THUMBNAIL);
             responses.add(mediaMapper.toMediaResponse(mediaRepository.save(thumbnail)));
+            thumbnail.setPosition(0);
             thumbnailUrl = thumbnail.getUrl();
         }
+        Integer currentPosition = mediaRepository.findMaxPositionByOwnerIdAndPurpose(productId, MediaPurpose.GALLERY).orElse(0);
         for (MultipartFile file : imageProductFile) {
+            currentPosition++;
             Media image = uploadAndSave(file, productId, MediaOwnerType.PRODUCT, MediaPurpose.GALLERY);
+            image.setPosition(currentPosition);
             responses.add(mediaMapper.toMediaResponse(mediaRepository.save(image)));
             imageProductUrl.add(image.getUrl());
         }
@@ -75,6 +81,16 @@ public class ImageServiceImpl implements ImageService {
                 .mediaType(thumbnailMedia.getMediaType())
                 .mediaPurpose(thumbnailMedia.getMediaPurpose())
                 .build();
+    }
+
+    @Override
+    public MediaResponse changeImageProduct(MultipartFile file, String productId, Integer position) throws IOException {
+        Media media = uploadAndSave(file, productId, MediaOwnerType.PRODUCT, MediaPurpose.GALLERY);
+        Optional<Integer> currentPosition = mediaRepository
+                .findMaxPositionByOwnerIdAndPurpose(productId, MediaPurpose.GALLERY);
+        media.setPosition(currentPosition.get() + 1);
+        mediaRepository.save(media);
+        return mediaMapper.toMediaResponse(media);
     }
 
     @Override
@@ -122,13 +138,39 @@ public class ImageServiceImpl implements ImageService {
         if(media == null){
             throw new AppException(MediaErrorCode.CAN_NOT_FIND_MEDIA_BY_URL);
         }
+        mediaRepository.reindexAfterDelete(media.getOwnerId(), url);
         try {
-            cloudinary.uploader().destroy(media.getPublicId(), ObjectUtils.asMap("resource_type",
-                    media.getMediaPurpose().name().toLowerCase()));
+            cloudinary.uploader().destroy(
+                    media.getPublicId(),
+                    ObjectUtils.asMap("resource_type", media.getMediaType().name().toLowerCase())
+            );
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         mediaRepository.deleteById(media.getId());
+    }
+
+    @Transactional
+    public void changePosition(String mediaId, int newPosition) {
+        Media media = mediaRepository.findById(mediaId)
+                .orElseThrow(() -> new AppException(MediaErrorCode.CAN_NOT_FIND_MEDIA_BY_ID));
+
+        int oldPos = media.getPosition();
+        String ownerId = media.getOwnerId();
+
+        if (oldPos == newPosition) return; // không cần đổi
+
+        if (oldPos < newPosition) {
+            // di chuyển xuống
+            mediaRepository.shiftDownPositions(ownerId, oldPos, newPosition);
+        } else {
+            // di chuyển lên
+            mediaRepository.shiftUpPositions(ownerId, oldPos, newPosition);
+        }
+
+        // cập nhật vị trí mới cho ảnh đó
+        media.setPosition(newPosition);
+        mediaRepository.save(media);
     }
 
 
