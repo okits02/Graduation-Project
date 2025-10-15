@@ -23,7 +23,7 @@ public class Media {
     String id;
     String ownerId;
     @Enumerated(EnumType.STRING)
-    private MediaOwnerType ownerType;
+    MediaOwnerType ownerType;
     String url;
     String publicId;
     @Enumerated(EnumType.STRING)

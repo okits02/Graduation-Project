@@ -40,11 +40,12 @@ public class ImageServiceImpl implements ImageService {
         List<MediaResponse> responses = new ArrayList<>();
         if (thumbNailFile != null) {
             Media thumbnail = uploadAndSave(thumbNailFile, productId, MediaOwnerType.PRODUCT, MediaPurpose.THUMBNAIL);
-            responses.add(mediaMapper.toMediaResponse(mediaRepository.save(thumbnail)));
             thumbnail.setPosition(0);
+            responses.add(mediaMapper.toMediaResponse(mediaRepository.save(thumbnail)));
             thumbnailUrl = thumbnail.getUrl();
         }
-        Integer currentPosition = mediaRepository.findMaxPositionByOwnerIdAndPurpose(productId, MediaPurpose.GALLERY).orElse(0);
+        Integer currentPosition = mediaRepository.findMaxPositionByOwnerIdAndPurpose(productId, MediaPurpose.GALLERY.name())
+                .orElse(0);
         for (MultipartFile file : imageProductFile) {
             currentPosition++;
             Media image = uploadAndSave(file, productId, MediaOwnerType.PRODUCT, MediaPurpose.GALLERY);
@@ -84,18 +85,19 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public MediaResponse changeImageProduct(MultipartFile file, String productId, Integer position) throws IOException {
+    public MediaResponse changeImageProduct(MultipartFile file, String productId) throws IOException {
         Media media = uploadAndSave(file, productId, MediaOwnerType.PRODUCT, MediaPurpose.GALLERY);
         Optional<Integer> currentPosition = mediaRepository
-                .findMaxPositionByOwnerIdAndPurpose(productId, MediaPurpose.GALLERY);
+                .findMaxPositionByOwnerIdAndPurpose(productId, MediaPurpose.GALLERY.name());
         media.setPosition(currentPosition.get() + 1);
         mediaRepository.save(media);
         return mediaMapper.toMediaResponse(media);
     }
 
     @Override
+    @Transactional
     public void deleteByOwnerId(String ownerId, MediaOwnerType mediaOwnerType) {
-        List<Media> medias = mediaRepository.findByOwnerIdAndOwnerType(ownerId, mediaOwnerType);
+        List<Media> medias = mediaRepository.findByOwnerIdAndOwnerType(ownerId, mediaOwnerType.name());
         if(medias.isEmpty()){
             throw new AppException(MediaErrorCode.CAN_NOT_FIND_MEDIA_BY_PRODUCT);
         }
@@ -115,7 +117,7 @@ public class ImageServiceImpl implements ImageService {
 
     @Override
     public ListMediaResponse getMedia(String ownerId, MediaOwnerType mediaOwnerType) {
-        List<Media> medias = mediaRepository.findByOwnerIdAndOwnerType(ownerId, mediaOwnerType);
+        List<Media> medias = mediaRepository.findByOwnerIdAndOwnerType(ownerId, mediaOwnerType.name());
         List<MediaResponse> mediaResponses = medias.stream()
                 .map(media -> MediaResponse.builder()
                         .id(media.getId())
@@ -133,6 +135,7 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
+    @Transactional
     public void deleteByUrl(String url) {
         Media media = mediaRepository.findByUrl(url);
         if(media == null){
@@ -151,24 +154,20 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Transactional
-    public void changePosition(String mediaId, int newPosition) {
+    public void changePosition(String mediaId, Integer newPosition) {
         Media media = mediaRepository.findById(mediaId)
                 .orElseThrow(() -> new AppException(MediaErrorCode.CAN_NOT_FIND_MEDIA_BY_ID));
 
         int oldPos = media.getPosition();
         String ownerId = media.getOwnerId();
 
-        if (oldPos == newPosition) return; // không cần đổi
+        if (oldPos == newPosition) return;
 
         if (oldPos < newPosition) {
-            // di chuyển xuống
             mediaRepository.shiftDownPositions(ownerId, oldPos, newPosition);
         } else {
-            // di chuyển lên
             mediaRepository.shiftUpPositions(ownerId, oldPos, newPosition);
         }
-
-        // cập nhật vị trí mới cho ảnh đó
         media.setPosition(newPosition);
         mediaRepository.save(media);
     }

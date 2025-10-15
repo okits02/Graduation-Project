@@ -86,6 +86,19 @@ public class ImageController {
                 .build());
     }
 
+    @PostMapping("/product/change-image")
+    public ResponseEntity<ApiResponse<MediaResponse>> changeImage(
+            @ModelAttribute ChangeImageProductRequest request
+    ) throws IOException {
+        MediaResponse mediaResponse = imageService.changeImageProduct(request.getFile(),
+                request.getProductId());
+        return ResponseEntity.ok(ApiResponse.<MediaResponse>builder()
+                        .code(200)
+                        .message("Create new image successfully!")
+                        .result(mediaResponse)
+                .build());
+    }
+
     @PostMapping("/category/media")
     public ResponseEntity<ApiResponse<MediaResponse>> uploadCateImage(
             @ModelAttribute ImageUploadRequest request
@@ -131,12 +144,15 @@ public class ImageController {
                 .build());
     }
 
-    @PutMapping("/{mediaId}/reorder")
-    public ResponseEntity<Void> reorderImage(
-            @PathVariable String mediaId,
-            @RequestParam int newPosition) {
-        imageService.changePosition(mediaId, newPosition);
-        return ResponseEntity.ok().build();
+    @PutMapping("/product/reorder")
+    public ResponseEntity<ApiResponse<?>> reorderImage(
+            @RequestBody ReorderImageRequest request
+            ) {
+        imageService.changePosition(request.getImageId(), request.getNewPosition());
+        return ResponseEntity.ok(ApiResponse.builder()
+                        .code(200)
+                        .message("reorder position successfully !")
+                .build());
     }
 
 

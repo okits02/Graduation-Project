@@ -5,7 +5,6 @@ import com.example.media_service.enums.MediaPurpose;
 import com.example.media_service.model.Media;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.NativeQuery;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.util.List;
@@ -13,12 +12,12 @@ import java.util.Optional;
 
 public interface MediaRepository extends JpaRepository<Media, String> {
     @Query(value = """
-            Select * From media Where owner_id = : ownerId
+            Select * From media Where owner_id = :ownerId
             and owner_type = :ownerType
             Order by position ASC
-            """)
-    List<Media> findByOwnerIdAndOwnerType(String ownerId,
-                                          MediaOwnerType ownerType);
+            """, nativeQuery = true)
+    List<Media> findByOwnerIdAndOwnerType(@Param("ownerId") String ownerId,
+                                          @Param("ownerType") String ownerType);
     @Modifying
     @Query(
             value = """
@@ -68,5 +67,5 @@ public interface MediaRepository extends JpaRepository<Media, String> {
     nativeQuery = true)
     Optional<Integer> findMaxPositionByOwnerIdAndPurpose(
             @Param("ownerId") String productId,
-            @Param("purpose") MediaPurpose mediaPurpose);
+            @Param("purpose") String mediaPurpose);
 }
