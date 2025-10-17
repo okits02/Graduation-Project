@@ -10,7 +10,6 @@ import com.example.order_service.model.OrderItem;
 import com.example.order_service.model.Orders;
 import com.example.order_service.repository.OrderRepository;
 import com.example.order_service.repository.httpClient.UserClient;
-import com.example.order_service.service.OrderItemService;
 import com.example.order_service.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,34 +27,7 @@ import java.util.List;
 public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
-    private final OrderItemService orderItemService;
     private final UserClient userClient;
 
-    @Override
-    public OrderResponse save(OrderCreationRequest request) {
-        ServletRequestAttributes servletRequestAttributes =
-                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        assert servletRequestAttributes != null;
-        var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
-        var response = userClient.getUserId(authHeader);
-        String userId = null;
-        if(response.getBody().getCode() != 200){
-            throw new AppException(OrderErrorCode.valueOf(response.getBody()));
-        }
-        Orders orders = Orders.builder()
-                .orderDate(LocalDateTime.now())
-                .orderFee(request.getOrderFee())
-                .orderDesc(request.getOrderDesc())
-                .build();
-        if(!request.getItems().isEmpty()){
-            List<OrderItem> itemList = new ArrayList<>();
-            for(OrderItemRequest item : request.getItems()){
-                OrderItem orderItem = orderItemService.save(item.getProductId(), item.getQuantity(), orders);
-                itemList.add(orderItem);
-            }
-            orders.setItems(itemList);
-        }
-        return orderMapper.toOrderResponse(orderRepository.save(orders));
 
-    }
 }

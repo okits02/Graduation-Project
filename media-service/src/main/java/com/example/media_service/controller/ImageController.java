@@ -150,8 +150,8 @@ public class ImageController {
             ) {
         imageService.changePosition(request.getImageId(), request.getNewPosition());
         return ResponseEntity.ok(ApiResponse.builder()
-                        .code(200)
-                        .message("reorder position successfully !")
+                .code(200)
+                .message("reorder position successfully !")
                 .build());
     }
 
