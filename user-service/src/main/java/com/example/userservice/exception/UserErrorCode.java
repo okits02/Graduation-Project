@@ -12,7 +12,8 @@ public enum UserErrorCode implements ErrorCode {
     OTP_NOT_EXISTS(2007, "OTP Not Exist", HttpStatus.NOT_FOUND),
     EMAIL_EXISTS(2008, "Email Exist", HttpStatus.CONFLICT),
     OTP_INVALID(2009, "OTP is not valid!", HttpStatus.BAD_REQUEST),
-    OTP_EXPIRED(2010, "OTP has expired!", HttpStatus.BAD_REQUEST);
+    OTP_EXPIRED(2010, "OTP has expired!", HttpStatus.BAD_REQUEST),
+    CAN_NOT_CONNECT_TO_PROFILE(2011, "Can not connected to profile client", HttpStatus.BAD_REQUEST);
 
     private final int code;
     private final String message;

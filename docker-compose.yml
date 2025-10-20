@@ -29,6 +29,8 @@ services:
       - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
     mem_limit: 2g
     cpus: 1.5
+
+
   neo4j:
     image: neo4j:latest
     ports:

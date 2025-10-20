@@ -102,7 +102,7 @@ public class ProfileServiceImpl implements ProfileService {
                 .currentPage(page)
                 .pageSize(pageData.getSize())
                 .totalElements(pageData.getTotalElements())
-                .Data(pageData.getContent().stream().map(profileMapper::toProfileResponse).toList())
+                .data(pageData.getContent().stream().map(profileMapper::toProfileResponse).toList())
                 .build();
     }
 

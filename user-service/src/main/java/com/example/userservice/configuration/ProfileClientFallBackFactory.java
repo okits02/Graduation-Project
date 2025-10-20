@@ -1,5 +1,6 @@
 package com.example.userservice.configuration;
 
+import com.example.userservice.exception.UserErrorCode;
 import com.example.userservice.repository.httpClient.ProfileClient;
 import com.okits02.common_lib.exception.AppException;
 import com.okits02.common_lib.exception.GlobalErrorCode;
@@ -19,38 +20,28 @@ public class ProfileClientFallBackFactory implements FallbackFactory<ProfileClie
     @Override
     public ProfileClient create(Throwable cause) {
         log.error("profile client fallback triggered: {}", cause.getMessage(), cause);
-        return (token, userId) -> {
-            if(cause instanceof RetryableException || cause.getCause() instanceof SocketTimeoutException){
-                log.warn("TimeOut when calling profile-service: {}", cause.getMessage());
-                throw new AppException(GlobalErrorCode.UNAUTHORIZED);
-            }
+        if(cause.getCause() instanceof AppException appEx){
+            log.warn("AppException from FeignErrorDecoder : code={}, message= {}",
+                    appEx.getErrorCode().getCode(), appEx.getErrorCode().getMessage());
+            throw appEx;
+        }
 
-            if(cause.getCause() instanceof ConnectException){
-                log.warn("Connect refused: profile-service not reachable");
-                throw new AppException(GlobalErrorCode.UNAUTHORIZED);
-            }
+        if(cause instanceof RetryableException || cause.getCause() instanceof SocketTimeoutException){
+            log.warn("Timeout / network error when calling profile-service");
+            throw new AppException(UserErrorCode.CAN_NOT_CONNECT_TO_PROFILE);
+        }
 
-            if(cause instanceof DecodeException){
-                log.warn("Failed to decode Feign response from profile-service", cause);
-                throw new AppException(GlobalErrorCode.UNAUTHORIZED);
-            }
-
-            if (cause instanceof FeignException feignEx) {
-                int status = feignEx.status();
-                log.error("Feign HTTP error from profile-service: {}", status);
-
-                if (status >= 500) {
-                    // lỗi server
-                    throw new AppException(GlobalErrorCode.UNAUTHORIZED);
-                } else if (status == 404) {
-                    throw new AppException(GlobalErrorCode.UNAUTHORIZED);
-                } else {
-                    throw new AppException(GlobalErrorCode.UNAUTHORIZED);
-                }
-            }
-
-            log.error("Unknown error when calling profile-service: {}", cause.getMessage());
+        if(cause.getCause() instanceof ConnectException){
+            log.warn("Connect refused: profile-service not reachable");
             throw new AppException(GlobalErrorCode.UNAUTHORIZED);
-        };
+        }
+
+        if(cause instanceof FeignException feignEx){
+            int status = feignEx.status();
+            log.error("Feign HTTP error from profile-service: {}", status);
+            throw new AppException(GlobalErrorCode.UNAUTHORIZED);
+        }
+        log.error("Unknown error calling profile-service");
+        throw new AppException(GlobalErrorCode.UNAUTHENTICATED);
     }
 }

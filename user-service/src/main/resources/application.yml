@@ -35,6 +35,8 @@ spring:
         max.in.fight.request.per.connection: 5
         retry.backoff.ms: 1000
   feign:
+    circuitbreaker:
+      enabled: true
     client:
       config:
         default:
