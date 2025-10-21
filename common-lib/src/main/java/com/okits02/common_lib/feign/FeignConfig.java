@@ -1,5 +1,6 @@
 package com.okits02.common_lib.feign;
 
+import feign.Logger;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import feign.codec.ErrorDecoder;
@@ -22,4 +23,10 @@ public class FeignConfig {
             }
         };
     }
+
+    @Bean
+    public Logger.Level feignLoggerLevel() {
+        return Logger.Level.FULL;
+    }
+
 }

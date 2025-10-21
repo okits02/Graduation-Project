@@ -151,16 +151,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void deleteUser(String userId) {
-        ServletRequestAttributes servletRequestAttributes =
-                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
-        var response = profileClient.deleteMyProfile(authHeader, userId).getBody();
-        if (response == null || response.getCode() != 200) {
-            throw new RuntimeException("Failed to delete profile from Profile-service");
+        public void deleteUser(String userId) {
+            ServletRequestAttributes servletRequestAttributes =
+                    (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
+            var response = profileClient.deleteMyProfile(authHeader, userId).getBody();
+            if (response == null || response.getCode() != 200) {
+                throw new RuntimeException("Failed to delete profile from Profile-service");
+            }
+            userRepository.deleteById(userId);
         }
-        userRepository.deleteById(userId);
-    }
 
     @Override
     public UserIdResponse getUserId() {

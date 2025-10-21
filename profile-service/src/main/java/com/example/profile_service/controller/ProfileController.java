@@ -97,13 +97,11 @@ public class ProfileController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteMyProfile(@PathVariable String userId) {
         profileService.DeleteProfile(userId);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(
-                ApiResponse.<Void>builder()
-                        .code(204)
-                        .message("Profile deleted successfully")
-                        .result(null)
-                        .build()
-        );
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .code(200)
+                .message("Profile deleted successfully")
+                .result(null)
+                .build());
     }
 
     @Operation(summary = "admin get all user info",

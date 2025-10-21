@@ -48,6 +48,10 @@ spring:
         enable: true
       response:
         enable: true
+logging:
+  level:
+    feign: DEBUG
+    com.example.userservice.repository.httpClient: DEBUG
 
 
 springdoc:

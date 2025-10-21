@@ -114,11 +114,13 @@ public class ProfileServiceImpl implements ProfileService {
         }
 
         List<UserAddress> addressList = userProfile.getAddress();
-        for (UserAddress address : addressList) {
-            addressRepository.deleteById(address.getId());
+        if(addressList != null || !addressList.isEmpty()) {
+            for (UserAddress address : addressList) {
+                addressRepository.deleteById(address.getId());
+            }
         }
         userProfile.setAddress(null);
-        profileRepository.save(userProfile);
+        profileRepository.deleteById(userProfile.getId());
     }
 
     @Override
