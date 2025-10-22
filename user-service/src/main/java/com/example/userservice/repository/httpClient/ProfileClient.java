@@ -10,7 +10,9 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 
-@FeignClient(name = "profile-service")
+@FeignClient(name = "profile-service",
+        configuration = FeignConfig.class,
+        fallbackFactory = ProfileClientFallBackFactory.class)
 public interface ProfileClient {
     @DeleteMapping(value = "/profile-service/profile/admin/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<ApiResponse<Void>> deleteMyProfile(

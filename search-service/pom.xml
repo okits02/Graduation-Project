@@ -96,6 +96,11 @@
 			<artifactId>elasticsearch-java</artifactId>
 			<version>8.17.6</version>
 		</dependency>
+        <dependency>
+            <groupId>com.okits02</groupId>
+            <artifactId>common-lib</artifactId>
+            <version>1.0.0</version>
+        </dependency>
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>

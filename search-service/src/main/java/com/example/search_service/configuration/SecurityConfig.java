@@ -1,8 +1,7 @@
 package com.example.search_service.configuration;
 
 
-import com.example.search_service.configuration.CustomJwtDecoder;
-import com.example.search_service.configuration.JwtAuthenticationEntryPoint;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;

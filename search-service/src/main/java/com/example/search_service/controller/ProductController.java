@@ -5,7 +5,7 @@ import com.example.search_service.viewmodel.ProductDetailsVM;
 import com.example.search_service.viewmodel.ProductGetListVM;
 import com.example.search_service.viewmodel.ProductGetVM;
 import com.example.search_service.viewmodel.ProductNameGetListVm;
-import com.example.search_service.viewmodel.dto.ApiResponse;
+import com.okits02.common_lib.dto.ApiResponse;
 import com.example.search_service.viewmodel.dto.request.RemoveCategoryIdsRequest;
 import com.example.search_service.viewmodel.dto.request.SearchRequest;
 import lombok.RequiredArgsConstructor;

@@ -1,13 +1,10 @@
 package com.example.search_service.consumer;
 
-import com.example.search_service.Repository.ProductsRepository;
-import com.example.search_service.mapper.ProductsMapper;
-import com.example.search_service.model.Products;
+
 import com.example.search_service.service.ProductService;
 import com.example.search_service.viewmodel.dto.ApplyThumbnailEventDTO;
 import com.example.search_service.viewmodel.dto.ProductEventDTO;
 import com.example.search_service.viewmodel.dto.request.ApplyThumbnailRequest;
-import com.example.search_service.viewmodel.dto.request.CategoryRequest;
 import com.example.search_service.viewmodel.dto.request.DeleteProductEventDTO;
 import com.example.search_service.viewmodel.dto.request.ProductRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -19,9 +16,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
-
-import java.util.HashSet;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor

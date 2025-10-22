@@ -1,11 +1,12 @@
 package com.example.search_service.exceptions;
 
+import com.okits02.common_lib.exception.ErrorCode;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 
 @Getter
-public enum ErrorCode {
+public enum SearchErrorCode implements ErrorCode {
     UNAUTHENTICATED(40300, "Unauthenticated!", HttpStatus.UNAUTHORIZED),
     PRODUCT_EXISTS(40100, "Product is exists in search!", HttpStatus.BAD_REQUEST),
     PRODUCT_NOT_EXISTS(40200, "Product is not exists in search!", HttpStatus.BAD_REQUEST),
@@ -16,7 +17,7 @@ public enum ErrorCode {
     private final String message;
     private final HttpStatusCode httpStatusCode;
 
-    ErrorCode(int code, String message, HttpStatusCode httpStatusCode) {
+    SearchErrorCode(int code, String message, HttpStatusCode httpStatusCode) {
         this.code = code;
         this.message = message;
         this.httpStatusCode = httpStatusCode;

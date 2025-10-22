@@ -9,8 +9,8 @@ import co.elastic.clients.elasticsearch.core.UpdateByQueryResponse;
 import co.elastic.clients.json.JsonData;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.example.search_service.Repository.ProductsRepository;
-import com.example.search_service.exceptions.AppException;
-import com.example.search_service.exceptions.ErrorCode;
+import com.okits02.common_lib.exception.AppException;
+import com.example.search_service.exceptions.SearchErrorCode;
 import com.example.search_service.mapper.ProductsMapper;
 import com.example.search_service.mapper.PromotionMapper;
 import com.example.search_service.model.Products;
@@ -45,9 +45,6 @@ public class ProductService {
 
 
     public void createProduct(ProductRequest request) {
-        /*if(productsRepository.existsById(request.getId())) {
-            throw new AppException(ErrorCode.PRODUCT_EXISTS);
-        }*/
         Products products = productsMapper.toProducts(request);
         NativeQuery nativeQuery = NativeQuery.builder()
                 .withQuery(query -> query
@@ -118,7 +115,7 @@ public class ProductService {
 
     public void updateProduct(ProductRequest request) {
         Products products = productsRepository.findById(request.getId()).orElseThrow(() ->
-                new AppException(ErrorCode.PRODUCT_NOT_EXISTS));
+                new AppException(SearchErrorCode.PRODUCT_NOT_EXISTS));
         productsMapper.updateProduct(products, request);
         productsRepository.save(products);
     }
@@ -417,7 +414,7 @@ public class ProductService {
     public void deletePromotion(ApplyPromotionEventDTO request) throws IOException {
         String promotionId = request.getId();
         if(promotionId == null) {
-            throw new AppException(ErrorCode.ID_OF_PROMOTION_NOT_VALID);
+            throw new AppException(SearchErrorCode.ID_OF_PROMOTION_NOT_VALID);
         }
         Query query = Query.of(q -> q
                 .nested(n -> n
@@ -519,7 +516,7 @@ public class ProductService {
     public void AppyThumbnailToProduct(ApplyThumbnailRequest request){
         if(request == null || request.getProductId() == null || request.getProductId().isBlank()
                 || request.getUrl() == null || request.getUrl().isBlank()){
-            throw new AppException(ErrorCode.INVALID_REQUEST);
+            throw new AppException(SearchErrorCode.INVALID_REQUEST);
         }
         try{
             boolean exists = elasticsearchClient.exists(e -> e
@@ -528,7 +525,7 @@ public class ProductService {
                     .value();
 
             if(!exists){
-                throw new AppException(ErrorCode.PRODUCT_NOT_EXISTS);
+                throw new AppException(SearchErrorCode.PRODUCT_NOT_EXISTS);
             }
             elasticsearchClient.update(u -> u
                     .index("product")
@@ -544,7 +541,7 @@ public class ProductService {
     public ProductDetailsVM getDetailsProduct(String productId){
         Optional<Products> products = productsRepository.findById(productId);
         if(products.isEmpty()){
-            throw new AppException(ErrorCode.PRODUCT_NOT_EXISTS);
+            throw new AppException(SearchErrorCode.PRODUCT_NOT_EXISTS);
         }
         ProductDetailsVM productDetailsVM = ProductDetailsVM.fromEntity(products.get());
         return productDetailsVM;
