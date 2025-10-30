@@ -14,14 +14,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class UserClientFallBackFactory extends BaseFallbackFactory<UserServiceClient> {
     @Override
-    protected String getClientName() {
-        return "user-service";
-    }
-
-    @Override
-    public UserServiceClient create(Throwable cause){
-        super.create(cause);
-
+    protected UserServiceClient createFallbackInstance(Throwable cause) {
         return new UserServiceClient() {
             @Override
             public ApiResponse<GetUserIdResponse> getUserId(String token) {
@@ -29,4 +22,10 @@ public class UserClientFallBackFactory extends BaseFallbackFactory<UserServiceCl
             }
         };
     }
+
+    @Override
+    protected String getClientName() {
+        return "user-service";
+    }
+
 }

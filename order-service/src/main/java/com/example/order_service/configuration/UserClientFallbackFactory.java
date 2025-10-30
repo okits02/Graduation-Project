@@ -16,19 +16,19 @@ import org.springframework.stereotype.Component;
 @Component
 public class UserClientFallbackFactory extends BaseFallbackFactory<UserClient> {
     @Override
+    protected UserClient createFallbackInstance(Throwable cause) {
+        return new UserClient() {
+            @Override
+            public ResponseEntity<ApiResponse<UserIdResponse>> getUserId(String token) {
+                log.warn("Fallback: cannot delete profile for user {} because {}", token, cause.getMessage());
+                throw new AppException(GlobalErrorCode.SERVICE_UNAVAILABLE);
+            }
+        };
+    }
+
+    @Override
     protected String getClientName() {
         return "user-service";
     }
 
-    @Override
-    public UserClient create(Throwable cause){
-        super.create(cause);
-        return new UserClient() {
-
-            @Override
-            public ResponseEntity<ApiResponse<UserIdResponse>> getUserId(String token) {
-                throw new AppException(GlobalErrorCode.INTERNAL_ERROR);
-            }
-        };
-    }
 }

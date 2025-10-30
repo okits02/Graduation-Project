@@ -15,25 +15,11 @@ public abstract class BaseFallbackFactory<T> implements FallbackFactory<T> {
     @Override
     public T create(Throwable cause) {
         log.error("{} fallback triggered: {}", getClientName(), cause.getMessage(), cause);
-        if(cause.getCause() instanceof AppException appEx){
-            log.warn("AppException from FeignErrorDecoder: code={}, message={}",
-                    appEx.getErrorCode().getCode(), appEx.getErrorCode().getMessage());
-            throw appEx;
-        }
 
-        if(cause instanceof RetryableException || cause.getCause() instanceof SocketTimeoutException){
-            log.warn("{} timeout/network issue", getClientName());
-            throw new AppException(GlobalErrorCode.SERVICE_TIMEOUT);
-        }
-
-        if(cause.getCause() instanceof ConnectException ) {
-            log.warn("{} connection refused!", getClientName());
-            throw new AppException(GlobalErrorCode.SERVICE_UNAVAILABLE);
-        }
-
-        log.error("Unknown error in {} fallback", getClientName());
-        throw new AppException(GlobalErrorCode.INTERNAL_ERROR);
+        return createFallbackInstance(cause);
     }
+
+    protected abstract T createFallbackInstance(Throwable cause);
 
     protected abstract String getClientName();
 }

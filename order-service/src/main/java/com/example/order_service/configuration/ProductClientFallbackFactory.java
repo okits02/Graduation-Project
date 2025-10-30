@@ -19,13 +19,13 @@ public class ProductClientFallbackFactory extends BaseFallbackFactory<ProductCli
     }
 
     @Override
-    public ProductClient create(Throwable cause){
-        super.create(cause);
+    protected ProductClient createFallbackInstance(Throwable cause) {
         return new ProductClient() {
 
             @Override
             public ResponseEntity<ApiResponse<ProductGetVM>> getProductDetails(String token, String productId) {
-                throw new AppException(GlobalErrorCode.INTERNAL_ERROR);
+                log.warn("Fallback: cannot delete profile for user {} because {}", productId, cause.getMessage());
+                throw new AppException(GlobalErrorCode.SERVICE_UNAVAILABLE);
             }
         };
     }

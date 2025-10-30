@@ -15,18 +15,20 @@ import org.springframework.stereotype.Component;
 @Component
 public class MediaClientFallbackFactory extends BaseFallbackFactory<MediaClient> {
     @Override
+    protected MediaClient createFallbackInstance(Throwable cause) {
+        return new MediaClient() {
+            @Override
+            public ResponseEntity<ApiResponse<ListMediaResponse>> getMedia(String ownerId, MediaOwnerType mediaOwnerType) {
+                log.warn("Fallback: cannot delete profile for user {} because {}", ownerId, cause.getMessage());
+                throw  new AppException(GlobalErrorCode.INTERNAL_ERROR);
+            }
+        };
+    }
+
+    @Override
     protected String getClientName() {
         return "media-service";
     }
 
-    @Override
-    public MediaClient create(Throwable cause){
-        super.create(cause);
-        return new MediaClient() {
-            @Override
-            public ResponseEntity<ApiResponse<ListMediaResponse>> getMedia(String ownerId, MediaOwnerType mediaOwnerType) {
-                throw new AppException(GlobalErrorCode.INTERNAL_ERROR);
-            }
-        };
-    }
+
 }

@@ -17,13 +17,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class SearchClientFallbackFactory extends BaseFallbackFactory<SearchClient> {
     @Override
-    protected String getClientName() {
-        return "search-service";
-    }
-
-    @Override
-    public SearchClient create(Throwable cause){
-        super.create(cause);
+    protected SearchClient createFallbackInstance(Throwable cause) {
         return new SearchClient() {
             @Override
             public ResponseEntity<ApiResponse<Long>> removeCate(RemoveCategoryRequest request) {
@@ -31,4 +25,11 @@ public class SearchClientFallbackFactory extends BaseFallbackFactory<SearchClien
             }
         };
     }
+
+    @Override
+    protected String getClientName() {
+        return "search-service";
+    }
+
+
 }
