@@ -5,7 +5,6 @@ import com.example.order_service.repository.httpClient.ProductClient;
 import com.okits02.common_lib.dto.ApiResponse;
 import com.okits02.common_lib.exception.AppException;
 import com.okits02.common_lib.exception.GlobalErrorCode;
-import com.okits02.common_lib.feign.BaseFallbackFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;

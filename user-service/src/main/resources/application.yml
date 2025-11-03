@@ -34,20 +34,21 @@ spring:
         enable.idempotence: true
         max.in.fight.request.per.connection: 5
         retry.backoff.ms: 1000
-  feign:
-    circuitbreaker:
-      enabled: true
-    client:
-      config:
-        default:
-          connectTimeOut: 3000
-          readTimeOut: 5000
-          loggerLevel: full
-    compersion:
-      request:
-        enable: true
-      response:
-        enable: true
+  cloud:
+    feign:
+      circuitbreaker:
+        enabled: true
+      client:
+        config:
+          default:
+            connectTimeOut: 3000
+            readTimeOut: 5000
+            loggerLevel: full
+      compersion:
+        request:
+          enable: true
+        response:
+          enable: true
 logging:
   level:
     feign: DEBUG

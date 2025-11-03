@@ -3,7 +3,6 @@ package com.example.order_service.repository.httpClient;
 import com.example.order_service.configuration.ProductClientFallbackFactory;
 import com.example.order_service.dto.ProductGetVM;
 import com.okits02.common_lib.dto.ApiResponse;
-import com.okits02.common_lib.feign.FeignConfig;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;

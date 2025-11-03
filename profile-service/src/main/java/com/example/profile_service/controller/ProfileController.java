@@ -95,13 +95,12 @@ public class ProfileController {
             security = @SecurityRequirement(name = "bearerAuth"))
     @DeleteMapping("/admin/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Void>> deleteMyProfile(@PathVariable String userId) {
-        profileService.DeleteProfile(userId);
-        return ResponseEntity.ok(ApiResponse.<Void>builder()
+    public ApiResponse<Void> deleteMyProfile(@PathVariable String userId) {
+        return ApiResponse.<Void>builder()
                 .code(200)
                 .message("Profile deleted successfully")
                 .result(null)
-                .build());
+                .build();
     }
 
     @Operation(summary = "admin get all user info",

@@ -1,5 +1,6 @@
 package com.okits02.inventory_service.service.Impl;
 
+import com.okits02.common_lib.dto.PageResponse;
 import com.okits02.inventory_service.dto.request.InventoryRequest;
 import com.okits02.inventory_service.dto.request.IsInStockRequest;
 import com.okits02.inventory_service.dto.response.InventoryResponse;
@@ -11,6 +12,8 @@ import com.okits02.inventory_service.model.Inventory;
 import com.okits02.inventory_service.repository.InventoryRepository;
 import com.okits02.inventory_service.service.InventoryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -102,6 +105,18 @@ public class InventoryServiceImpl implements InventoryService {
         }
         inventory.setQuantity(inventory.getQuantity() + quantity);
         return inventoryRepository.save(inventory);
+    }
+
+    @Override
+    public PageResponse<InventoryResponse> getAll(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        var pageData = inventoryRepository.findAll(pageable);
+        return PageResponse.<InventoryResponse>builder()
+                .currentPage(page)
+                .pageSize(pageData.getSize())
+                .totalElements(pageData.getTotalElements())
+                .data(pageData.getContent().stream().map(inventoryMapper::toInventoryResponse).toList())
+                .build();
     }
 
     private void productStockEvent(String productId, Boolean isInStock){

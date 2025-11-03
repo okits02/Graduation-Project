@@ -4,7 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
-@EnableFeignClients
+@EnableFeignClients(basePackages = "com.example.userservice.repository.httpClient")
 @SpringBootApplication(scanBasePackages = {"com.example.userservice", "com.okits02.common_lib"})
 public class UserServiceApplication {
 

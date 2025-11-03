@@ -85,13 +85,20 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public MediaResponse changeImageProduct(MultipartFile file, String productId) throws IOException {
-        Media media = uploadAndSave(file, productId, MediaOwnerType.PRODUCT, MediaPurpose.GALLERY);
+    public ListMediaResponse changeImageProduct(List<MultipartFile> listFileImage, String productId) throws IOException {
         Optional<Integer> currentPosition = mediaRepository
                 .findMaxPositionByOwnerIdAndPurpose(productId, MediaPurpose.GALLERY.name());
-        media.setPosition(currentPosition.get() + 1);
-        mediaRepository.save(media);
-        return mediaMapper.toMediaResponse(media);
+        List<MediaResponse> responses = new ArrayList<>();
+        Integer i = currentPosition.get();
+        for(MultipartFile file : listFileImage) {
+            Media media = uploadAndSave(file, productId, MediaOwnerType.PRODUCT, MediaPurpose.GALLERY);
+            media.setPosition(i + 1);
+            responses.add(mediaMapper.toMediaResponse(mediaRepository.save(media)));
+            i++;
+        }
+        return ListMediaResponse.builder()
+                .mediaResponseList(responses)
+                .build();
     }
 
     @Override

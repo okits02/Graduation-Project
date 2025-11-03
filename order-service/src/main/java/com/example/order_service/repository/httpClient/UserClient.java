@@ -3,8 +3,6 @@ package com.example.order_service.repository.httpClient;
 import com.example.order_service.configuration.UserClientFallbackFactory;
 import com.okits02.common_lib.dto.ApiResponse;
 import com.example.order_service.dto.response.UserIdResponse;
-import com.okits02.common_lib.feign.FeignConfig;
-import feign.Headers;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;

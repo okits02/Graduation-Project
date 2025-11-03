@@ -155,7 +155,7 @@ public class UserServiceImpl implements UserService {
             ServletRequestAttributes servletRequestAttributes =
                     (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
             var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
-            var response = profileClient.deleteMyProfile(authHeader, userId).getBody();
+            var response = profileClient.deleteMyProfile(authHeader, userId);
             if (response == null || response.getCode() != 200) {
                 throw new RuntimeException("Failed to delete profile from Profile-service");
             }

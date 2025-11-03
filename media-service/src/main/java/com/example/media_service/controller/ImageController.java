@@ -87,15 +87,15 @@ public class ImageController {
     }
 
     @PostMapping("/product/change-image")
-    public ResponseEntity<ApiResponse<MediaResponse>> changeImage(
+    public ResponseEntity<ApiResponse<ListMediaResponse>> changeImage(
             @ModelAttribute ChangeImageProductRequest request
     ) throws IOException {
-        MediaResponse mediaResponse = imageService.changeImageProduct(request.getFile(),
+        ListMediaResponse listMediaResponse = imageService.changeImageProduct(request.getListFile(),
                 request.getProductId());
-        return ResponseEntity.ok(ApiResponse.<MediaResponse>builder()
+        return ResponseEntity.ok(ApiResponse.<ListMediaResponse>builder()
                         .code(200)
                         .message("Create new image successfully!")
-                        .result(mediaResponse)
+                        .result(listMediaResponse)
                 .build());
     }
 

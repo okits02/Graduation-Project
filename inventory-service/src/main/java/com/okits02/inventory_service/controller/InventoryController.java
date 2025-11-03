@@ -1,5 +1,6 @@
 package com.okits02.inventory_service.controller;
 
+import com.okits02.common_lib.dto.PageResponse;
 import com.okits02.inventory_service.dto.request.InventoryRequest;
 import com.okits02.inventory_service.dto.request.IsInStockRequest;
 import com.okits02.common_lib.dto.ApiResponse;
@@ -87,6 +88,18 @@ public class InventoryController {
         return ApiResponse.builder()
                 .code(200)
                 .message("Decrease success!")
+                .build();
+    }
+
+    @GetMapping("/get-all")
+    public ApiResponse<PageResponse<?>> getAll(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size
+    ){
+        return ApiResponse.<PageResponse<?>>builder()
+                .code(200)
+                .message("get all inventory successfully!")
+                .result(inventoryService.getAll(page - 1, size))
                 .build();
     }
 }
