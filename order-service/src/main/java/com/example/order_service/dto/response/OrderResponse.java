@@ -1,6 +1,7 @@
 package com.example.order_service.dto.response;
 
 import com.example.order_service.constant.AppConstant;
+import com.example.order_service.enums.Status;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -12,6 +13,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,17 +23,15 @@ import java.util.List;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class OrderResponse implements Serializable {
-    @Serial
-    private static final long serialVersionUID = 1L;
     String orderId;
-
-    @JsonSerialize(using = LocalDateTimeSerializer.class)
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    @JsonFormat(pattern = AppConstant.LOCAL_DATE_TIME_FORMAT, shape = JsonFormat.Shape.STRING)
-    @DateTimeFormat(pattern = AppConstant.LOCAL_DATE_TIME_FORMAT)
     LocalDateTime orderDate;
     String orderDesc;
-    Double orderFee;
+    BigDecimal orderFee;
+    Status orderStatus;
     String userId;
+    String paymentId;
+    String addressId;
+    String deliveryId;
+    BigDecimal totalPrice;
     List<OrderItemResponse> items;
 }

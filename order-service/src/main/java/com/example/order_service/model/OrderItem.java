@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "order_item")
@@ -19,7 +20,7 @@ public class OrderItem {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String orderItemId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "order_id")
     private Orders orders;
 
@@ -29,6 +30,8 @@ public class OrderItem {
     @Column(name = "name_product")
     private String productName;
 
+    @Column(name = "thumbnail_url")
+    private String thumbnailUrl;
     @Column(name = "quantity")
     private Integer quantity;
 
@@ -38,12 +41,6 @@ public class OrderItem {
     @Column(name = "sell_price", precision = 10, scale = 2)
     private BigDecimal sellPrice;
 
-    @Column(name = "total_price", precision = 10, scale = 2)
-    private BigDecimal totalPrice;
-
-
-    public void calculatorSellPrice(){
-        if(sellPrice == null || quantity == null) return;
-        totalPrice = sellPrice.multiply(BigDecimal.valueOf(quantity));
-    }
+    @Column(name = "add_at")
+    private LocalDateTime addAt;
 }

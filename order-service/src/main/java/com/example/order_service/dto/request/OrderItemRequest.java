@@ -7,11 +7,17 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
+import java.math.BigDecimal;
+
 @Data
 @Setter
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class OrderItemRequest {
     String productId;
+    String productName;
+    String thumbnailUrl;
     Integer quantity;
+    BigDecimal listPrice;
+    BigDecimal sellPrice;
 }

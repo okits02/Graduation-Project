@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatusCode;
 
 @Getter
 public enum OrderErrorCode implements ErrorCode {
-    UNAUTHENTICATED(40100, "Unauthenticated!", HttpStatus.UNAUTHORIZED),
+    ORDER_NOT_EXISTS(6804, "Orders not exists!", HttpStatus.BAD_REQUEST)
     ;
     private final int code;
     private final String message;

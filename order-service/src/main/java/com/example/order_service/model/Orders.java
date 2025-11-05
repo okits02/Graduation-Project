@@ -20,7 +20,6 @@ import java.util.List;
 @Table(name = "orders")
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true, exclude = {"cart"})
 @Data
 @Builder
 public class Orders extends AbstractMappedEntity{
@@ -50,10 +49,20 @@ public class Orders extends AbstractMappedEntity{
     private String paymentId;
     @Column(name = "delivery_id")
     private String deliveryId;
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Column(name = "address_id")
+    private String addressId;
+    @Column(name = "total_price")
+    private BigDecimal totalPrice;
+    @OneToMany(mappedBy = "orders", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items;
 
-    public void CalculatorFee(){
 
+    public void calculateTotalPrice() {
+        this.totalPrice = BigDecimal.ZERO;
+        for (OrderItem item : items) {
+            if (item.getSellPrice() != null) {
+                this.totalPrice = this.totalPrice.add(item.getSellPrice());
+            }
+        }
     }
 }

@@ -24,15 +24,11 @@ import java.util.List;
 public class OrderCreationRequest implements Serializable {
     @Serial
     static final long serialVersionUID = 1L;
-
     String orderId;
-
-    @JsonSerialize(using = LocalDateTimeSerializer.class)
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    @JsonFormat(pattern = AppConstant.LOCAL_DATE_TIME_FORMAT, shape = JsonFormat.Shape.STRING)
-    @DateTimeFormat(pattern = AppConstant.LOCAL_DATE_TIME_FORMAT)
     LocalDateTime orderDate;
     String orderDesc;
     BigDecimal orderFee;
+    String paymentId;
+    String addressId;
     List<OrderItemRequest> items;
 }

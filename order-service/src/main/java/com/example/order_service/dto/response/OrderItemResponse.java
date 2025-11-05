@@ -4,6 +4,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -12,10 +13,9 @@ import java.math.BigDecimal;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class OrderItemResponse {
     String productId;
-    BigDecimal sellPrice;
-    Double totalPromotion;
-    BigDecimal listPrice;
-    String thumbnailUrl;
+    String productName;
     Integer quantity;
-    BigDecimal totalPrice;
+    BigDecimal listPrice;
+    BigDecimal sellPrice;
+    LocalDateTime addAt;
 }
