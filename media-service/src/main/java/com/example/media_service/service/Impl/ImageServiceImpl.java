@@ -13,7 +13,7 @@ import com.example.media_service.mapper.MediaMapper;
 import com.example.media_service.model.Media;
 import com.example.media_service.repository.MediaRepository;
 import com.example.media_service.service.ImageService;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -102,7 +102,6 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    @Transactional
     public void deleteByOwnerId(String ownerId, MediaOwnerType mediaOwnerType) {
         List<Media> medias = mediaRepository.findByOwnerIdAndOwnerType(ownerId, mediaOwnerType.name());
         if(medias.isEmpty()){

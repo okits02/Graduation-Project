@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -19,6 +21,7 @@ public interface MediaRepository extends JpaRepository<Media, String> {
     List<Media> findByOwnerIdAndOwnerType(@Param("ownerId") String ownerId,
                                           @Param("ownerType") String ownerType);
     @Modifying
+    @Transactional
     @Query(
             value = """
         UPDATE media
@@ -53,7 +56,6 @@ public interface MediaRepository extends JpaRepository<Media, String> {
     void shiftUpPositions(@Param("ownerId") String ownerId,
                           @Param("oldPos") int oldPos,
                           @Param("newPos") int newPos);
-
     Media findByUrl(String url);
 
     boolean existsByOwnerIdAndMediaPurpose(String ownerId, MediaPurpose mediaPurpose);
