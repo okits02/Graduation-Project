@@ -17,18 +17,19 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Data
 @Builder
-public class PaymentTransaction {
+public class Payment {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     private String orderId;
+    @Enumerated(EnumType.STRING)
     private PaymentMethod method;
+    @Enumerated(EnumType.STRING)
     private PaymentStatus status;
     private BigDecimal amount;
 
-    private String transactionRef;
-    private String providerResponse;
+    private String transactionId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

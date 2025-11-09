@@ -68,20 +68,18 @@ public class ImageServiceImpl implements ImageService {
     @Override
     public MediaResponse changeThumbnail(String oldThumbnailUrl, MultipartFile newThumbnail, String productId)
             throws IOException {
-        deleteByUrl(oldThumbnailUrl);
+        Media oldThumbnail = mediaRepository.findByUrl(oldThumbnailUrl);
+        if(oldThumbnail == null){
+            throw new AppException(MediaErrorCode.CAN_NOT_FIND_MEDIA_BY_URL);
+        }
+        mediaRepository.deleteById(oldThumbnail.getId());
         var exists = mediaRepository.existsByOwnerIdAndMediaPurpose(productId, MediaPurpose.THUMBNAIL);
         if(exists){
             throw new AppException(MediaErrorCode.THUMBNAIL_EXISTS);
         }
         Media thumbnailMedia = uploadAndSave(newThumbnail, productId, MediaOwnerType.PRODUCT, MediaPurpose.THUMBNAIL);
-        return MediaResponse.builder()
-                .id(thumbnailMedia.getId())
-                .ownerId(thumbnailMedia.getOwnerId())
-                .ownerType(thumbnailMedia.getOwnerType())
-                .url(thumbnailMedia.getUrl())
-                .mediaType(thumbnailMedia.getMediaType())
-                .mediaPurpose(thumbnailMedia.getMediaPurpose())
-                .build();
+        thumbnailMedia.setPosition(0);
+        return mediaMapper.toMediaResponse(mediaRepository.save(thumbnailMedia));
     }
 
     @Override
