@@ -30,7 +30,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         //String bankCode = req.getParameter("bankCode");
 
         String vnp_TxnRef = VnpayConfig.getRandomNumber(8);
-        String vnp_IpAddr = VnpayConfig.getIpAddress(req);
+        // String vnp_IpAddr = VnpayConfig.getIpAddress(req);
 
         String vnp_TmnCode = VnpayConfig.vnp_TmnCode;
 
@@ -45,8 +45,8 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang:" + vnp_TxnRef);
         vnp_Params.put("vnp_OrderType", orderType);
         vnp_Params.put("vnp_Locale", "vn");
-        vnp_Params.put("vnp_ReturnUrl", VnpayConfig.vnp_ReturnUrl);
-        vnp_Params.put("vnp_IpAddr", vnp_IpAddr);;
+        //vnp_Params.put("vnp_ReturnUrl", VnpayConfig.vnp_ReturnUrl);
+        //vnp_Params.put("vnp_IpAddr", vnp_IpAddr);;
 
         String locate = req.getParameter("language");
         if (locate != null && !locate.isEmpty()) {
