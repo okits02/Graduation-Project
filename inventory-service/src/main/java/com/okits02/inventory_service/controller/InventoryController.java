@@ -5,6 +5,7 @@ import com.okits02.inventory_service.dto.request.InventoryRequest;
 import com.okits02.inventory_service.dto.request.IsInStockRequest;
 import com.okits02.common_lib.dto.ApiResponse;
 import com.okits02.inventory_service.dto.response.InventoryResponse;
+import com.okits02.inventory_service.dto.response.InventoryTransactionResponse;
 import com.okits02.inventory_service.model.Inventory;
 import com.okits02.inventory_service.service.InventoryService;
 import lombok.RequiredArgsConstructor;
@@ -16,27 +17,7 @@ import org.springframework.web.bind.annotation.*;
 public class InventoryController {
     private final InventoryService inventoryService;
 
-    @PostMapping("/create")
-    public ApiResponse<InventoryResponse> save(
-            @RequestBody InventoryRequest request
-            ){
-        return ApiResponse.<InventoryResponse>builder()
-                .code(200)
-                .message("Add product to inventory successfully!")
-                .result(inventoryService.save(request))
-                .build();
-    }
 
-    @PutMapping("/update")
-    public ApiResponse<InventoryResponse> update(
-            @RequestBody InventoryRequest request
-    ){
-        return ApiResponse.<InventoryResponse>builder()
-                .code(200)
-                .message("Update quantity of product in Inventory successfully!")
-                .result(inventoryService.update(request))
-                .build();
-    }
 
     @DeleteMapping("/delete/{productId}")
     public ApiResponse<?> delete(
@@ -101,5 +82,14 @@ public class InventoryController {
                 .message("get all inventory successfully!")
                 .result(inventoryService.getAll(page - 1, size))
                 .build();
+    }
+
+    @GetMapping("/{productId}/transactions")
+    public PageResponse<InventoryTransactionResponse> getTransactionHistory(
+            @PathVariable String productId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return inventoryService.getTransactionHistory(productId, page, size);
     }
 }

@@ -1,21 +1,18 @@
 package com.okits02.inventory_service.dto.request;
 
-import com.okits02.inventory_service.validator.QuantityConstraint;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
-import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class StockInItemRequest {
-    String productId;
-    @QuantityConstraint(message = "Quantity must not null and greater than 0")
-    Integer quantity;
-    BigDecimal unitCost;
+public class GetHistoryRequest {
+    LocalDateTime start;
+    LocalDateTime end;
 }

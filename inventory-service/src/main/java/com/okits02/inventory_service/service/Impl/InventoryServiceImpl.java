@@ -1,50 +1,80 @@
 package com.okits02.inventory_service.service.Impl;
 
 import com.okits02.common_lib.dto.PageResponse;
+import com.okits02.inventory_service.dto.ProductEventDTO;
 import com.okits02.inventory_service.dto.request.InventoryRequest;
 import com.okits02.inventory_service.dto.request.IsInStockRequest;
+import com.okits02.inventory_service.dto.request.StockInItemRequest;
 import com.okits02.inventory_service.dto.response.InventoryResponse;
 import com.okits02.common_lib.exception.AppException;
+import com.okits02.inventory_service.dto.response.InventoryTransactionResponse;
+import com.okits02.inventory_service.enums.ReferenceType;
+import com.okits02.inventory_service.enums.TransactionType;
 import com.okits02.inventory_service.exceptions.InventoryErrorCode;
 import com.okits02.inventory_service.kafka.ChangeStatusStockEvent;
 import com.okits02.inventory_service.mapper.InventoryMapper;
+import com.okits02.inventory_service.mapper.InventoryTransactionMapper;
 import com.okits02.inventory_service.model.Inventory;
+import com.okits02.inventory_service.model.InventoryTransaction;
 import com.okits02.inventory_service.repository.InventoryRepository;
+import com.okits02.inventory_service.repository.InventoryTransactionRepository;
 import com.okits02.inventory_service.service.InventoryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class InventoryServiceImpl implements InventoryService {
     private final InventoryRepository inventoryRepository;
+    private final InventoryTransactionRepository inventoryTransactionRepository;
     private final InventoryMapper inventoryMapper;
+    private final InventoryTransactionMapper transactionMapper;
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Override
-    public InventoryResponse save(InventoryRequest request) {
-        if(inventoryRepository.existsByProductId(request.getProductId())){
-            throw new AppException(InventoryErrorCode.PRODUCT_EXISTS);
+    public void save(List<StockInItemRequest> request, String stockInId) {
+
+        for (StockInItemRequest item : request) {
+            Inventory inventory = inventoryRepository.findByProductId(item.getProductId());
+            if (inventory == null) {
+                throw new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS);
+            }
+            if(inventory.getQuantity() == 0){
+                productStockEvent(item.getProductId(), true);
+            }
+            int newQuantity = inventory.getQuantity() + item.getQuantity();
+            inventory.setQuantity(newQuantity);
+
+            inventoryRepository.save(inventory);
+
+            InventoryTransaction transaction = InventoryTransaction.builder()
+                    .inventory(inventory)
+                    .productId(item.getProductId())
+                    .transactionType(TransactionType.IN)
+                    .quantity(item.getQuantity())
+                    .referenceId(stockInId)
+                    .referenceType(ReferenceType.STOCK_IN)
+                    .note("Stock in product " + item.getProductId())
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            inventory.getTransactions().add(transaction);
         }
-        Inventory newInventory = inventoryMapper.toInventory(request);
-        productStockEvent(request.getProductId(), true);
-        return inventoryMapper.toInventoryResponse(inventoryRepository.save(newInventory));
     }
 
     @Override
-    public InventoryResponse update(InventoryRequest request) {
-        Inventory inventory = inventoryRepository.findByProductId(request.getProductId());
-        if(inventory == null){
-            throw new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS);
-        }
-        if(inventory.getQuantity() == 0){
-            productStockEvent(request.getProductId(), true);
-        }
-        inventoryMapper.updateInventory(inventory, request);
-        return inventoryMapper.toInventoryResponse(inventoryRepository.save(inventory));
+    public void createProduct(ProductEventDTO request) {
+        Inventory newProduct = Inventory.builder()
+                .productId(request.getId())
+                .quantity(0)
+                .build();
+        inventoryRepository.save(newProduct);
     }
 
     @Override
@@ -76,34 +106,68 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
-    public Inventory decreaseStock(String productId, int quantity) {
+    public Inventory increaseStock(String productId, int quantity) {
+
         Inventory inventory = inventoryRepository.findByProductId(productId);
-        if(inventory == null){
+        if (inventory == null) {
             throw new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS);
         }
-        if(quantity > inventory.getQuantity()){
-            throw new AppException(InventoryErrorCode.PRODUCT_NOT_ENOUGH);
-        }
-        if(quantity == inventory.getQuantity()){
-            inventory.setQuantity(0);
-            productStockEvent(productId, false);
-        }else if(quantity < inventory.getQuantity()){
-            inventory.setQuantity(inventory.getQuantity() - quantity);
+
+        boolean wasOutOfStock = inventory.getQuantity() == 0;
+
+        inventory.setQuantity(inventory.getQuantity() + quantity);
+
+        InventoryTransaction tran = InventoryTransaction.builder()
+                .inventory(inventory)
+                .productId(productId)
+                .transactionType(TransactionType.IN)
+                .quantity(quantity)
+                .referenceType(ReferenceType.MANUAL)
+                .note("Manual increase")
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        inventory.getTransactions().add(tran);
+
+        if (wasOutOfStock) {
+            productStockEvent(productId, true);
         }
 
         return inventoryRepository.save(inventory);
     }
 
     @Override
-    public Inventory increaseStock(String productId, int quantity) {
+    public Inventory decreaseStock(String productId, int quantity) {
+
         Inventory inventory = inventoryRepository.findByProductId(productId);
-        if(inventory == null){
+        if (inventory == null) {
             throw new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS);
         }
-        if(inventory.getQuantity() == 0){
-            productStockEvent(productId, true);
+
+        if (quantity > inventory.getQuantity()) {
+            throw new AppException(InventoryErrorCode.PRODUCT_NOT_ENOUGH);
         }
-        inventory.setQuantity(inventory.getQuantity() + quantity);
+
+        int oldQty = inventory.getQuantity();
+        int newQty = oldQty - quantity;
+        inventory.setQuantity(newQty);
+
+        InventoryTransaction tran = InventoryTransaction.builder()
+                .inventory(inventory)
+                .productId(productId)
+                .transactionType(TransactionType.OUT)
+                .quantity(quantity)
+                .referenceType(ReferenceType.ORDER)
+                .note("Decrease stock")
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        inventory.getTransactions().add(tran);
+
+        if (newQty == 0) {
+            productStockEvent(productId, false);
+        }
+
         return inventoryRepository.save(inventory);
     }
 
@@ -116,6 +180,28 @@ public class InventoryServiceImpl implements InventoryService {
                 .pageSize(pageData.getSize())
                 .totalElements(pageData.getTotalElements())
                 .data(pageData.getContent().stream().map(inventoryMapper::toInventoryResponse).toList())
+                .build();
+    }
+
+    @Override
+    public PageResponse<InventoryTransactionResponse> getTransactionHistory(String productId, int page, int size) {
+        Inventory inventory = inventoryRepository.findByProductId(productId);
+        if (inventory == null) {
+            throw new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS);
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<InventoryTransaction> pageData =
+                inventoryTransactionRepository.findByProductIdOrderByCreatedAtDesc(productId, pageable);
+
+        return PageResponse.<InventoryTransactionResponse>builder()
+                .currentPage(pageData.getNumber())
+                .pageSize(pageData.getSize())
+                .totalElements(pageData.getTotalElements())
+                .data(pageData.getContent().stream()
+                        .map(transactionMapper::toResponse)
+                        .toList())
                 .build();
     }
 
