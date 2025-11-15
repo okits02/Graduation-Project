@@ -7,10 +7,9 @@
     import co.elastic.clients.json.JsonData;
     import com.example.search_service.constant.SortType;
     import com.example.search_service.model.Products;
-    import com.example.search_service.viewmodel.ProductGetListVM;
-    import com.example.search_service.viewmodel.ProductGetVM;
-    import com.example.search_service.viewmodel.ProductNameGetListVm;
-    import com.example.search_service.viewmodel.ProductNameGetVm;
+    import com.example.search_service.viewmodel.*;
+    import com.example.search_service.viewmodel.dto.request.AdminSearchRequest;
+    import com.okits02.common_lib.dto.PageResponse;
     import lombok.RequiredArgsConstructor;
     import lombok.extern.slf4j.Slf4j;
     import org.springframework.data.domain.PageRequest;
@@ -90,6 +89,34 @@
                     .pageSize(productsSearchPage.getSize())
                     .totalElements(productsSearchPage.getTotalElements())
                     .aggregations(getAggregations(productsSearchHits))
+                    .build();
+        }
+
+        public PageResponse<ProductAdminGetVM> searchProductAdmin(int page, int size, AdminSearchRequest request){
+            NativeQueryBuilder nativeQueryBuilder = NativeQuery.builder();
+            nativeQueryBuilder.withQuery(q -> q.bool(b -> {
+                if(request.getProductName() != null && !request.getProductName().isBlank()){
+                    b.must(m -> m.match(match -> match
+                            .field("name")
+                            .query(request.getProductName()
+                            )
+                    )
+                    );
+                }
+                return b;
+            }));
+            nativeQueryBuilder.withPageable(PageRequest.of(page, size));
+            SearchHits<Products> searchHits = elasticsearchOperations.search(nativeQueryBuilder.build(), Products.class);
+            SearchPage<Products> productsSearchPage = SearchHitSupport.searchPageFor(
+                    searchHits, nativeQueryBuilder.getPageable());
+            List<ProductAdminGetVM> productAdminGetVMS = searchHits.stream()
+                    .map(m -> ProductAdminGetVM.fromEntity(m.getContent())).toList();
+            return PageResponse.<ProductAdminGetVM>builder()
+                    .currentPage(productsSearchPage.getNumber())
+                    .totalPage(productsSearchPage.getTotalPages())
+                    .pageSize(productsSearchPage.getSize())
+                    .totalElements(productsSearchPage.getTotalElements())
+                    .data(productAdminGetVMS)
                     .build();
         }
 

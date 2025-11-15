@@ -18,17 +18,6 @@ public class InventoryController {
     private final InventoryService inventoryService;
 
 
-
-    @DeleteMapping("/delete/{productId}")
-    public ApiResponse<?> delete(
-            @PathVariable String productId
-    ){
-        return ApiResponse.builder()
-                .code(200)
-                .message("Remove product in Inventory successfully!")
-                .build();
-    }
-
     @GetMapping("/get/{productId}")
     public ApiResponse<InventoryResponse> getByProductId(
             @PathVariable String productId

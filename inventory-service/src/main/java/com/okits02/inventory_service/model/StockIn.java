@@ -31,7 +31,7 @@ public class StockIn {
     BigDecimal totalAmount;
     @Column(name = "note")
     String note;
-    LocalDateTime createAt = LocalDateTime.now();
+    LocalDateTime createdAt = LocalDateTime.now();
 
     @OneToMany(mappedBy = "stockIn", cascade = CascadeType.ALL)
     List<StockInItem> items;

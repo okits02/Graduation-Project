@@ -3,6 +3,7 @@ package com.okits02.inventory_service.consumer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.okits02.inventory_service.dto.ProductDeleteEventDTO;
 import com.okits02.inventory_service.dto.ProductEventDTO;
 import com.okits02.inventory_service.service.InventoryService;
 import lombok.RequiredArgsConstructor;
@@ -27,5 +28,18 @@ public class ProductConsumer {
             throw new RuntimeException(e);
         }
         inventoryService.createProduct(productEventDTO);
+    }
+
+    @KafkaListener(topics = "product-delete-event",
+            containerFactory = "deleteInventoryKafkaListenerContainerFactory")
+    public void consumerDeleteProduct(String productEvent) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        ProductDeleteEventDTO productDeleteEventDTO;
+        try {
+            productDeleteEventDTO = objectMapper.readValue(productEvent, ProductDeleteEventDTO.class);
+        } catch (JsonMappingException e) {
+            throw new RuntimeException(e);
+        }
+        inventoryService.delete(productDeleteEventDTO.getProductId());
     }
 }

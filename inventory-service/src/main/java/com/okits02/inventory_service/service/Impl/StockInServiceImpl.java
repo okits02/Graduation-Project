@@ -12,6 +12,7 @@ import com.okits02.inventory_service.mapper.StockInMapper;
 import com.okits02.inventory_service.model.StockIn;
 import com.okits02.inventory_service.model.StockInItem;
 import com.okits02.inventory_service.repository.StockInRepository;
+import com.okits02.inventory_service.service.InventoryService;
 import com.okits02.inventory_service.service.StockInService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -27,6 +28,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class StockInServiceImpl implements StockInService {
     private final StockInRepository stockInRepository;
+    private final InventoryService inventoryService;
     private final StockInMapper stockInMapper;
     private final StockInItemMapper stockInItemMapper;
 
@@ -40,15 +42,17 @@ public class StockInServiceImpl implements StockInService {
         List<StockInItem> items = createItemStockIn(newStockIn, request.getItems());
         newStockIn.setItems(items);
         List<StockInItemResponse> itemsResponse = new ArrayList<>();
-        for(StockInItem item : items){
-            itemsResponse.add(stockInItemMapper.toResponse(item));
-        }
+        stockInRepository.save(newStockIn);
+        inventoryService.save(request.getItems(), newStockIn.getId());
         return StockInResponse.builder()
                 .referenceCode(newStockIn.getReferenceCode())
                 .supplierName(newStockIn.getSupplierName())
                 .totalAmount(newStockIn.getTotalAmount())
-                .createAt(newStockIn.getCreateAt())
-                .items(itemsResponse)
+                .createAt(newStockIn.getCreatedAt())
+                .items(newStockIn.getItems()
+                        .stream()
+                        .map(stockInItemMapper::toResponse)
+                        .toList())
                 .note(newStockIn.getNote())
                 .build();
     }
@@ -67,7 +71,7 @@ public class StockInServiceImpl implements StockInService {
                 .referenceCode(stockIn.get().getReferenceCode())
                 .supplierName(stockIn.get().getSupplierName())
                 .totalAmount(stockIn.get().getTotalAmount())
-                .createAt(stockIn.get().getCreateAt())
+                .createAt(stockIn.get().getCreatedAt())
                 .items(itemsResponse)
                 .note(stockIn.get().getNote())
                 .build();
@@ -90,7 +94,7 @@ public class StockInServiceImpl implements StockInService {
                                 .unitCost(item.getUnitCost())
                                 .totalCost(item.getTotalCost())
                                 .build()).toList())
-                        .createAt(stockIn.getCreateAt())
+                        .createAt(stockIn.getCreatedAt())
                         .build()).toList();
         return PageResponse.<StockInResponse>builder()
                 .currentPage(page)

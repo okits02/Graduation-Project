@@ -20,16 +20,16 @@ public enum StockInErrorCode implements ErrorCode {
 
     @Override
     public int getCode() {
-        return 0;
+        return code;
     }
 
     @Override
     public String getMessage() {
-        return "";
+        return message;
     }
 
     @Override
     public HttpStatusCode getHttpStatusCode() {
-        return null;
+        return httpStatusCode;
     }
 }

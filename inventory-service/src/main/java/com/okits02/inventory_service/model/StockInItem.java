@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Table(name = "stock_in")
+@Table(name = "stock_in_item")
 public class StockInItem {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
