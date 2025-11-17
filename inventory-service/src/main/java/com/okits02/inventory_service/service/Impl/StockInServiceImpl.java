@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -34,15 +35,15 @@ public class StockInServiceImpl implements StockInService {
 
 
     @Override
+    @Transactional
     public StockInResponse save(StockInCreationRequest request) {
         if(stockInRepository.existsByReferenceCode(request.getReferenceCode())){
             throw new AppException(StockInErrorCode.STOCK_IN_EXISTS_BY_REFERENCE_CODE);
         }
-        StockIn newStockIn = stockInRepository.save(stockInMapper.toStockIn(request));
+        StockIn newStockIn = stockInMapper.toStockIn(request);
         List<StockInItem> items = createItemStockIn(newStockIn, request.getItems());
         newStockIn.setItems(items);
-        List<StockInItemResponse> itemsResponse = new ArrayList<>();
-        stockInRepository.save(newStockIn);
+        newStockIn = stockInRepository.save(newStockIn);
         inventoryService.save(request.getItems(), newStockIn.getId());
         return StockInResponse.builder()
                 .referenceCode(newStockIn.getReferenceCode())

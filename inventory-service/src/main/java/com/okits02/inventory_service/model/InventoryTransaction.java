@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Table(name = "inventory-transaction")
+@Table(name = "inventory_transaction")
 public class InventoryTransaction {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -28,15 +28,15 @@ public class InventoryTransaction {
     String productId;
 
     @Enumerated
-    TransactionType transactionType;  // IN / OUT / RETURN / ADJUST
+    TransactionType transactionType;
 
     @Column(nullable = false)
     Integer quantity;
 
-    String referenceId;      // Liên kết đến StockIn, Order, Return...
+    String referenceId;
 
     @Enumerated
-    ReferenceType referenceType;    // STOCK_IN / ORDER / RETURN / MANUAL
+    ReferenceType referenceType;
     String note;
 
     LocalDateTime createdAt = LocalDateTime.now();

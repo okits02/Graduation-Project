@@ -52,8 +52,6 @@ public class InventoryServiceImpl implements InventoryService {
             int newQuantity = inventory.getQuantity() + item.getQuantity();
             inventory.setQuantity(newQuantity);
 
-            inventoryRepository.save(inventory);
-
             InventoryTransaction transaction = InventoryTransaction.builder()
                     .inventory(inventory)
                     .productId(item.getProductId())
@@ -65,6 +63,7 @@ public class InventoryServiceImpl implements InventoryService {
                     .createdAt(LocalDateTime.now())
                     .build();
             inventory.getTransactions().add(transaction);
+            inventoryRepository.save(inventory);
         }
     }
 
