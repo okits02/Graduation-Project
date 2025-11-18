@@ -1,13 +1,12 @@
 package com.example.search_service.controller;
 
 import com.example.search_service.service.ProductService;
-import com.example.search_service.viewmodel.ProductDetailsVM;
-import com.example.search_service.viewmodel.ProductGetListVM;
-import com.example.search_service.viewmodel.ProductGetVM;
-import com.example.search_service.viewmodel.ProductNameGetListVm;
+import com.example.search_service.viewmodel.*;
+import com.example.search_service.viewmodel.dto.request.AdminSearchRequest;
 import com.okits02.common_lib.dto.ApiResponse;
 import com.example.search_service.viewmodel.dto.request.RemoveCategoryIdsRequest;
 import com.example.search_service.viewmodel.dto.request.SearchRequest;
+import com.okits02.common_lib.dto.PageResponse;
 import lombok.RequiredArgsConstructor;
 
 import com.example.search_service.service.SearchService;
@@ -49,6 +48,18 @@ public class ProductController {
                 .code(200)
                 .result(productService.getDetailsProduct(productId))
                 .build());
+    }
+
+    @PostMapping("/admin")
+    public ApiResponse<PageResponse<ProductAdminGetVM>> searchAdmin(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer size,
+            @RequestBody AdminSearchRequest request
+    ){
+        return ApiResponse.<PageResponse<ProductAdminGetVM>>builder()
+                .code(200)
+                .result(searchService.searchProductAdmin(page - 1, size, request))
+                .build();
     }
 
     @PutMapping("/internal/categories/remove")
