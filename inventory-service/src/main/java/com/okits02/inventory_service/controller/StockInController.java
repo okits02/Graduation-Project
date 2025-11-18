@@ -7,8 +7,11 @@ import com.okits02.inventory_service.dto.request.StockInCreationRequest;
 import com.okits02.inventory_service.dto.response.StockInResponse;
 import com.okits02.inventory_service.service.StockInService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/stock-in")
@@ -38,12 +41,13 @@ public class StockInController {
     public ApiResponse<PageResponse<StockInResponse>> getHistory(
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
-            @RequestBody GetHistoryRequest request
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end
             ){
         return ApiResponse.<PageResponse<StockInResponse>>builder()
                 .code(200)
                 .message("get all history for stock receipt successfully!")
-                .result(stockInService.getAllHistory(page, size, request.getStart(), request.getEnd()))
+                .result(stockInService.getAllHistory(page, size, start, end))
                 .build();
     }
 

@@ -27,7 +27,7 @@ public class InventoryTransaction {
     @Column(nullable = false)
     String productId;
 
-    @Enumerated
+    @Enumerated(EnumType.STRING)
     TransactionType transactionType;
 
     @Column(nullable = false)
@@ -35,7 +35,7 @@ public class InventoryTransaction {
 
     String referenceId;
 
-    @Enumerated
+    @Enumerated(EnumType.STRING)
     ReferenceType referenceType;
     String note;
 

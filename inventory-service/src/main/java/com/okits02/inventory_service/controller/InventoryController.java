@@ -1,6 +1,7 @@
 package com.okits02.inventory_service.controller;
 
 import com.okits02.common_lib.dto.PageResponse;
+import com.okits02.inventory_service.dto.request.InventoryAdjustmentRequest;
 import com.okits02.inventory_service.dto.request.InventoryRequest;
 import com.okits02.inventory_service.dto.request.IsInStockRequest;
 import com.okits02.common_lib.dto.ApiResponse;
@@ -41,9 +42,10 @@ public class InventoryController {
 
     @PostMapping("/decrease-stock")
     public ApiResponse<?> decreaseStock(
-            @RequestBody InventoryRequest request
+            @RequestBody InventoryAdjustmentRequest request
     ){
-        Inventory inventory = inventoryService.decreaseStock(request.getProductId(), request.getQuantity());
+        Inventory inventory = inventoryService.decreaseStock(request.getProductId(), request.getQuantity(),
+                request.getOrderId());
         return ApiResponse.builder()
                 .code(200)
                 .message("Decrease success!")
@@ -52,12 +54,13 @@ public class InventoryController {
 
     @PostMapping("/increase-stock")
     public ApiResponse<?> increaseStock(
-            @RequestBody InventoryRequest request
+            @RequestBody InventoryAdjustmentRequest request
     ){
-        Inventory inventory = inventoryService.increaseStock(request.getProductId(), request.getQuantity());
+        Inventory inventory = inventoryService.increaseStock(request.getProductId(), request.getQuantity(),
+                request.getOrderId());
         return ApiResponse.builder()
                 .code(200)
-                .message("Decrease success!")
+                .message("increase success!")
                 .build();
     }
 
@@ -73,12 +76,12 @@ public class InventoryController {
                 .build();
     }
 
-    @GetMapping("/{productId}/transactions")
+    @GetMapping("/transactions")
     public PageResponse<InventoryTransactionResponse> getTransactionHistory(
-            @PathVariable String productId,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam String productId,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        return inventoryService.getTransactionHistory(productId, page, size);
+        return inventoryService.getTransactionHistory(productId, page-1, size);
     }
 }

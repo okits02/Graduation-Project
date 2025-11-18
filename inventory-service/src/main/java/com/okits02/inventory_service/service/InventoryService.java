@@ -17,8 +17,8 @@ public interface InventoryService {
     public boolean checkIsStock(IsInStockRequest request);
     public void delete(String productId);
     public InventoryResponse getByProductId(String productId);
-    public Inventory decreaseStock(String productId, int quantity);
-    public Inventory increaseStock(String productId, int quantity);
+    public Inventory decreaseStock(String productId, int quantity, String orderId);
+    public Inventory increaseStock(String productId, int quantity, String orderId);
     public PageResponse<InventoryResponse> getAll(int page, int size);
     PageResponse<InventoryTransactionResponse> getTransactionHistory(String productId, int page, int size);
 }

@@ -105,7 +105,7 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
-    public Inventory increaseStock(String productId, int quantity) {
+    public Inventory increaseStock(String productId, int quantity, String orderId) {
 
         Inventory inventory = inventoryRepository.findByProductId(productId);
         if (inventory == null) {
@@ -122,6 +122,7 @@ public class InventoryServiceImpl implements InventoryService {
                 .transactionType(TransactionType.IN)
                 .quantity(quantity)
                 .referenceType(ReferenceType.MANUAL)
+                .referenceId(orderId)
                 .note("Manual increase")
                 .createdAt(LocalDateTime.now())
                 .build();
@@ -136,7 +137,7 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
-    public Inventory decreaseStock(String productId, int quantity) {
+    public Inventory decreaseStock(String productId, int quantity, String orderId) {
 
         Inventory inventory = inventoryRepository.findByProductId(productId);
         if (inventory == null) {
@@ -157,6 +158,7 @@ public class InventoryServiceImpl implements InventoryService {
                 .transactionType(TransactionType.OUT)
                 .quantity(quantity)
                 .referenceType(ReferenceType.ORDER)
+                .referenceId(orderId)
                 .note("Decrease stock")
                 .createdAt(LocalDateTime.now())
                 .build();
