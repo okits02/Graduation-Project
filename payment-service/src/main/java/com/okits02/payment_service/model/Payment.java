@@ -29,7 +29,6 @@ public class Payment {
     private PaymentStatus status;
     private BigDecimal amount;
 
-    private String transactionId;
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt = LocalDateTime.now();
 }

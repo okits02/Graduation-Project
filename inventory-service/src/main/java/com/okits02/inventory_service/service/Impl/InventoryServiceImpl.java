@@ -71,6 +71,7 @@ public class InventoryServiceImpl implements InventoryService {
     public void createProduct(ProductEventDTO request) {
         Inventory newProduct = Inventory.builder()
                 .productId(request.getId())
+                .productName(request.getName())
                 .quantity(0)
                 .build();
         inventoryRepository.save(newProduct);

@@ -22,6 +22,8 @@ public class Inventory {
 
     @Column(name = "product_id")
     String productId;
+    @Column(name = "product_name")
+    String productName;
     @Column(name = "quantity")
     Integer quantity;
 
