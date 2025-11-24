@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "payment_transaction")
+@Table(name = "payment")
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
@@ -22,7 +22,7 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    private String orderId;
+    private String userId;
     @Enumerated(EnumType.STRING)
     private PaymentMethod method;
     @Enumerated(EnumType.STRING)
@@ -30,6 +30,6 @@ public class Payment {
     private BigDecimal amount;
 
     private String transactionId;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime updatedAt = LocalDateTime.now();
 }
