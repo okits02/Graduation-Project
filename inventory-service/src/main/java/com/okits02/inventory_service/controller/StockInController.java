@@ -47,7 +47,7 @@ public class StockInController {
         return ApiResponse.<PageResponse<StockInResponse>>builder()
                 .code(200)
                 .message("get all history for stock receipt successfully!")
-                .result(stockInService.getAllHistory(page, size, start, end))
+                .result(stockInService.getAllHistory(page - 1, size, start, end))
                 .build();
     }
 

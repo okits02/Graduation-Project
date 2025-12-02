@@ -22,7 +22,8 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
     private final String[] END_POINTS = {
             "/swagger-ui/**",
-            "/v3/api-docs/**"};
+            "/v3/api-docs/**",
+            "/bank/vnpay-ipn"};
     @Autowired
     private final CustomJwtDecoder customJwtDecoder;
 

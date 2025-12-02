@@ -52,7 +52,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             "/product-service/category/getAll",
             "/search-service/search/catalog-search",
             "/search-service/search/search_suggest",
-            "/payment-service/bank/vnpay/ipn",
+            "/payment-service/bank/vnpay-ipn",
             "/swagger-ui.html",
             "/swagger-ui/**",
             "/v3/api-docs/**",
@@ -95,7 +95,10 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
     {
         String path = request.getURI().getPath();
         return Arrays.stream(publicEndpoints)
-                .anyMatch(pattern -> PATH_MATCHER.match(apiPrefix + pattern, path));
+                .anyMatch(pattern ->
+                        PATH_MATCHER.match(apiPrefix + pattern, path) ||
+                                PATH_MATCHER.match(pattern, path)
+                );
     }
 
     Mono<Void> unauthenticated(ServerHttpResponse response)

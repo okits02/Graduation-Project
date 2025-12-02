@@ -1,5 +1,6 @@
 package com.okits02.payment_service.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.okits02.common_lib.dto.ApiResponse;
 import com.okits02.payment_service.dto.request.PaymentCreationRequest;
 import com.okits02.payment_service.service.PaymentService;
@@ -19,7 +20,7 @@ public class PaymentController {
 
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<?>> createPayment(
-            @RequestBody PaymentCreationRequest request) throws UnsupportedEncodingException {
+            @RequestBody PaymentCreationRequest request) throws UnsupportedEncodingException, JsonProcessingException {
         return ResponseEntity.ok(ApiResponse.<Object>builder()
                         .code(200)
                         .message("create payment successfully!")

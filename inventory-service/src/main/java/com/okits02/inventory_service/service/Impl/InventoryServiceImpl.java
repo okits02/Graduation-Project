@@ -20,6 +20,7 @@ import com.okits02.inventory_service.repository.InventoryRepository;
 import com.okits02.inventory_service.repository.InventoryTransactionRepository;
 import com.okits02.inventory_service.service.InventoryService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +31,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class InventoryServiceImpl implements InventoryService {
     private final InventoryRepository inventoryRepository;
@@ -99,9 +101,12 @@ public class InventoryServiceImpl implements InventoryService {
     @Override
     public InventoryResponse getByProductId(String productId) {
         Inventory inventory = inventoryRepository.findByProductId(productId);
+        log.info(inventory.toString());
         if(inventory == null){
             throw new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS);
         }
+        InventoryResponse inventoryResponse = inventoryMapper.toInventoryResponse(inventory);
+        log.info(inventoryResponse.toString());
         return inventoryMapper.toInventoryResponse(inventory);
     }
 

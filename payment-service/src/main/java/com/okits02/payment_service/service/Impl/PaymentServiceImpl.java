@@ -1,9 +1,13 @@
 package com.okits02.payment_service.service.Impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.okits02.payment_service.dto.request.PaymentCreationRequest;
 import com.okits02.payment_service.enums.PaymentStatus;
 import com.okits02.payment_service.mapper.PaymentMapper;
 import com.okits02.payment_service.model.Payment;
+import com.okits02.payment_service.model.PaymentSession;
+import com.okits02.payment_service.repository.PaymentRepository;
+import com.okits02.payment_service.repository.PaymentSessionRepository;
 import com.okits02.payment_service.repository.httpClient.UserClient;
 import com.okits02.payment_service.service.PaymentGatewayService;
 import com.okits02.payment_service.service.PaymentService;
@@ -17,16 +21,19 @@ import java.io.UnsupportedEncodingException;
 @Service
 @RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
+    private final PaymentRepository paymentRepository;
     private final PaymentGatewayService paymentGatewayService;
     private final PaymentMapper paymentMapper;
     private final UserClient userClient;
 
 
     @Override
-    public Object createPayment(PaymentCreationRequest request) throws UnsupportedEncodingException {
+    public Object createPayment(PaymentCreationRequest request)
+            throws UnsupportedEncodingException, JsonProcessingException {
         Payment newPayment = paymentMapper.toPayment(request);
         newPayment.setStatus(PaymentStatus.PENDING);
-        newPayment.setUserId(getUserId());
+        // newPayment.setUserId(getUserId());
+        paymentRepository.save(newPayment);
         Object provideResponse = null;
         switch (request.getMethod()){
             case VNPAY -> provideResponse = paymentGatewayService.createVnPayPayment(newPayment);
