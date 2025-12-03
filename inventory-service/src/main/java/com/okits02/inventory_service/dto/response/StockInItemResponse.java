@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class StockInItemResponse {
     String productId;
+    String productName;
     Integer quantity;
     BigDecimal unitCost;
     BigDecimal totalCost;

@@ -119,6 +119,7 @@ public class StockInServiceImpl implements StockInService {
         for(StockInItemRequest item : request){
             StockInItem stockInItem = StockInItem.builder()
                     .productId(item.getProductId())
+                    .productName(item.getProductName())
                     .quantity(item.getQuantity())
                     .unitCost(item.getUnitCost())
                     .stockIn(stockIn)
