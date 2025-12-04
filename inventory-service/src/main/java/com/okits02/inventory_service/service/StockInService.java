@@ -11,4 +11,5 @@ public interface StockInService {
     public StockInResponse getByReferenceCode(String referenceCode);
     public PageResponse<StockInResponse> getAllHistory(int page, int size, LocalDateTime start, LocalDateTime end);
     public void deleteStockIn(String referenceCode);
+    public StockInResponse getById(String stockInId);
 }

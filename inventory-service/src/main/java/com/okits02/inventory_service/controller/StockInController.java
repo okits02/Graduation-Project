@@ -59,4 +59,15 @@ public class StockInController {
                 .message("delete stock receipt successfully!")
                 .build();
     }
+
+    @GetMapping("/get-by-id/{stockInId}")
+    public ApiResponse<StockInResponse> getById(
+            @PathVariable String stockInId
+    ){
+        return ApiResponse.<StockInResponse>builder()
+                .code(200)
+                .message("get stock in successfully!")
+                .result(stockInService.getById(stockInId))
+                .build();
+    }
 }

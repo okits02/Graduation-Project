@@ -114,6 +114,25 @@ public class StockInServiceImpl implements StockInService {
         stockInRepository.delete(stockIn.get());
     }
 
+    @Override
+    public StockInResponse getById(String stockInId) {
+        Optional<StockIn> stockIn = stockInRepository.findById(stockInId);
+        if(stockIn.get() ==  null){
+            throw new AppException(StockInErrorCode.STOCK_IN_NOT_EXISTS);
+        }
+        return StockInResponse.builder()
+                .referenceCode(stockIn.get().getReferenceCode())
+                .supplierName(stockIn.get().getSupplierName())
+                .totalAmount(stockIn.get().getTotalAmount())
+                .createAt(stockIn.get().getCreatedAt())
+                .items(stockIn.get().getItems()
+                        .stream()
+                        .map(stockInItemMapper::toResponse)
+                        .toList())
+                .note(stockIn.get().getNote())
+                .build();
+    }
+
     private List<StockInItem> createItemStockIn(StockIn stockIn, List<StockInItemRequest> request){
         List<StockInItem> items = new ArrayList<>();
         for(StockInItemRequest item : request){
