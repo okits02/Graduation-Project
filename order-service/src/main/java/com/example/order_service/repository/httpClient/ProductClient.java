@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 
-@FeignClient(value = "/search-service")
+@FeignClient(value = "search-service")
 public interface ProductClient {
     @GetMapping(value = "/search-service/search/internal/get-product/{productId}",
             produces = MediaType.APPLICATION_JSON_VALUE)

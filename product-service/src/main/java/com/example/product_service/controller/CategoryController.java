@@ -1,5 +1,6 @@
 package com.example.product_service.controller;
 
+import com.example.product_service.kafka.CategoryEvent;
 import com.okits02.common_lib.dto.PageResponse;
 import com.example.product_service.dto.request.CategoryRequest;
 import com.okits02.common_lib.dto.ApiResponse;
@@ -10,16 +11,14 @@ import com.example.product_service.service.CategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
-import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
+
+import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/category")
@@ -27,14 +26,33 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 public class CategoryController {
     private final CategoryService categoryService;
+    KafkaTemplate<String, Object> kafkaTemplate;
 
     @Operation(summary = "admin create category", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/create")
     @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<Category> createCate(@RequestBody @Valid CategoryRequest request) {
+        Category response = categoryService.createCate(request);
+        CategoryEvent categoryEvent = CategoryEvent.builder()
+                .eventType("CATEGORY_CREATED")
+                .id(response.getId())
+                .name(response.getName())
+                .parentId(response.getParentId())
+                .childrentId(new ArrayList<>(response.getChildrenId()))
+                .build();
+        kafkaTemplate.send("category-event", categoryEvent).whenComplete(
+                (result, ex) -> {
+                    if(ex != null)
+                    {
+                        System.err.println("Failed to send message" + ex.getMessage());
+                    }else
+                    {
+                        System.err.println("send message successfully" + result.getProducerRecord());
+                    }
+                });
         return ApiResponse.<Category>builder()
                 .code(200)
-                .result(categoryService.createCate(request))
+                .result(response)
                 .build();
     }
 
@@ -44,9 +62,27 @@ public class CategoryController {
     ApiResponse<CategoryResponse> updateCategory(@RequestBody @Valid CategoryRequest request)
     {
         try{
+            CategoryResponse response = categoryService.updateCate(request);
+            CategoryEvent categoryEvent = CategoryEvent.builder()
+                    .eventType("CATEGORY_UPDATE")
+                    .id(response.getId())
+                    .name(response.getName())
+                    .parentId(response.getParentId())
+                    .childrentId(new ArrayList<>(response.getChildrenId()))
+                    .build();
+            kafkaTemplate.send("category-event", categoryEvent).whenComplete(
+                    (result, ex) -> {
+                        if(ex != null)
+                        {
+                            System.err.println("Failed to send message" + ex.getMessage());
+                        }else
+                        {
+                            System.err.println("send message successfully" + result.getProducerRecord());
+                        }
+                    });
             return ApiResponse.<CategoryResponse>builder()
                     .code(200)
-                    .result(categoryService.updateCate(request))
+                    .result(response)
                     .build();
         }catch (AppException e)
         {
@@ -96,6 +132,10 @@ public class CategoryController {
     @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<CategoryResponse> deleteById(@PathVariable String categoryId)
     {
+        CategoryEvent categoryEvent = CategoryEvent.builder()
+                .eventType("CATEGORY_UPDATE")
+                .id(categoryId)
+                .build();
         categoryService.deleteCateById(categoryId);
         return ApiResponse.<CategoryResponse>builder()
                 .code(200)

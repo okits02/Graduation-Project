@@ -15,6 +15,6 @@ public interface CategoryService {
     public CategoryResponse findById(String categoryId);
     public Category createCate(CategoryRequest request);
     public CategoryResponse updateCate(CategoryRequest request);
-    public List<CategoryResponse> getCategoryHierarchy(Set<String> categoryId);
+    public List<String> getCategoryHierarchy(Set<String> categoryId);
     public void deleteCateById(String categoryId);
 }

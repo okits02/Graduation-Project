@@ -46,8 +46,10 @@ public class ImageController {
 
 
         if(mediaResponse != null) {
-            ApplyThumbnailEvent applyThumbnailEvent = createEvent(mediaResponse.getOwnerId(), mediaResponse.getUrl());
-            kafkaTemplate.send("product-apply-thumbnail-event", applyThumbnailEvent).whenComplete(
+            ApplyThumbnailEvent applyThumbnailEvent = createEvent(
+                    mediaResponse.getOwnerId(), mediaResponse.getUrl(), MediaOwnerType.PRODUCT
+            );
+            kafkaTemplate.send("apply-thumbnail-event", applyThumbnailEvent).whenComplete(
                     (result, ex) -> {
                         if(ex != null)
                         {
@@ -69,7 +71,9 @@ public class ImageController {
     ) throws IOException {
         MediaResponse mediaResponse = imageService.changeThumbnail(request.getOldThumbnailUrl(),
                 request.getNewThumbnail(), request.getProductId());
-        ApplyThumbnailEvent applyThumbnailEvent = createEvent(mediaResponse.getOwnerId(), mediaResponse.getUrl());
+        ApplyThumbnailEvent applyThumbnailEvent = createEvent(
+                mediaResponse.getOwnerId(), mediaResponse.getUrl(), MediaOwnerType.PRODUCT
+        );
         kafkaTemplate.send("product-apply-thumbnail-event", applyThumbnailEvent).whenComplete(
                 (result, ex) -> {
                     if(ex != null)
@@ -103,10 +107,23 @@ public class ImageController {
     public ResponseEntity<ApiResponse<MediaResponse>> uploadCateImage(
             @ModelAttribute ImageUploadRequest request
             ) throws IOException {
+        MediaResponse mediaResponse = imageService.imageCategory(request.getMultipartFile(), request.getOwnerId());
+        ApplyThumbnailEvent applyThumbnailEvent = createEvent(
+                mediaResponse.getOwnerId(), mediaResponse.getUrl(), MediaOwnerType.CATEGORY
+        );
+        kafkaTemplate.send("apply-thumbnail-event", applyThumbnailEvent).whenComplete(
+                (result, ex) -> {
+                    if(ex != null)
+                    {
+                        System.err.println("Failed to send message" + ex.getMessage());
+                    }else {
+                        System.err.println("send message successfully" + result.getProducerRecord());
+                    }
+                });
         return ResponseEntity.ok(ApiResponse.<MediaResponse>builder()
                         .code(200)
                         .message("create image successfully")
-                        .result(imageService.imageCategory(request.getMultipartFile(), request.getOwnerId()))
+                        .result(mediaResponse)
                 .build());
     }
 
@@ -156,9 +173,10 @@ public class ImageController {
     }
 
 
-    private ApplyThumbnailEvent createEvent(String productId, String url){
+    private ApplyThumbnailEvent createEvent(String productId, String url, MediaOwnerType mediaOwnerType){
         return ApplyThumbnailEvent.builder()
-                .productId(productId)
+                .ownerId(productId)
+                .mediaOwnerType(String.valueOf(mediaOwnerType))
                 .url(url)
                 .build();
     }

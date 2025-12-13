@@ -42,7 +42,7 @@ public class Products {
     @Field(type = FieldType.Text)
     String thumbnail;
     @Field(type = FieldType.Nested)
-    List<Category> categories;
+    List<String> categoriesId;
     @Field(type = FieldType.Nested)
     List<Specification> specifications;
     @Field(type = FieldType.Date,

@@ -34,6 +34,6 @@ public class PromotionCreationRequest {
     Date endDate;
     Boolean active;
     List<String> productId;
-    List<String> categoryName;
+    List<String> categoryId;
     boolean isVoucher;
 }

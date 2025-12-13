@@ -17,9 +17,9 @@ public class PromotionApplyTo {
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "promotion_id")
     Promotion promotion;
-    Set<String> productId;
-    Set<String> categoryName;
+    String productId;
+    String categoryId;
 }

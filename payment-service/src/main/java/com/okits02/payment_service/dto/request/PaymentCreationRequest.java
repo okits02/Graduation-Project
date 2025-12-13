@@ -17,6 +17,6 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class PaymentCreationRequest {
-    private PaymentMethod method;
-    private BigDecimal amount;
+    PaymentMethod method;
+    String orderId;
 }

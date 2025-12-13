@@ -16,6 +16,7 @@ import java.util.List;
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class PromotionUpdateRequest {
+    String id;
     String name;
     String description;
     DiscountType discountType;
@@ -27,7 +28,7 @@ public class PromotionUpdateRequest {
     Double minimumOrderPurchaseAmount;
     Date startDate;
     Date endDate;
-    boolean active;
+    Boolean active;
     List<String> productId;
     List<String> categoryId;
     List<String> deleteApplyTo;

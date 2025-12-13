@@ -27,7 +27,7 @@ public class ProductEventDTO {
     Integer quantity;
     double avgRating;
     Integer sold;
-    List<CategoryRequest> categories;
+    List<String> categoriesId;
     Map<String, String> specifications;
     LocalDate createAt;
     LocalDate updateAt;

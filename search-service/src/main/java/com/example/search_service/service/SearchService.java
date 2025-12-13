@@ -1,11 +1,14 @@
     package com.example.search_service.service;
 
+    import co.elastic.clients.elasticsearch._types.FieldValue;
     import co.elastic.clients.elasticsearch._types.aggregations.StringTermsAggregate;
     import co.elastic.clients.elasticsearch._types.aggregations.StringTermsBucket;
     import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
     import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
+    import co.elastic.clients.elasticsearch.core.SearchResponse;
     import co.elastic.clients.json.JsonData;
     import com.example.search_service.constant.SortType;
+    import com.example.search_service.model.Category;
     import com.example.search_service.model.Products;
     import com.example.search_service.viewmodel.*;
     import com.example.search_service.viewmodel.dto.request.AdminSearchRequest;
@@ -21,21 +24,21 @@
     import org.springframework.data.elasticsearch.core.query.FetchSourceFilter;
     import org.springframework.stereotype.Service;
 
-    import java.util.ArrayList;
-    import java.util.HashMap;
-    import java.util.List;
-    import java.util.Map;
+    import java.io.IOException;
+    import java.util.*;
+    import java.util.stream.Collectors;
 
     @Service
     @RequiredArgsConstructor
     @Slf4j
     public class SearchService {
         private final ElasticsearchOperations elasticsearchOperations;
+        private final CategoryService categoryService;
 
         public ProductGetListVM searchProductAdvance(String keyword,
                                                      Integer page,
                                                      Integer size,
-                                                     List<String> category,
+                                                     String category,
                                                      List<Map<String, String>> attributes,
                                                      Double minPrice,
                                                      Double maxPrice,
@@ -80,8 +83,14 @@
             SearchHits<Products> productsSearchHits = elasticsearchOperations.search(nativeQueryBuilder.build(), Products.class);
             SearchPage<Products> productsSearchPage = SearchHitSupport.searchPageFor(
                     productsSearchHits, nativeQueryBuilder.getPageable());
+            List<Products> products = productsSearchHits.stream().map(SearchHit::getContent).toList();
+            Set<String> categoryIds = products.stream()
+                    .flatMap(p -> p.getCategoriesId().stream())
+                    .collect(Collectors.toSet());
+            Map<String, CategoryGetVM> categoryMap =
+                categoryService.getCategoryByIds(categoryIds);
             List<ProductGetVM> productGetVMList = productsSearchHits.stream().map(i -> ProductGetVM
-                    .fromEntity(i.getContent())).toList();
+                    .fromEntity(i.getContent(), categoryMap)).toList();
             return ProductGetListVM.builder()
                     .productGetVMList(productGetVMList)
                     .currentPages(productsSearchPage.getNumber())
@@ -150,30 +159,18 @@
             }
         }
 
-        private void extractCategory(List<String> category, String productField, BoolQuery.Builder b)
+        private void extractCategory(String category, String productField, BoolQuery.Builder b)
         {
             if(category == null || category.isEmpty())
             {
                 return;
             }
-
-            for(String cate : category)
-            {
-                b.must(m -> m
-                        .nested(nested -> nested
-                                .path(productField)
-                                .query(q -> q.bool(bl -> bl
-                                        .must(m1 -> m1
-                                                    .term(t -> t
-                                                            .field("categories.name")
-                                                            .value(cate)
-                                                    )
-                                            )
-                                            )
-                                    )
-                            )
-                    );
-            }
+            b.must(m -> m
+                    .terms(t -> t
+                            .field("categoriesId")
+                            .terms(v -> v.value(List.of(FieldValue.of(category))))
+                    )
+            );
         }
 
         private void extractRange(Number min, Number max, String productField, BoolQuery.Builder b) {
@@ -220,6 +217,9 @@
             SearchHits<Products> result = elasticsearchOperations.search(nativeQuery, Products.class);
             List<Products> products = result.stream().map(SearchHit::getContent).toList();
             return new ProductNameGetListVm(products.stream().map(ProductNameGetVm::fromModel).toList());
+        }
+
+        public List<CategoryGetVM> autocompleteCategory(String prefix, int size) throws IOException {
         }
 
     }

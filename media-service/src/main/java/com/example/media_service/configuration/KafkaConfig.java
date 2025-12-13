@@ -9,7 +9,7 @@ import org.springframework.kafka.config.TopicBuilder;
 public class KafkaConfig {
     @Bean
     public NewTopic applyThumbnailUrlForProduct(){
-        return TopicBuilder.name("product-apply-thumbnail-event")
+        return TopicBuilder.name("apply-thumbnail-event")
                 .partitions(3)
                 .replicas(2)
                 .build();

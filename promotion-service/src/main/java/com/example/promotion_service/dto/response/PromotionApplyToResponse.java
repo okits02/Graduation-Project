@@ -13,5 +13,5 @@ import java.util.Set;
 public class PromotionApplyToResponse {
     String id;
     Set<String> productId;
-    Set<String> categoryName;
+    String categoryName;
 }

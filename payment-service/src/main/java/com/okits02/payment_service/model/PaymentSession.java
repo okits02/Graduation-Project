@@ -21,7 +21,7 @@ public class PaymentSession {
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "payment_id")
     Payment payment;
 
@@ -34,4 +34,5 @@ public class PaymentSession {
     @Enumerated(EnumType.STRING)
     PaymentStatus status;
     LocalDateTime createAt = LocalDateTime.now();
+    LocalDateTime updateAt = LocalDateTime.now();
 }

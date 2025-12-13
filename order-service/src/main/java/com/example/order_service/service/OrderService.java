@@ -2,6 +2,7 @@ package com.example.order_service.service;
 
 import com.example.order_service.dto.request.OrderCreationRequest;
 import com.example.order_service.dto.request.OrderUpdateRequest;
+import com.example.order_service.dto.response.GetAmountResponse;
 import com.example.order_service.dto.response.OrderResponse;
 import com.example.order_service.dto.response.OrderSummaryResponse;
 import com.example.order_service.enums.Status;
@@ -14,6 +15,8 @@ public interface OrderService {
     public PageResponse<OrderSummaryResponse> getByUserIdAndStatus(int page, int size, Status status);
     public void cancelOrder(String orderId);
     public OrderResponse changeStatusOrder(String orderId, Status status);
+    public void changStatusOrderForPayment(String paymentId, String orderId, Status status);
+    public GetAmountResponse getAmount(String orderId);
     public PageResponse<OrderSummaryResponse> getAllByStatus(int page, int size, Status status);
     public OrderResponse getById(String orderId);
 }

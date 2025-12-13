@@ -26,4 +26,11 @@ public class kafkaConfig {
             .replicas(2)
             .partitions(3)
             .build();}
+
+    @Bean
+    public NewTopic categoryTopic(){return TopicBuilder.name("category-event")
+            .replicas(2)
+            .partitions(3)
+            .build();
+    }
 }

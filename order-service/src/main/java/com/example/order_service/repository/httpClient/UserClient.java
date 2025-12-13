@@ -8,11 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 
-@FeignClient(value = "/user-service")
+@FeignClient(value = "user-service")
 public interface UserClient {
-    @GetMapping(value = "/user-service/users/getUserId",
-            produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<ApiResponse<UserIdResponse>> getUserId(
-            @RequestHeader String token
-    );
+    @GetMapping(value = "/user-service/users/getUserId", produces = MediaType.APPLICATION_JSON_VALUE)
+    ApiResponse<UserIdResponse> getUserId(@RequestHeader("Authorization") String token);
 }

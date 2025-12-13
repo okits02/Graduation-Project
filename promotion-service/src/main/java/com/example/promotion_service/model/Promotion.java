@@ -39,8 +39,8 @@ public class Promotion {
     int usageLimited;
     int usageCount;
     Boolean active;
-    @OneToOne(mappedBy = "promotion", cascade = CascadeType.ALL, orphanRemoval = true)
-    PromotionApplyTo promotionApplyTo;
+    @OneToMany(mappedBy = "promotion", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<PromotionApplyTo> promotionApplyTo = new ArrayList<>();
     Date createAt;
     Date updateAt;
 

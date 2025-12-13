@@ -15,7 +15,8 @@ import java.util.Map;
 public class SearchRequest {
     String keyword;
     String color;
-    List<String> category;
+
+    String category;
     List<Map<String, String>> attributes;
     Double minPrice;
     Double maxPrice;

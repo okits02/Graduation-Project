@@ -2,7 +2,9 @@ package com.okits02.payment_service.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.okits02.common_lib.dto.ApiResponse;
+import com.okits02.common_lib.dto.PageResponse;
 import com.okits02.payment_service.dto.request.PaymentCreationRequest;
+import com.okits02.payment_service.dto.response.HistoryPaymentInfoResponse;
 import com.okits02.payment_service.service.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -46,5 +48,16 @@ public class PaymentController {
             System.out.println("Thanh toán THẤT BẠI - TxnRef: " + vnp_TxnRef + " - Code: " + vnp_ResponseCode);
             return ResponseEntity.ok("Thanh toán thất bại. Mã lỗi: " + vnp_ResponseCode);
         }
+    }
+
+    @GetMapping("/history")
+    public ApiResponse<PageResponse<HistoryPaymentInfoResponse>> getHistoryPayment(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size){
+        return ApiResponse.<PageResponse<HistoryPaymentInfoResponse>>builder()
+                .code(200)
+                .message("get history successfully!")
+                .result(paymentService.getHistory(page, size))
+                .build();
     }
 }

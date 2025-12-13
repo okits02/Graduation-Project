@@ -92,20 +92,20 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public List<CategoryResponse> getCategoryHierarchy(Set<String> categoryId) {
-        List<CategoryResponse> categoryHierarchy = new ArrayList<>();
+    public List<String> getCategoryHierarchy(Set<String> categoryId) {
+        List<String> categoryHierarchy = new ArrayList<>();
         Set<String> categoryList = categoryId;
         if (categoryList!=null && !categoryList.isEmpty())
         {
             for(String id : categoryList) {
                 Optional<Category> categoryOptional = categoryRepository.findById(id);
-                categoryHierarchy.add(categoryMapper.toCategoryResponse(categoryOptional.get()));
+                categoryHierarchy.add(categoryOptional.get().getId());
                 if(categoryOptional.get().getParentId() != null){
                     String parentId = categoryOptional.get().getParentId();
                     while (parentId != null && !parentId.isEmpty()){
                         Optional<Category> categoryParent = categoryRepository.findById(parentId);
                         if(categoryParent.isPresent()){
-                            categoryHierarchy.add(categoryMapper.toCategoryResponse(categoryParent.get()));
+                            categoryHierarchy.add(categoryParent.get().getId());
                             parentId = categoryParent.get().getParentId();
                         }else {
                             break;

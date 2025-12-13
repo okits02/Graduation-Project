@@ -2,6 +2,7 @@ package com.example.order_service.service.impl;
 
 import com.example.order_service.dto.request.OrderCreationRequest;
 import com.example.order_service.dto.request.OrderItemRequest;
+import com.example.order_service.dto.response.GetAmountResponse;
 import com.example.order_service.dto.response.ItemSummaryResponse;
 import com.example.order_service.dto.response.OrderResponse;
 import com.example.order_service.dto.response.OrderSummaryResponse;
@@ -19,6 +20,7 @@ import com.example.order_service.repository.httpClient.UserClient;
 import com.example.order_service.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.query.Order;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -47,7 +49,6 @@ public class OrderServiceImpl implements OrderService {
         Orders orders = Orders.builder()
                 .userId(userId)
                 .addressId(request.getAddressId())
-                .paymentId(request.getPaymentId())
                 .orderFee(request.getOrderFee())
                 .orderDesc(request.getOrderDesc())
                 .orderDate(LocalDateTime.now())
@@ -135,6 +136,24 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public void changStatusOrderForPayment(String paymentId, String orderId, Status status) {
+        Orders orders = orderRepository.findById(orderId).orElseThrow(()
+                -> new AppException(OrderErrorCode.ORDER_NOT_EXISTS));
+        orders.setOrderStatus(status);
+        orders.setPaymentId(paymentId);
+        orderRepository.save(orders);
+    }
+
+    @Override
+    public GetAmountResponse getAmount(String orderId) {
+        Orders orders = orderRepository.findById(orderId).orElseThrow(() ->
+                new AppException(OrderErrorCode.ORDER_NOT_EXISTS));
+        return GetAmountResponse.builder()
+                .amount(orders.getTotalPrice())
+                .build();
+    }
+
+    @Override
     public PageResponse<OrderSummaryResponse> getAllByStatus(int page, int size, Status status) {
         Pageable pageable = PageRequest.of(page, size);
         var pageData = orderRepository.findAllByStatus(status, pageable);
@@ -172,6 +191,6 @@ public class OrderServiceImpl implements OrderService {
                 (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
         var apiResponse = userClient.getUserId(authHeader);
-        return apiResponse.getBody().getResult().getUserId();
+        return apiResponse.getResult().getUserId();
     }
 }

@@ -3,6 +3,7 @@ package com.example.search_service.consumer;
 import com.example.search_service.service.ProductService;
 import com.example.search_service.viewmodel.dto.ApplyPromotionEventDTO;
 import com.example.search_service.viewmodel.dto.StatusPromotionDTO;
+import com.example.search_service.viewmodel.dto.UpdatePromotionDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,13 +47,13 @@ public class PromotionConsumer {
             containerFactory = "updatePromotionKafkaListenerContainerFactory")
     public void updatePromotionConsumer(String updatePromotionEvent) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
-        ApplyPromotionEventDTO applyPromotionEventDTO = null;
+        UpdatePromotionDTO updatePromotionDTO = null;
         try {
-            applyPromotionEventDTO = objectMapper.readValue(updatePromotionEvent, ApplyPromotionEventDTO.class);
+            updatePromotionDTO = objectMapper.readValue(updatePromotionEvent, UpdatePromotionDTO.class);
         }catch (JsonMappingException e) {
             throw new RuntimeException(e);
         }
-        productService.updatePromotion(applyPromotionEventDTO);
+        productService.updatePromotion(updatePromotionDTO);
     }
 
     @KafkaListener(topics = "promotion-delete-event",

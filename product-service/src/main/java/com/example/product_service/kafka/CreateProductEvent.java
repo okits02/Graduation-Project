@@ -28,7 +28,7 @@ public class CreateProductEvent {
     Integer quantity;
     double avgRating;
     Integer sold;
-    List<CategoryResponse> categories;
+    List<String> categories;
     Map<String, String> specifications;
     LocalDate createAt;
     LocalDate updateAt;

@@ -2,6 +2,7 @@ package com.example.promotion_service.controller;
 
 import com.example.promotion_service.dto.request.PromotionCreationRequest;
 import com.example.promotion_service.dto.request.PromotionUpdateRequest;
+import com.example.promotion_service.kafka.UpdatePromotionEvent;
 import com.okits02.common_lib.dto.ApiResponse;
 import com.okits02.common_lib.dto.PageResponse;
 import com.example.promotion_service.dto.response.PromotionResponse;
@@ -18,6 +19,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
+import java.util.HashSet;
 
 import static com.example.promotion_service.enums.UsageType.LIMITED;
 
@@ -45,8 +47,8 @@ public class PromotionController {
                 .discountPercent(promotion.getDiscountPercent())
                 .applyTo(promotion.getApplyTo().toString())
                 .fixedAmount(promotion.getFixedAmount())
-                .productIdList(promotion.getPromotionApplyTo().getProductId())
-                .categoryNameList(promotion.getPromotionApplyTo().getCategoryName())
+                .productIdList(new HashSet<>(request.getProductId()))
+                .categoryIdList(new HashSet<>(request.getCategoryId()))
                 .createAt(new Date())
                 .build();
         kafkaTemplate.send("promotion-create-event", promotionEvent).whenComplete(
@@ -76,19 +78,21 @@ public class PromotionController {
             }
         }
         PromotionResponse promotionResponse = promotionService.updatePromotion(request);
-        PromotionEvent promotionEvent = PromotionEvent.builder()
+        UpdatePromotionEvent updatePromotionEvent = UpdatePromotionEvent.builder()
                 .id(promotionResponse.getId())
                 .name(promotionResponse.getName())
                 .descriptions(promotionResponse.getDescriptions())
                 .active(promotionResponse.getActive())
+                .applyTo(String.valueOf(promotionResponse.getApplyTo()))
                 .discountPercent(promotionResponse.getDiscountPercent())
                 .fixedAmount(promotionResponse.getFixedAmount())
-                .productIdList(promotionResponse.getPromotionApplyTo().getProductId())
-                .categoryNameList(promotionResponse.getPromotionApplyTo().getCategoryName())
+                .productIdList(new HashSet<>(request.getProductId()))
+                .categoryIdList(new HashSet<>(request.getCategoryId()))
+                .deleteApplyTo(request.getDeleteApplyTo())
                 .createAt(promotionResponse.getCreateAt())
                 .updateAt(new Date())
                 .build();
-        kafkaTemplate.send("promotion-update-event", promotionEvent).whenComplete(
+        kafkaTemplate.send("promotion-update-event", updatePromotionEvent).whenComplete(
                 (result, ex) -> {
             if(ex != null)
             {

@@ -23,6 +23,7 @@ public class Payment {
     private String id;
 
     private String userId;
+    private String orderId;
     @Enumerated(EnumType.STRING)
     private PaymentMethod method;
     @Enumerated(EnumType.STRING)

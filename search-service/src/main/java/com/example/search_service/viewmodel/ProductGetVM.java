@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Data
 @Builder
@@ -30,15 +31,16 @@ public class ProductGetVM {
     double avgRating;
     Integer sold;
     Float discount;
+    String thumbnailUrl;
     List<String> imageList;
-    List<Category> categories;
+    List<CategoryGetVM> categories;
     List<Specification> specifications;
     @JsonFormat(pattern = "yyyy-MM-dd")
     LocalDate createAt;
     @JsonFormat(pattern = "yyyy-MM-dd")
     LocalDate updateAt;
 
-    public static ProductGetVM fromEntity(Products products){
+    public static ProductGetVM fromEntity(Products products,  Map<String, CategoryGetVM > categoryMap){
         return ProductGetVM.builder()
                 .id(products.getId())
                 .name(products.getName())
@@ -47,8 +49,12 @@ public class ProductGetVM {
                 .sellPrice(products.getSellPrice())
                 .quantity(products.getQuantity())
                 .avgRating(products.getAvgRating())
+                .thumbnailUrl(products.getThumbnail())
                 .sold(products.getSold())
-                .categories(products.getCategories())
+                .categories(products.getCategoriesId().stream()
+                        .map(categoryMap::get)
+                        .filter(Objects::nonNull)
+                        .toList())
                 .specifications(products.getSpecifications())
                 .createAt(products.getCreateAt())
                 .updateAt(products.getUpdateAt())

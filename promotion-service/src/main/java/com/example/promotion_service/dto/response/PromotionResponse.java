@@ -14,6 +14,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 @Builder
@@ -35,7 +36,8 @@ public class PromotionResponse {
     int usageLimited;
     int usageCount;
     Boolean active;
-    PromotionApplyToResponse promotionApplyTo;
+    List<String> productId;
+    List<String> categoryName;
     Date createAt;
-    Date UpdateAt;
+    Date updateAt;
 }

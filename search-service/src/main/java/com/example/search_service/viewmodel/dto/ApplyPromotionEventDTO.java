@@ -18,12 +18,12 @@ public class ApplyPromotionEventDTO {
     String id;
     String name;
     String descriptions;
-    BigDecimal discountPercent;
-    BigDecimal fixedAmount;
+    Double discountPercent;
+    Double fixedAmount;
     String applyTo;
     Boolean active;
     Set<String> productIdList;
-    Set<String> categoryNameList;
+    Set<String> categoryIdList;
     Date createAt;
     Date updateAt;
 }

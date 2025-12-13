@@ -18,9 +18,9 @@ public class PromotionEvent {
     Double discountPercent;
     Double fixedAmount;
     String applyTo;
-    boolean active;
+    Boolean active;
     Set<String> productIdList;
-    Set<String> categoryNameList;
+    Set<String> categoryIdList;
     Date createAt;
     Date updateAt;
 }

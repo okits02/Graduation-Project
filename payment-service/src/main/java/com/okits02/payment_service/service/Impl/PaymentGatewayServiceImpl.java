@@ -9,14 +9,17 @@ import com.okits02.payment_service.dto.request.VnPayPaymentInfoRequest;
 import com.okits02.payment_service.dto.response.VnpResponseDTO;
 import com.okits02.payment_service.enums.PaymentMethod;
 import com.okits02.payment_service.enums.PaymentStatus;
+import com.okits02.payment_service.kafka.ChangeStatusOrdersEvent;
 import com.okits02.payment_service.model.Payment;
 import com.okits02.payment_service.model.PaymentSession;
+import com.okits02.payment_service.repository.PaymentRepository;
 import com.okits02.payment_service.repository.PaymentSessionRepository;
 import com.okits02.payment_service.service.PaymentGatewayService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -35,11 +38,14 @@ import static java.lang.System.out;
 @RequiredArgsConstructor
 public class PaymentGatewayServiceImpl implements PaymentGatewayService {
     private final PaymentSessionRepository paymentSessionRepository;
+    private final PaymentRepository paymentRepository;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Override
     public ResponseEntity<?> createVnPayPayment(Payment payment) throws UnsupportedEncodingException, JsonProcessingException {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-        long amount = Integer.parseInt(String.valueOf(payment.getAmount()))*100;
+        BigDecimal amount = payment.getAmount();
+        long vnpAmount = amount.multiply(BigDecimal.valueOf(100)).longValue();
         String vnp_TxnRef = VnpayConfig.getRandomNumber(8);
         String vnp_IpAddr = VnpayConfig.getIpAddress(request);
         String orderType = "other";
@@ -49,7 +55,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         vnp_Params.put("vnp_Version", VnpayConfig.vnp_Version);
         vnp_Params.put("vnp_Command", VnpayConfig.vnp_Command);
         vnp_Params.put("vnp_TmnCode", vnp_TmnCode);
-        vnp_Params.put("vnp_Amount", String.valueOf(amount));
+        vnp_Params.put("vnp_Amount", String.valueOf(vnpAmount));
         vnp_Params.put("vnp_CurrCode", "VND");
 
         vnp_Params.put("vnp_CurrCode", "VND");
@@ -101,7 +107,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         String providerDataJson = new ObjectMapper().writeValueAsString(vnp_Params);
         PaymentSession session = PaymentSession.builder()
                 .payment(payment)
-                .transactionId(vnp_TmnCode)
+                .transactionId(vnp_TxnRef)
                 .providerData(providerDataJson)
                 .method(PaymentMethod.VNPAY)
                 .status(payment.getStatus())
@@ -149,7 +155,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         String vnp_TxnRef = request.getParameter("vnp_TxnRef");
 
         PaymentSession session = paymentSessionRepository.findByTransactionId(vnp_TxnRef);
-
+        Payment payment = session.getPayment();
 
         if (session == null) {
             return ResponseEntity.ok(Map.of(
@@ -160,17 +166,69 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
 
         String responseCode = request.getParameter("vnp_ResponseCode");
 
-        if ("00".equals(responseCode)) {
-            session.getPayment().setStatus(PaymentStatus.SUCCESS);
-        } else {
-            session.getPayment().setStatus(PaymentStatus.FAILED);
+        switch (responseCode){
+
+            case "00" -> {
+                session.setStatus(PaymentStatus.SUCCESS);
+                payment.setStatus(PaymentStatus.SUCCESS);
+                OrderStatusEvent(payment.getId(), payment.getOrderId(), PaymentStatus.SUCCESS);
+            }
+
+            case "24" -> {
+                session.setStatus(PaymentStatus.CANCELLED);
+                payment.setStatus(PaymentStatus.CANCELLED);
+                OrderStatusEvent(payment.getId(), payment.getOrderId(), PaymentStatus.CANCELLED);
+            }
+
+            case "09" -> {
+                session.setStatus(PaymentStatus.FAILED);
+                payment.setStatus(PaymentStatus.FAILED);
+                OrderStatusEvent(payment.getId(), payment.getOrderId(), PaymentStatus.FAILED);
+            }
+
+            case "10" -> {
+                session.setStatus(PaymentStatus.EXPIRED);
+                payment.setStatus(PaymentStatus.EXPIRED);
+                OrderStatusEvent(payment.getId(), payment.getOrderId(), PaymentStatus.FAILED);
+            }
+
+            case "11", "12" -> {
+                session.setStatus(PaymentStatus.FAILED);
+                payment.setStatus(PaymentStatus.FAILED);
+                OrderStatusEvent(payment.getId(), payment.getOrderId(), PaymentStatus.FAILED);
+            }
+
+            default -> {
+                session.setStatus(PaymentStatus.FAILED);
+                payment.setStatus(PaymentStatus.FAILED);
+                OrderStatusEvent(payment.getId(), payment.getOrderId(), PaymentStatus.FAILED);
+            }
         }
 
         paymentSessionRepository.save(session);
+        paymentRepository.save(payment);
+
 
         return ResponseEntity.ok(Map.of(
                 "RspCode", "00",
                 "Message", "Confirm Success"
         ));
+    }
+
+    public void OrderStatusEvent(String paymentId, String orderId, PaymentStatus status){
+        ChangeStatusOrdersEvent event = ChangeStatusOrdersEvent.builder()
+                .orderId(orderId)
+                .paymentId(paymentId)
+                .status(status)
+                .build();
+        kafkaTemplate.send("change-status-order", event).whenComplete(
+                (result, ex) ->{
+                    if (ex != null)
+                    {
+                        System.err.println("Failed to send message" + ex.getMessage());
+                    } else {
+                        System.err.println("send message successfully" + result.getProducerRecord());
+                    }
+                });
     }
 }

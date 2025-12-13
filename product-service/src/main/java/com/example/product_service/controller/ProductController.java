@@ -169,7 +169,7 @@ public class ProductController {
     private CreateProductEvent createEventProduct(Products product)
     {
         Set<String> currentCateId = product.getCategoryId();
-        List<CategoryResponse> categoryList = categoryService.getCategoryHierarchy(currentCateId);
+        List<String> categoryList = categoryService.getCategoryHierarchy(currentCateId);
         CreateProductEvent createProductEvent = CreateProductEvent.builder()
                 .id(product.getId())
                 .name(product.getName())
