@@ -5,11 +5,13 @@ import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import com.example.search_service.exceptions.SearchErrorCode;
 import com.example.search_service.model.Category;
+import com.example.search_service.viewmodel.CategoryGetListVM;
 import com.example.search_service.viewmodel.CategoryGetVM;
 import com.example.search_service.viewmodel.dto.CategoryEventDTO;
 import com.example.search_service.viewmodel.dto.request.ApplyThumbnailRequest;
 import com.okits02.common_lib.exception.AppException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CategoryService {
     private final ElasticsearchOperations elasticsearchOperations;
     private final ElasticsearchClient elasticsearchClient;
@@ -62,6 +65,7 @@ public class CategoryService {
     }
 
     public void indexCategory(CategoryEventDTO request) throws IOException {
+        log.error("🔥 CATEGORY INDEX HIT: {}", request);
         Category category = Category.builder()
                 .id(request.getId())
                 .name(request.getName())
@@ -144,4 +148,33 @@ public class CategoryService {
         }
     }
 
+    public CategoryGetListVM getCategoryByListIds(List<String> categoryIds){
+        if(categoryIds == null || categoryIds.isEmpty()){
+            return CategoryGetListVM.builder().build();
+        }
+        NativeQuery nativeQuery = NativeQuery.builder()
+                .withQuery(q -> q
+                        .terms(t -> t
+                                .field("_id")
+                                .terms(v -> v
+                                        .value(categoryIds
+                                                .stream()
+                                                .map(FieldValue::of)
+                                                .toList()
+                                        )
+                                )
+                        )
+                )
+                .withMaxResults(categoryIds.size())
+                .build();
+        SearchHits<Category> hits = elasticsearchOperations.search(nativeQuery, Category.class);
+        List<CategoryGetVM> categoryGetVMS = hits.stream().map(i ->
+                        CategoryGetVM.fromEntity(i.getContent()))
+                .toList();
+        return CategoryGetListVM.builder()
+                .totalPage(1)
+                .totalElements((long) categoryIds.size())
+                .CategoryGetVM(categoryGetVMS)
+                .build();
+    }
 }

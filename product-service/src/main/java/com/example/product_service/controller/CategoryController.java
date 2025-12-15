@@ -1,5 +1,7 @@
 package com.example.product_service.controller;
 
+import com.example.product_service.dto.request.CategoryLevelValidateRequest;
+import com.example.product_service.dto.response.CategoryLevelValidateResponse;
 import com.example.product_service.kafka.CategoryEvent;
 import com.okits02.common_lib.dto.PageResponse;
 import com.example.product_service.dto.request.CategoryRequest;
@@ -19,6 +21,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequestMapping("/category")
@@ -26,19 +29,21 @@ import java.util.ArrayList;
 @Slf4j
 public class CategoryController {
     private final CategoryService categoryService;
-    KafkaTemplate<String, Object> kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Operation(summary = "admin create category", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/create")
     @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<Category> createCate(@RequestBody @Valid CategoryRequest request) {
         Category response = categoryService.createCate(request);
+        List<String> children = response.getChildrenId() == null ? new ArrayList<>()
+                : new ArrayList<>(response.getChildrenId());
         CategoryEvent categoryEvent = CategoryEvent.builder()
                 .eventType("CATEGORY_CREATED")
                 .id(response.getId())
                 .name(response.getName())
                 .parentId(response.getParentId())
-                .childrentId(new ArrayList<>(response.getChildrenId()))
+                .childrentId(children)
                 .build();
         kafkaTemplate.send("category-event", categoryEvent).whenComplete(
                 (result, ex) -> {
@@ -63,12 +68,14 @@ public class CategoryController {
     {
         try{
             CategoryResponse response = categoryService.updateCate(request);
+            List<String> children = response.getChildrenId() == null ? new ArrayList<>()
+                    : new ArrayList<>(response.getChildrenId());
             CategoryEvent categoryEvent = CategoryEvent.builder()
                     .eventType("CATEGORY_UPDATE")
                     .id(response.getId())
                     .name(response.getName())
                     .parentId(response.getParentId())
-                    .childrentId(new ArrayList<>(response.getChildrenId()))
+                    .childrentId(children)
                     .build();
             kafkaTemplate.send("category-event", categoryEvent).whenComplete(
                     (result, ex) -> {
@@ -140,6 +147,16 @@ public class CategoryController {
         return ApiResponse.<CategoryResponse>builder()
                 .code(200)
                 .message("category delete successfully")
+                .build();
+    }
+
+    @PostMapping("internal/validate-same-level")
+    ApiResponse<CategoryLevelValidateResponse> CategoryValidateSameLevel(
+            @RequestBody CategoryLevelValidateRequest request
+    ){
+        return ApiResponse.<CategoryLevelValidateResponse>builder()
+                .code(200)
+                .result(categoryService.validateSameLevel(request.getCategoryIds()))
                 .build();
     }
 }

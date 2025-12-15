@@ -15,12 +15,35 @@ public interface PromotionApplyToRepository extends JpaRepository<PromotionApply
             nativeQuery = true)
     PromotionApplyTo findByProductIdAndPromotion(@Param("productId") String productId,
                                                  @Param("promotionId") String promotionId);
-    @Query(value = "SELECT * FROM promotion_apply_to WHERE category_name = :categoryName AND promotion_id = :promotionId",
+    @Query(value = "SELECT * FROM promotion_apply_to WHERE category_id = :categoryId AND promotion_id = :promotionId",
             nativeQuery = true)
-    PromotionApplyTo findByCategoryNameAndPromotion(@Param("categoryName") String categoryName,
+    PromotionApplyTo findByCategoryNameAndPromotion(@Param("categoryId") String categoryId,
                                                     @Param("promotionId") String promotionId);
 
-    boolean existsByPromotionAndProductId(Promotion promotion, String id);
-
-    boolean existsByPromotionAndCategoryId(Promotion promotion, String id);
+    @Query(
+            value = """
+    SELECT CASE WHEN COUNT(*) > 0 THEN TRUE ELSE FALSE END
+    FROM promotion_apply_to
+    WHERE promotion_id = :promotionId
+      AND product_id = :productId
+  """,
+            nativeQuery = true
+    )
+    Long existsByPromotionAndProductId(
+            @Param("promotionId") String promotionId,
+            @Param("productId") String productId
+    );
+    @Query(
+            value = """
+    SELECT CASE WHEN COUNT(*) > 0 THEN TRUE ELSE FALSE END
+    FROM promotion_apply_to
+    WHERE promotion_id = :promotionId
+      AND category_id = :categoryId
+  """,
+            nativeQuery = true
+    )
+    Long existsByPromotionAndCategoryId(
+            @Param("promotionId") String promotionId,
+            @Param("categoryId") String categoryId
+    );
 }

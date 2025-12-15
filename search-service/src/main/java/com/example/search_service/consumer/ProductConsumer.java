@@ -45,7 +45,7 @@ public class ProductConsumer {
                 .quantity(productEventDTO.getQuantity())
                 .avgRating(productEventDTO.getAvgRating())
                 .sold(productEventDTO.getSold())
-                .categoriesId(productEventDTO.getCategoriesId())
+                .categoriesId(productEventDTO.getCategories())
                 .specifications(productEventDTO.getSpecifications())
                 .createAt(productEventDTO.getCreateAt())
                 .updateAt(productEventDTO.getUpdateAt())
@@ -72,7 +72,7 @@ public class ProductConsumer {
                 .quantity(productEventDTO.getQuantity())
                 .avgRating(productEventDTO.getAvgRating())
                 .sold(productEventDTO.getSold())
-                .categoriesId(productEventDTO.getCategoriesId())
+                .categoriesId(productEventDTO.getCategories())
                 .specifications(productEventDTO.getSpecifications())
                 .createAt(productEventDTO.getCreateAt())
                 .updateAt(productEventDTO.getUpdateAt())
@@ -92,16 +92,4 @@ public class ProductConsumer {
         productService.deleteProduct(deleteProductEventDTO.getProductId());
     }
 
-    @KafkaListener(topics = "product-apply-thumbnail-event",
-            containerFactory = "applyThumbnailKafkaListenerContainerFactory")
-    public void consumerApplyThumbnail(String applyThumbnailEvent) throws JsonProcessingException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        ApplyThumbnailEventDTO applyThumbnailEventDTO = null;
-        applyThumbnailEventDTO = objectMapper.readValue(applyThumbnailEvent, ApplyThumbnailEventDTO.class);
-        productService.AppyThumbnailToProduct(ApplyThumbnailRequest.builder()
-                .productId(applyThumbnailEventDTO.getProductId())
-                .url(applyThumbnailEventDTO.getUrl())
-                .build());
-    }
 }

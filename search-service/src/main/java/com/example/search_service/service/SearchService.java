@@ -4,9 +4,6 @@
     import co.elastic.clients.elasticsearch._types.aggregations.StringTermsAggregate;
     import co.elastic.clients.elasticsearch._types.aggregations.StringTermsBucket;
     import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
-    import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
-    import co.elastic.clients.elasticsearch.core.SearchResponse;
-    import co.elastic.clients.json.JsonData;
     import com.example.search_service.constant.SortType;
     import com.example.search_service.model.Category;
     import com.example.search_service.model.Products;
@@ -16,6 +13,7 @@
     import lombok.RequiredArgsConstructor;
     import lombok.extern.slf4j.Slf4j;
     import org.springframework.data.domain.PageRequest;
+    import org.springframework.data.domain.Pageable;
     import org.springframework.data.domain.Sort;
     import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregation;
     import org.springframework.data.elasticsearch.client.elc.NativeQuery;
@@ -24,7 +22,6 @@
     import org.springframework.data.elasticsearch.core.query.FetchSourceFilter;
     import org.springframework.stereotype.Service;
 
-    import java.io.IOException;
     import java.util.*;
     import java.util.stream.Collectors;
 
@@ -219,7 +216,34 @@
             return new ProductNameGetListVm(products.stream().map(ProductNameGetVm::fromModel).toList());
         }
 
-        public List<CategoryGetVM> autocompleteCategory(String prefix, int size) throws IOException {
+        public CategoryGetListVM autocompleteCategory(String prefix, int size, int page) {
+            Pageable pageable = PageRequest.of(page, size);
+
+            NativeQuery query = NativeQuery.builder()
+                    .withQuery(q -> q
+                            .matchPhrasePrefix(m -> m
+                                    .field("name")
+                                    .query(prefix)
+                            )
+                    )
+                    .withPageable(pageable)
+                    .build();
+
+            SearchHits<Category> hits =
+                    elasticsearchOperations.search(query, Category.class);
+
+            SearchPage<Category> searchPage =
+                    SearchHitSupport.searchPageFor(hits, pageable);
+
+            List<CategoryGetVM> categoryGetVMS = hits.stream()
+                    .map(hit -> CategoryGetVM.fromEntity(hit.getContent()))
+                    .toList();
+
+            return CategoryGetListVM.builder()
+                    .CategoryGetVM(categoryGetVMS)
+                    .totalElements(searchPage.getTotalElements())
+                    .totalPage(searchPage.getTotalPages())
+                    .build();
         }
 
     }

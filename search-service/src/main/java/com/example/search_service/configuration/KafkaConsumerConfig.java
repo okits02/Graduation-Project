@@ -1,5 +1,6 @@
 package com.example.search_service.configuration;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -109,7 +110,7 @@ public class KafkaConsumerConfig {
     public ConcurrentKafkaListenerContainerFactory<String, String> updateStatusPromotionKafkaListenerContainerFactory(){
         ConcurrentKafkaListenerContainerFactory<String, String> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(updateConsumerFactory());
+        factory.setConsumerFactory(updateStatusPromotionFactory());
         factory.setConcurrency(3);
         return factory;
     }
@@ -147,7 +148,7 @@ public class KafkaConsumerConfig {
     public ConcurrentKafkaListenerContainerFactory<String, String> deletePromotionKafkaListenerContainerFactory(){
         ConcurrentKafkaListenerContainerFactory<String, String> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(deleteConsumerFactory());
+        factory.setConsumerFactory(deletePromotion());
         factory.setConcurrency(3);
         return factory;
     }
@@ -165,7 +166,7 @@ public class KafkaConsumerConfig {
     public ConcurrentKafkaListenerContainerFactory<String, String> applyThumbnailKafkaListenerContainerFactory(){
         ConcurrentKafkaListenerContainerFactory<String, String> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(deleteConsumerFactory());
+        factory.setConsumerFactory(applyThumbnail());
         factory.setConcurrency(3);
         return factory;
     }
@@ -173,7 +174,7 @@ public class KafkaConsumerConfig {
     public ConsumerFactory<String, String> categoryEventFactory(){
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9094");
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "category-event");
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "category-consumer");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         return new DefaultKafkaConsumerFactory<>(props);
@@ -183,7 +184,7 @@ public class KafkaConsumerConfig {
     public ConcurrentKafkaListenerContainerFactory<String, String> categoryKafkaListenerContainerFactory(){
         ConcurrentKafkaListenerContainerFactory<String, String> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(deleteConsumerFactory());
+        factory.setConsumerFactory(categoryEventFactory());
         factory.setConcurrency(3);
         return factory;
     }

@@ -1,5 +1,6 @@
 package com.example.product_service.service;
 
+import com.example.product_service.dto.response.CategoryLevelValidateResponse;
 import com.okits02.common_lib.dto.PageResponse;
 import com.example.product_service.dto.request.CategoryRequest;
 import com.example.product_service.dto.response.CategoryResponse;
@@ -17,4 +18,5 @@ public interface CategoryService {
     public CategoryResponse updateCate(CategoryRequest request);
     public List<String> getCategoryHierarchy(Set<String> categoryId);
     public void deleteCateById(String categoryId);
+    public CategoryLevelValidateResponse validateSameLevel(List<String> categoryIds);
 }

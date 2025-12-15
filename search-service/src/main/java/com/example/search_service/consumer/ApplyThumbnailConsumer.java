@@ -17,7 +17,7 @@ public class ApplyThumbnailConsumer {
     private final ProductService productService;
     private final CategoryService categoryService;
 
-    @KafkaListener(topics = "product-apply-thumbnail-event",
+    @KafkaListener(topics = "apply-thumbnail-event",
             containerFactory = "applyThumbnailKafkaListenerContainerFactory")
     public void consumerApplyThumbnail(String applyThumbnailEvent) throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();

@@ -13,6 +13,10 @@ public enum PromotionErrorCode implements ErrorCode {
     INVALID_PRODUCT_IDS(HttpStatus.BAD_REQUEST, 4003, "Invalid product id!"),
     INVALID_CATEGORY_IDS(HttpStatus.BAD_REQUEST, 4004, "Invalid category id!"),
     CAN_NOT_CREATE_VOUCHER(HttpStatus.BAD_REQUEST, 4005, "Can't create voucher"),
+    CAN_NOT_CONNECT_TO_PRODUCT_CLIENT(HttpStatus.BAD_REQUEST, 4008,
+            "cant not connected to product client"),
+    INVALID_LEVEL_CATEGORY(HttpStatus.BAD_REQUEST, 4010,
+            "Cannot apply promotion to parent and child categories at the same time"),
     USAGE_LIMITED_NULL(HttpStatus.BAD_REQUEST, 4006, "Usage limited can not null!")
     ;
 

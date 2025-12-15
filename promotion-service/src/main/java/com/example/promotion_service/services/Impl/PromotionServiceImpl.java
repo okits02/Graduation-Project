@@ -1,7 +1,9 @@
 package com.example.promotion_service.services.Impl;
 
+import com.example.promotion_service.dto.request.CategoryLevelValidateRequest;
 import com.example.promotion_service.dto.request.PromotionCreationRequest;
 import com.example.promotion_service.dto.request.PromotionUpdateRequest;
+import com.example.promotion_service.repository.httpClient.ProductClient;
 import com.okits02.common_lib.dto.PageResponse;
 import com.example.promotion_service.dto.response.PromotionResponse;
 import com.okits02.common_lib.exception.AppException;
@@ -31,6 +33,7 @@ public class PromotionServiceImpl implements PromotionService {
     private final PromotionRepository promotionRepository;
     private final PromotionApplyToRepository applyToRepository;
     private final PromotionMapper promotionMapper;
+    private final ProductClient productClient;
 
     @Override
     public PromotionResponse createPromotion(PromotionCreationRequest request) {
@@ -57,6 +60,9 @@ public class PromotionServiceImpl implements PromotionService {
 
             case Category -> {
                 if(request.getCategoryId() != null && !request.getCategoryId().isEmpty()){
+                    if(!checkValidLevel(request.getCategoryId())){
+                        throw new AppException(PromotionErrorCode.INVALID_LEVEL_CATEGORY);
+                    }
                     for(String id : request.getCategoryId()){
                         promotionApplyTo.add(PromotionApplyTo.builder()
                                         .promotion(promotion)
@@ -87,20 +93,24 @@ public class PromotionServiceImpl implements PromotionService {
             throw new AppException(PromotionErrorCode.PROMOTION_NOT_EXISTS);
         }
         List<PromotionApplyTo> promotionApplyTos = promotion.get().getPromotionApplyTo();
-        if(request.getDeleteApplyTo() != null){
+        if(request.getDeleteApplyTo() != null && !request.getDeleteApplyTo().isEmpty()){
             switch (request.getApplyTo()){
                 case Product -> {
                     for(String id : request.getDeleteApplyTo()){
                         PromotionApplyTo promotionApplyTo =applyToRepository.findByProductIdAndPromotion(id,
                                 promotion.get().getId());
-                        promotionApplyTos.remove(promotionApplyTo);
+                        if (promotionApplyTo != null) {
+                            promotionApplyTos.remove(promotionApplyTo);
+                        }
                     }
                 }
                 case Category -> {
-                    for(String name : request.getDeleteApplyTo()){
-                        PromotionApplyTo promotionApplyTo =applyToRepository.findByCategoryNameAndPromotion(name,
+                    for(String id : request.getDeleteApplyTo()){
+                        PromotionApplyTo promotionApplyTo =applyToRepository.findByCategoryNameAndPromotion(id,
                                 promotion.get().getId());
-                        promotionApplyTos.remove(promotionApplyTo);
+                        if (promotionApplyTo != null) {
+                            promotionApplyTos.remove(promotionApplyTo);
+                        }
                     }
                 }
             }
@@ -108,11 +118,10 @@ public class PromotionServiceImpl implements PromotionService {
         switch (request.getApplyTo()){
             case Product -> {
                 if (request.getProductId() != null && !request.getProductId().isEmpty()) {
-                    for(String id : request.getCategoryId()){
-                        boolean exists = applyToRepository
-                                .existsByPromotionAndProductId(promotion.orElse(null), id);
-
-                        if (!exists) {
+                    for(String id : request.getProductId()){
+                        Long exists = applyToRepository
+                                .existsByPromotionAndProductId(promotion.get().getId(), id);
+                        if (exists == 0) {
                             promotionApplyTos.add(
                                     PromotionApplyTo.builder()
                                             .promotion(promotion.get())
@@ -121,17 +130,21 @@ public class PromotionServiceImpl implements PromotionService {
                             );
                         }
                     }
-                }else{
-                    throw new AppException(PromotionErrorCode.INVALID_PRODUCT_IDS);
                 }
             }
-
             case Category -> {
                 if(request.getCategoryId() != null && !request.getCategoryId().isEmpty()){
+                    List<String> listCate = promotionApplyTos.stream().map(PromotionApplyTo::getCategoryId)
+                            .filter(Objects::nonNull)
+                            .toList();
+                    listCate.addAll(request.getCategoryId());
+                    if(!checkValidLevel(listCate)){
+                        throw new AppException(PromotionErrorCode.INVALID_LEVEL_CATEGORY);
+                    }
                     for(String id : request.getCategoryId()){
-                        boolean exists = applyToRepository
-                                .existsByPromotionAndCategoryId(promotion.orElse(null), id);
-                        if (!exists) {
+                        Long exists = applyToRepository
+                                .existsByPromotionAndCategoryId(promotion.get().getId(), id);
+                        if (exists == 0) {
                             promotionApplyTos.add(
                                     PromotionApplyTo.builder()
                                             .promotion(promotion.get())
@@ -140,8 +153,6 @@ public class PromotionServiceImpl implements PromotionService {
                             );
                         }
                     }
-                }else{
-                    throw new AppException(PromotionErrorCode.INVALID_CATEGORY_IDS);
                 }
             }
         }
@@ -175,5 +186,17 @@ public class PromotionServiceImpl implements PromotionService {
         Promotion promotion = promotionRepository.findById(promotionId).orElseThrow(() ->
                 new AppException(PromotionErrorCode.PROMOTION_NOT_EXISTS));
         promotionRepository.deleteById(promotionId);
+    }
+
+    private Boolean checkValidLevel(List<String> categoryIds){
+        CategoryLevelValidateRequest request = CategoryLevelValidateRequest.builder()
+                .categoryIds(categoryIds)
+                .build();
+        var response = productClient.CategoryValidateSameLevel(request);
+        if(response.getCode() != 200)
+        {
+            throw new AppException(PromotionErrorCode.CAN_NOT_CONNECT_TO_PRODUCT_CLIENT);
+        }
+        return response.getResult().getValid();
     }
 }

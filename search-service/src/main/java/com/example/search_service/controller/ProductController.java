@@ -3,6 +3,7 @@ package com.example.search_service.controller;
 import com.example.search_service.service.ProductService;
 import com.example.search_service.viewmodel.*;
 import com.example.search_service.viewmodel.dto.request.AdminSearchRequest;
+import com.example.search_service.viewmodel.dto.request.ProductGetByListIdRequest;
 import com.okits02.common_lib.dto.ApiResponse;
 import com.example.search_service.viewmodel.dto.request.RemoveCategoryIdsRequest;
 import com.example.search_service.viewmodel.dto.request.SearchRequest;
@@ -59,6 +60,17 @@ public class ProductController {
         return ApiResponse.<PageResponse<ProductAdminGetVM>>builder()
                 .code(200)
                 .result(searchService.searchProductAdmin(page - 1, size, request))
+                .build();
+    }
+
+    @PostMapping("/admin/get-by-list-id")
+    public ApiResponse<ProductGetListVM> getByListIds(
+            @RequestBody ProductGetByListIdRequest request
+            ){
+        return ApiResponse.<ProductGetListVM>builder()
+                .code(200)
+                .message("get product by list ids successfully")
+                .result(productService.getByListIds(request.getProductIds(), request.getPage(), request.getSize()))
                 .build();
     }
 

@@ -23,7 +23,6 @@ public class  ProductResponse {
     double avgRating;
     Integer sold;
     String videoUrl;
-    Float discount;
     String thumbNail;
     Boolean inStock;
     List<MediaResponse> mediaList;

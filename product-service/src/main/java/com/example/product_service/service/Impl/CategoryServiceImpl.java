@@ -1,5 +1,6 @@
 package com.example.product_service.service.Impl;
 
+import com.example.product_service.dto.response.CategoryLevelValidateResponse;
 import com.okits02.common_lib.dto.PageResponse;
 import com.okits02.common_lib.dto.ApiResponse;
 import com.example.product_service.dto.RemoveCategoryRequest;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -146,6 +148,38 @@ public class CategoryServiceImpl implements CategoryService {
         }
         categoryRepository.deleteById(categoryId);
     }
+
+    @Override
+    public CategoryLevelValidateResponse validateSameLevel(List<String> categoryIds) {
+        if (categoryIds == null || categoryIds.size() <= 1) {
+            return CategoryLevelValidateResponse.builder().valid(true).build();
+        }
+        List<Category> selectedCategories = categoryRepository.findAllById(categoryIds);
+        List<Category> allCategories = categoryRepository.findAll();
+        Map<String, String> parentMap = new HashMap<>();
+        for (Category c : allCategories) {
+            parentMap.put(c.getId(), c.getParentId());
+        }
+
+        Set<String> selectedIds = new HashSet<>(categoryIds);
+
+        for (String categoryId : selectedIds) {
+            String parentId = parentMap.get(categoryId);
+
+            while (parentId != null && !parentId.isBlank()) {
+                if (selectedIds.contains(parentId)) {
+                    return CategoryLevelValidateResponse.builder()
+                            .valid(false)
+                            .build();
+                }
+                parentId = parentMap.get(parentId);
+            }
+        }
+
+        return CategoryLevelValidateResponse.builder().valid(true).build();
+    }
+
+
     private List<String> getAllDescendantIds(Category category){
         List<String> result = new ArrayList<>();
         if(category.getChildrenId() != null || !category.getChildrenId().isEmpty())

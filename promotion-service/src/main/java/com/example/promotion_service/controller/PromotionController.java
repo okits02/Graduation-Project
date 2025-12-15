@@ -18,8 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Date;
-import java.util.HashSet;
+import java.util.*;
 
 import static com.example.promotion_service.enums.UsageType.LIMITED;
 
@@ -39,6 +38,10 @@ public class PromotionController {
                 throw new AppException(PromotionErrorCode.USAGE_LIMITED_NULL);
             }
         PromotionResponse promotion = promotionService.createPromotion(request);
+        Set<String> categoryIdList = request.getCategoryId() == null ? new HashSet<>()
+                : new HashSet<>(request.getCategoryId());
+        Set<String> productIdList = request.getProductId() == null ? new HashSet<>()
+                : new HashSet<>(request.getProductId());
         PromotionEvent promotionEvent = PromotionEvent.builder()
                 .id(promotion.getId())
                 .name(promotion.getName())
@@ -47,8 +50,8 @@ public class PromotionController {
                 .discountPercent(promotion.getDiscountPercent())
                 .applyTo(promotion.getApplyTo().toString())
                 .fixedAmount(promotion.getFixedAmount())
-                .productIdList(new HashSet<>(request.getProductId()))
-                .categoryIdList(new HashSet<>(request.getCategoryId()))
+                .productIdList(productIdList)
+                .categoryIdList(categoryIdList)
                 .createAt(new Date())
                 .build();
         kafkaTemplate.send("promotion-create-event", promotionEvent).whenComplete(
@@ -78,6 +81,10 @@ public class PromotionController {
             }
         }
         PromotionResponse promotionResponse = promotionService.updatePromotion(request);
+        Set<String> categoryIdList = request.getCategoryId() == null ? new HashSet<>()
+                : new HashSet<>(request.getCategoryId());
+        Set<String> productIdList = request.getProductId() == null ? new HashSet<>()
+                : new HashSet<>(request.getProductId());
         UpdatePromotionEvent updatePromotionEvent = UpdatePromotionEvent.builder()
                 .id(promotionResponse.getId())
                 .name(promotionResponse.getName())
@@ -86,8 +93,8 @@ public class PromotionController {
                 .applyTo(String.valueOf(promotionResponse.getApplyTo()))
                 .discountPercent(promotionResponse.getDiscountPercent())
                 .fixedAmount(promotionResponse.getFixedAmount())
-                .productIdList(new HashSet<>(request.getProductId()))
-                .categoryIdList(new HashSet<>(request.getCategoryId()))
+                .productIdList(productIdList)
+                .categoryIdList(categoryIdList)
                 .deleteApplyTo(request.getDeleteApplyTo())
                 .createAt(promotionResponse.getCreateAt())
                 .updateAt(new Date())

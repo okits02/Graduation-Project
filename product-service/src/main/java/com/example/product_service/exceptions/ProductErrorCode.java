@@ -13,6 +13,7 @@ public enum ProductErrorCode implements ErrorCode {
     CATE_NOT_EXISTS(1006, "Category not exists!", HttpStatus.BAD_REQUEST),
     CATE_EXISTS(1008, "Cate exists!", HttpStatus.BAD_REQUEST),
     IMAGE_NOT_EXISTS(1010, "Image is not exists", HttpStatus.BAD_REQUEST),
+    INVALID_CATEGORY_LEVLE(1001, "Cannot apply promotion to parent & childent categories", HttpStatus.BAD_REQUEST),
     CANNOT_DELETE_WITH_CHILDREN(1012, "Can not delete with childrent", HttpStatus.BAD_REQUEST);
     private final int code;
     private final String message;

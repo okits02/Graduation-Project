@@ -47,6 +47,8 @@ public class ProductMappingHelper {
                 .videoUrl(products.getVideoUrl())
                 .mediaList(listMedia)
                 .specifications(products.getSpecifications())
+                .createAt(products.getCreateAt())
+                .updateAt(products.getUpdateAt())
                 .build();
     }
 }

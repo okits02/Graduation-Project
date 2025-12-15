@@ -9,6 +9,10 @@ import co.elastic.clients.elasticsearch.core.UpdateByQueryResponse;
 import co.elastic.clients.json.JsonData;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.example.search_service.Repository.ProductsRepository;
+import com.example.search_service.model.Category;
+import com.example.search_service.viewmodel.CategoryGetVM;
+import com.example.search_service.viewmodel.ProductGetListVM;
+import com.example.search_service.viewmodel.ProductGetVM;
 import com.example.search_service.viewmodel.dto.UpdatePromotionDTO;
 import com.okits02.common_lib.exception.AppException;
 import com.example.search_service.exceptions.SearchErrorCode;
@@ -25,15 +29,17 @@ import lombok.RequiredArgsConstructor;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.SearchHit;
-import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.*;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.lang.annotation.Native;
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -43,7 +49,7 @@ public class ProductService {
     private final ProductsMapper productsMapper;
     private final ElasticsearchOperations elasticsearchOperations;
     private final ElasticsearchClient elasticsearchClient;
-    private final PromotionMapper promotionMapper;
+    private final CategoryService categoryService;
 
 
     public void createProduct(ProductRequest request) {
@@ -657,5 +663,40 @@ public class ProductService {
         }
         ProductDetailsVM productDetailsVM = ProductDetailsVM.fromEntity(products.get());
         return productDetailsVM;
+    }
+
+    public ProductGetListVM getByListIds(List<String> productIds, int page, int size){
+        Pageable pageable = PageRequest.of(page, size);
+        NativeQuery nativeQuery = NativeQuery.builder()
+                .withQuery(q -> q
+                        .terms(t -> t
+                                .field("id")
+                                .terms(v -> v
+                                        .value(productIds
+                                                .stream()
+                                                .map(FieldValue::of)
+                                                .toList()
+                                        )
+                                )
+                        )
+                ).withPageable(pageable).build();
+        SearchHits<Products> productsSearchHits = elasticsearchOperations.search(nativeQuery, Products.class);
+        SearchPage<Products> productsSearchPage = SearchHitSupport.searchPageFor(
+                productsSearchHits, nativeQuery.getPageable());
+        List<Products> products = productsSearchHits.stream().map(SearchHit::getContent).toList();
+        Set<String> categoryIds = products.stream()
+                .flatMap(p -> p.getCategoriesId().stream())
+                .collect(Collectors.toSet());
+        Map<String, CategoryGetVM> categoryMap =
+                categoryService.getCategoryByIds(categoryIds);
+        List<ProductGetVM> productGetVMList = productsSearchHits.stream().map(i -> ProductGetVM
+                .fromEntity(i.getContent(), categoryMap)).toList();
+        return ProductGetListVM.builder()
+                .productGetVMList(productGetVMList)
+                .currentPages(productsSearchPage.getNumber())
+                .totalPage(productsSearchPage.getTotalPages())
+                .pageSize(productsSearchPage.getSize())
+                .totalElements(productsSearchPage.getTotalElements())
+                .build();
     }
 }
