@@ -3,7 +3,13 @@ package com.example.promotion_service.services.Impl;
 import com.example.promotion_service.dto.request.CategoryLevelValidateRequest;
 import com.example.promotion_service.dto.request.PromotionCreationRequest;
 import com.example.promotion_service.dto.request.PromotionUpdateRequest;
+import com.example.promotion_service.enums.ApplyTo;
+import com.example.promotion_service.enums.PromotionKind;
+import com.example.promotion_service.kafka.PromotionEvent;
+import com.example.promotion_service.kafka.StatusEvent;
+import com.example.promotion_service.kafka.UpdatePromotionEvent;
 import com.example.promotion_service.repository.httpClient.ProductClient;
+import com.okits02.common_lib.dto.ApiResponse;
 import com.okits02.common_lib.dto.PageResponse;
 import com.example.promotion_service.dto.response.PromotionResponse;
 import com.okits02.common_lib.exception.AppException;
@@ -19,10 +25,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.example.promotion_service.enums.UsageType.LIMITED;
 
@@ -32,6 +42,7 @@ import static com.example.promotion_service.enums.UsageType.LIMITED;
 public class PromotionServiceImpl implements PromotionService {
     private final PromotionRepository promotionRepository;
     private final PromotionApplyToRepository applyToRepository;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
     private final PromotionMapper promotionMapper;
     private final ProductClient productClient;
 
@@ -41,7 +52,8 @@ public class PromotionServiceImpl implements PromotionService {
         {
             throw new AppException(PromotionErrorCode.PROMOTION_EXISTS);
         }
-        Promotion promotion = promotionRepository.save(promotionMapper.toPromotion(request));
+        Promotion promotion = promotionMapper.toPromotion(request);
+        promotion.setPromotionKind(PromotionKind.AUTO);
         List<PromotionApplyTo> promotionApplyTo = new ArrayList<>();
         switch (request.getApplyTo())
         {
@@ -73,11 +85,6 @@ public class PromotionServiceImpl implements PromotionService {
                     throw new AppException(PromotionErrorCode.INVALID_CATEGORY_IDS);
                 }
             }
-        }
-        if(request.isVoucher() && (request.getUsageType().equals(LIMITED)))
-        {
-            String voucherCode = VoucherCodeUtils.generateVoucherCode();
-            promotion.setVoucherCode(voucherCode);
         }
         applyToRepository.saveAll(promotionApplyTo);
         promotion.setPromotionApplyTo(promotionApplyTo);
@@ -198,5 +205,104 @@ public class PromotionServiceImpl implements PromotionService {
             throw new AppException(PromotionErrorCode.CAN_NOT_CONNECT_TO_PRODUCT_CLIENT);
         }
         return response.getResult().getValid();
+    }
+
+    @Override
+    public void UpdatePromotionStatus(String id){
+        StatusEvent statusEvent = StatusEvent.builder()
+                .id(id)
+                .build();
+        kafkaTemplate.send("promotion-status-event", statusEvent).whenComplete(
+                (result, ex) -> {
+                    if (ex != null)
+                    {
+                        System.err.println("Failed to send message" + ex.getMessage());
+                    } else {
+                        System.err.println("send message successfully" + result.getProducerRecord());
+                    }
+                });
+    }
+
+    private void SendKafKaEvent(Promotion promotion, String eventType, List<String> DeleteApplyTo){
+        Set<String> categoryIds = new HashSet<>();
+        Set<String> productIds = new HashSet<>();
+        if(promotion.getApplyTo().equals(ApplyTo.Category)){
+            categoryIds = promotion.getPromotionApplyTo().stream()
+                    .map(PromotionApplyTo::getCategoryId)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+        }else if (promotion.getApplyTo().equals(ApplyTo.Product)){
+            productIds = promotion.getPromotionApplyTo().stream()
+                    .map(PromotionApplyTo::getProductId)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+        }
+        switch (eventType){
+            case "CREATED" -> {
+                PromotionEvent promotionEvent = PromotionEvent.builder()
+                        .id(promotion.getId())
+                        .name(promotion.getName())
+                        .descriptions(promotion.getDescriptions())
+                        .active(promotion.getActive())
+                        .discountPercent(promotion.getDiscountPercent())
+                        .applyTo(promotion.getApplyTo().toString())
+                        .fixedAmount(promotion.getFixedAmount())
+                        .productIdList(productIds)
+                        .categoryIdList(categoryIds)
+                        .createAt(new Date())
+                        .build();
+                kafkaTemplate.send("promotion-create-event", promotionEvent).whenComplete(
+                        (result, ex) -> {
+                            if (ex != null)
+                            {
+                                System.err.println("Failed to send message" + ex.getMessage());
+                            } else {
+                                System.err.println("send message successfully" + result.getProducerRecord());
+                            }
+                        });
+
+            }
+
+            case "UPDATED" -> {
+                UpdatePromotionEvent updatePromotionEvent = UpdatePromotionEvent.builder()
+                        .id(promotion.getId())
+                        .name(promotion.getName())
+                        .descriptions(promotion.getDescriptions())
+                        .active(promotion.getActive())
+                        .applyTo(String.valueOf(promotion.getApplyTo()))
+                        .discountPercent(promotion.getDiscountPercent())
+                        .fixedAmount(promotion.getFixedAmount())
+                        .productIdList(productIds)
+                        .categoryIdList(categoryIds)
+                        .deleteApplyTo(DeleteApplyTo)
+                        .createAt(promotion.getCreateAt())
+                        .updateAt(new Date())
+                        .build();
+                kafkaTemplate.send("promotion-update-event", updatePromotionEvent).whenComplete(
+                        (result, ex) -> {
+                            if(ex != null)
+                            {
+                                System.err.println("Failed to send message" + ex.getMessage());
+                            }else {
+                                System.err.println("send message successfully" + result.getProducerRecord());
+                            }
+                        });
+            }
+
+            case "DELETED" -> {
+                PromotionEvent promotionEvent = PromotionEvent.builder()
+                        .id(promotion.getId())
+                        .build();
+                kafkaTemplate.send("promotion-delete-event", promotionEvent).whenComplete(
+                        (result, ex) -> {
+                            if(ex != null)
+                            {
+                                System.err.println("Failed to send message" + ex.getMessage());
+                            }else {
+                                System.err.println("send message successfully" + result.getProducerRecord());
+                            }
+                        });
+            }
+        }
     }
 }

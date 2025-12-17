@@ -12,5 +12,6 @@ public interface PromotionService {
     public PromotionResponse updatePromotion(PromotionUpdateRequest request);
     public PromotionResponse getPromotion(String promotionId);
     public PageResponse<PromotionResponse> getAllPromotion(int page, int size);
+    public void UpdatePromotionStatus(String id);
     public void deletePromotion(String promotionId);
 }

@@ -2,6 +2,7 @@ package com.example.promotion_service.model;
 
 import com.example.promotion_service.enums.ApplyTo;
 import com.example.promotion_service.enums.DiscountType;
+import com.example.promotion_service.enums.PromotionKind;
 import com.example.promotion_service.enums.UsageType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -29,6 +30,8 @@ public class Promotion {
     ApplyTo applyTo;
     @Enumerated(EnumType.STRING)
     UsageType usageType;
+    @Enumerated(EnumType.STRING)
+    PromotionKind promotionKind;
     String voucherCode;
     String descriptions;
     Double discountPercent;

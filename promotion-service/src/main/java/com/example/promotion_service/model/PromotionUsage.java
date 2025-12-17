@@ -21,4 +21,5 @@ public class PromotionUsage {
     String productId;
     String categoryId;
     String userId;
+    String orderId;
 }

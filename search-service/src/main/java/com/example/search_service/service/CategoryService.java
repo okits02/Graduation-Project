@@ -2,9 +2,11 @@ package com.example.search_service.service;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.FieldValue;
+import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import com.example.search_service.exceptions.SearchErrorCode;
 import com.example.search_service.model.Category;
+import com.example.search_service.viewmodel.CategoryDetailsVM;
 import com.example.search_service.viewmodel.CategoryGetListVM;
 import com.example.search_service.viewmodel.CategoryGetVM;
 import com.example.search_service.viewmodel.dto.CategoryEventDTO;
@@ -177,4 +179,46 @@ public class CategoryService {
                 .CategoryGetVM(categoryGetVMS)
                 .build();
     }
+
+    public CategoryDetailsVM getCategoryByParentId(String categoryId){
+        NativeQuery nativeQuery = NativeQuery.builder()
+                .withQuery(q -> q
+                        .term(t -> t
+                                .field("_id")
+                                .value(categoryId)
+                        )
+                )
+                .build();
+        SearchHits<Category> hits = elasticsearchOperations.search(nativeQuery, Category.class);
+        Category parent = hits.getSearchHit(0).getContent();
+
+        NativeQuery childrentQuery = NativeQuery.builder()
+                .withQuery(q -> q
+                        .term(t -> t
+                                .field("parent_id")
+                                .value(categoryId)))
+                .withSort(s -> s
+                        .field(f -> f
+                                .field("name.keyword")
+                                .order(SortOrder.Asc)
+                        )
+                )
+                .withMaxResults(100)
+                .build();
+        SearchHits<Category> childrentHits = elasticsearchOperations.search(nativeQuery, Category.class);
+        List<CategoryGetVM> childrentVM = childrentHits.stream()
+                .map(i ->
+                        CategoryGetVM.fromEntity(i.getContent()))
+                .toList();
+        return CategoryDetailsVM.builder()
+                .id(parent.getId())
+                .name(parent.getName())
+                .description(parent.getDescription())
+                .imageUrl(parent.getImageUrl())
+                .parentId(parent.getParentId())
+                .childrenId(childrentVM)
+                .build();
+    }
+
+
 }

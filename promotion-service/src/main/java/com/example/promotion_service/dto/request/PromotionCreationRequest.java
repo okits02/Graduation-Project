@@ -35,5 +35,4 @@ public class PromotionCreationRequest {
     Boolean active;
     List<String> productId;
     List<String> categoryId;
-    boolean isVoucher;
 }
