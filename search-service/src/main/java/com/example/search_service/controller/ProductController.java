@@ -70,7 +70,7 @@ public class ProductController {
         return ApiResponse.<ProductGetListVM>builder()
                 .code(200)
                 .message("get product by list ids successfully")
-                .result(productService.getByListIds(request.getProductIds(), request.getPage(), request.getSize()))
+                .result(productService.getByListIds(request.getProductIds(), request.getPage() - 1, request.getSize()))
                 .build();
     }
 

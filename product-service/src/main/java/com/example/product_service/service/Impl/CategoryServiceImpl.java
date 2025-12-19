@@ -1,6 +1,7 @@
 package com.example.product_service.service.Impl;
 
 import com.example.product_service.dto.response.CategoryLevelValidateResponse;
+import com.example.product_service.kafka.CategoryEvent;
 import com.okits02.common_lib.dto.PageResponse;
 import com.okits02.common_lib.dto.ApiResponse;
 import com.example.product_service.dto.RemoveCategoryRequest;
@@ -20,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -35,6 +37,9 @@ public class CategoryServiceImpl implements CategoryService {
     private final ProductRepository productRepository;
     private final SearchClient searchClient;
     private final CategoryMappingHelper categoryMappingHelper;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+
+
     @Override
     public PageResponse<CategoryResponse> finAll(int Page, int Size) {
         Pageable pageable = PageRequest.of(Page, Size);
@@ -192,12 +197,65 @@ public class CategoryServiceImpl implements CategoryService {
         }
         }
         return result;
+
     }
     private void removeCateInProduct(String CateIds){
         List<Products> productsList = productRepository.findByCategoryId(CateIds);
         for(var products : productsList){
             products.getCategoryId().remove(CateIds);
             productRepository.save(products);
+        }
+    }
+
+
+
+    private void sendKafKaEvent(Category category, String eventType){
+        switch (eventType){
+            case "CATEGORY_CREATED" -> {
+                CategoryEvent categoryEvent = CategoryEvent.builder()
+                        .eventType("CATEGORY_CREATED")
+                        .id(category.getId())
+                        .name(category.getName())
+                        .parentId(category.getParentId())
+                        .build();
+                kafkaTemplate.send("category-event", categoryEvent).whenComplete(
+                        (result, ex) -> {
+                            if(ex != null)
+                            {
+                                System.err.println("Failed to send message" + ex.getMessage());
+                            }else
+                            {
+                                System.err.println("send message successfully" + result.getProducerRecord());
+                            }
+                        });
+            }
+            case "CATEGORY_UPDATED" -> {
+                List<String> children = category.getChildrenId() == null ? new ArrayList<>()
+                        : new ArrayList<>(category.getChildrenId());
+                CategoryEvent categoryEvent = CategoryEvent.builder()
+                        .eventType("CATEGORY_UPDATE")
+                        .id(category.getId())
+                        .name(category.getName())
+                        .parentId(category.getParentId())
+                        .childrentId(children)
+                        .build();
+                kafkaTemplate.send("category-event", categoryEvent).whenComplete(
+                        (result, ex) -> {
+                            if(ex != null)
+                            {
+                                System.err.println("Failed to send message" + ex.getMessage());
+                            }else
+                            {
+                                System.err.println("send message successfully" + result.getProducerRecord());
+                            }
+                        });
+            }
+            case "CATEGORY_DELETED" -> {
+                CategoryEvent categoryEvent = CategoryEvent.builder()
+                        .eventType("CATEGORY_DELETED")
+                        .id(category.getId())
+                        .build();
+            }
         }
     }
 }

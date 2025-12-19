@@ -25,6 +25,8 @@ public class Products {
     String id;
     @Field("name_product")
     String name;
+    @Field("sku")
+    String sku;
     @Field("color")
     String color;
     @Field("description")

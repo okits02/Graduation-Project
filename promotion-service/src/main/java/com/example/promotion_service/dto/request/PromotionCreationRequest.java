@@ -2,6 +2,7 @@ package com.example.promotion_service.dto.request;
 
 import com.example.promotion_service.enums.ApplyTo;
 import com.example.promotion_service.enums.DiscountType;
+import com.example.promotion_service.enums.PromotionKind;
 import com.example.promotion_service.enums.UsageType;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -26,6 +27,8 @@ public class PromotionCreationRequest {
     UsageType usageType;
     @NotNull
     ApplyTo applyTo;
+    @NotNull
+    PromotionKind promotionKind;
     double discountPercent;
     double fixedAmount;
     int usageLimited;

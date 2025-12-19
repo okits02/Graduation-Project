@@ -3,6 +3,7 @@ package com.example.search_service.service;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch.core.GetResponse;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import com.example.search_service.exceptions.SearchErrorCode;
 import com.example.search_service.model.Category;
@@ -80,6 +81,9 @@ public class CategoryService {
                 .id(request.getId())
                 .document(category)
         );
+        if (request.getParentId() != null) {
+            updateParentCategory(request.getParentId(), request.getId());
+        }
     }
 
     public void updateCategory(CategoryEventDTO request) throws IOException {
@@ -220,5 +224,36 @@ public class CategoryService {
                 .build();
     }
 
+    public void updateParentCategory(String parentId, String categoryId) throws IOException {
+        GetResponse<Category> getResponse = elasticsearchClient.get(g -> g
+                .index("category")
+                .id(parentId),
+                Category.class
+        );
+
+        if(!getResponse.found()){
+            log.warn("⚠️ Parent category not found: {}", parentId);
+            return;
+        }
+
+        Category parent = getResponse.source();
+
+        if(!parent.getParentId().contains(categoryId)){
+            parent.setChildrenId(new ArrayList<>());
+        }
+
+        if(!parent.getChildrenId().contains(categoryId)){
+            parent.getChildrenId().add(categoryId);
+        }
+
+        elasticsearchClient.update(
+                u -> u
+                        .index("category")
+                        .id(parentId)
+                        .doc(parent),
+                Category.class
+        );
+
+    }
 
 }

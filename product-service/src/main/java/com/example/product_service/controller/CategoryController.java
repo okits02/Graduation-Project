@@ -29,32 +29,12 @@ import java.util.List;
 @Slf4j
 public class CategoryController {
     private final CategoryService categoryService;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Operation(summary = "admin create category", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/create")
     @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<Category> createCate(@RequestBody @Valid CategoryRequest request) {
         Category response = categoryService.createCate(request);
-        List<String> children = response.getChildrenId() == null ? new ArrayList<>()
-                : new ArrayList<>(response.getChildrenId());
-        CategoryEvent categoryEvent = CategoryEvent.builder()
-                .eventType("CATEGORY_CREATED")
-                .id(response.getId())
-                .name(response.getName())
-                .parentId(response.getParentId())
-                .childrentId(children)
-                .build();
-        kafkaTemplate.send("category-event", categoryEvent).whenComplete(
-                (result, ex) -> {
-                    if(ex != null)
-                    {
-                        System.err.println("Failed to send message" + ex.getMessage());
-                    }else
-                    {
-                        System.err.println("send message successfully" + result.getProducerRecord());
-                    }
-                });
         return ApiResponse.<Category>builder()
                 .code(200)
                 .result(response)
@@ -68,25 +48,6 @@ public class CategoryController {
     {
         try{
             CategoryResponse response = categoryService.updateCate(request);
-            List<String> children = response.getChildrenId() == null ? new ArrayList<>()
-                    : new ArrayList<>(response.getChildrenId());
-            CategoryEvent categoryEvent = CategoryEvent.builder()
-                    .eventType("CATEGORY_UPDATE")
-                    .id(response.getId())
-                    .name(response.getName())
-                    .parentId(response.getParentId())
-                    .childrentId(children)
-                    .build();
-            kafkaTemplate.send("category-event", categoryEvent).whenComplete(
-                    (result, ex) -> {
-                        if(ex != null)
-                        {
-                            System.err.println("Failed to send message" + ex.getMessage());
-                        }else
-                        {
-                            System.err.println("send message successfully" + result.getProducerRecord());
-                        }
-                    });
             return ApiResponse.<CategoryResponse>builder()
                     .code(200)
                     .result(response)
@@ -139,10 +100,6 @@ public class CategoryController {
     @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<CategoryResponse> deleteById(@PathVariable String categoryId)
     {
-        CategoryEvent categoryEvent = CategoryEvent.builder()
-                .eventType("CATEGORY_UPDATE")
-                .id(categoryId)
-                .build();
         categoryService.deleteCateById(categoryId);
         return ApiResponse.<CategoryResponse>builder()
                 .code(200)
