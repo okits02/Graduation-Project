@@ -86,7 +86,6 @@ public class PromotionServiceImpl implements PromotionService {
                 }
             }
         }
-        applyToRepository.saveAll(promotionApplyTo);
         promotion.setPromotionApplyTo(promotionApplyTo);
         promotion.setCreateAt(Date.from(Instant.now()));
         promotionRepository.save(promotion);
