@@ -81,7 +81,7 @@ public class CategoryServiceImpl implements CategoryService {
                 throw new IllegalArgumentException("Parent category with ID " + newCategory.getParentId() + " not found");
             }
         }
-
+        sendKafKaEvent(newCategory, "CATEGORY_CREATED");
         log.info("category: {}", newCategory);
         return newCategory;
     }
@@ -95,6 +95,7 @@ public class CategoryServiceImpl implements CategoryService {
         categoryMapper.updateCategory(category.orElse(null), request);
         category.get().setParentId(request.getParentId());
         CategoryResponse categoryResponse = categoryMapper.toCategoryResponse(categoryRepository.save(category.get()));
+        sendKafKaEvent(category.get(), "CATEGORY_UPDATED");
         return categoryResponse;
     }
 
@@ -151,6 +152,7 @@ public class CategoryServiceImpl implements CategoryService {
         }else {
             log.info("Remove cate on search failed!");
         }
+        sendKafKaEvent(category, "CATEGORY_DELETED");
         categoryRepository.deleteById(categoryId);
     }
 
