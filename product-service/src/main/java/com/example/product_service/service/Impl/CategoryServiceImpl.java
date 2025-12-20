@@ -257,6 +257,16 @@ public class CategoryServiceImpl implements CategoryService {
                         .eventType("CATEGORY_DELETED")
                         .id(category.getId())
                         .build();
+                kafkaTemplate.send("category-event", categoryEvent).whenComplete(
+                        (result, ex) -> {
+                            if(ex != null)
+                            {
+                                System.err.println("Failed to send message" + ex.getMessage());
+                            }else
+                            {
+                                System.err.println("send message successfully" + result.getProducerRecord());
+                            }
+                        });
             }
         }
     }

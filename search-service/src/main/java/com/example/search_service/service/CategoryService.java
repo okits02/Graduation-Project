@@ -110,10 +110,50 @@ public class CategoryService {
     }
 
     public void deleteCategory(String categoryId) throws IOException {
+        GetResponse<Category> getResponse = elasticsearchClient.get(
+                g -> g.index("category").id(categoryId),
+                Category.class
+        );
 
-        elasticsearchClient.delete(d -> d
+        if (!getResponse.found() || getResponse.source() == null) {
+            log.warn("Category not found in ES: {}", categoryId);
+            return;
+        }
+        Category category = getResponse.source();
+        if (category.getParentId() != null && !category.getParentId().isBlank()) {
+
+            GetResponse<Category> getParent = elasticsearchClient.get(
+                    g -> g.index("category").id(category.getParentId()),
+                    Category.class
+            );
+
+            if (getParent.found() && getParent.source() != null) {
+
+                List<String> childrenIds =
+                        getParent.source().getChildrenId() != null
+                                ? new ArrayList<>(getParent.source().getChildrenId())
+                                : new ArrayList<>();
+
+                if (childrenIds.remove(categoryId)) {
+                    elasticsearchClient.update(
+                            u -> u
+                                    .index("category")
+                                    .id(category.getParentId())
+                                    .doc(Map.of("childrenId", childrenIds)),
+                            Category.class
+                    );
+                }
+            }
+        }
+        List<String> idsToDelete = new ArrayList<>();
+        collectAllDescendantIds(category, idsToDelete);
+        idsToDelete.add(categoryId);
+
+        elasticsearchClient.deleteByQuery(d -> d
                 .index("category")
-                .id(categoryId)
+                .query(q -> q
+                        .ids(i -> i.values(idsToDelete))
+                )
         );
     }
     public void applyThumbnailToCategory(ApplyThumbnailRequest request) {
@@ -128,7 +168,6 @@ public class CategoryService {
         }
 
         try {
-            // 1️⃣ Check category exists
             boolean exists = elasticsearchClient.exists(e -> e
                     .index("category")
                     .id(request.getOwnerId())
@@ -138,7 +177,6 @@ public class CategoryService {
                 throw new AppException(SearchErrorCode.CATEGORY_NOT_EXISTS);
             }
 
-            // 2️⃣ Partial update thumbnail
             elasticsearchClient.update(
                     u -> u
                             .index("category")
@@ -225,35 +263,58 @@ public class CategoryService {
     }
 
     public void updateParentCategory(String parentId, String categoryId) throws IOException {
-        GetResponse<Category> getResponse = elasticsearchClient.get(g -> g
-                .index("category")
-                .id(parentId),
+        GetResponse<Category> getResponse = elasticsearchClient.get(
+                g -> g
+                        .index("category")
+                        .id(parentId),
                 Category.class
         );
 
-        if(!getResponse.found()){
+        if (!getResponse.found() || getResponse.source() == null) {
             log.warn("⚠️ Parent category not found: {}", parentId);
             return;
         }
 
         Category parent = getResponse.source();
-
-        if(!parent.getParentId().contains(categoryId)){
-            parent.setChildrenId(new ArrayList<>());
+        List<String> childrenIds =
+                parent.getChildrenId() != null
+                        ? new ArrayList<>(parent.getChildrenId())
+                        : new ArrayList<>();
+        if (!childrenIds.contains(categoryId)) {
+            childrenIds.add(categoryId);
         }
-
-        if(!parent.getChildrenId().contains(categoryId)){
-            parent.getChildrenId().add(categoryId);
-        }
-
         elasticsearchClient.update(
                 u -> u
                         .index("category")
                         .id(parentId)
-                        .doc(parent),
+                        .doc(Map.of("childrenId", childrenIds)),
                 Category.class
         );
-
     }
 
+    private void collectAllDescendantIds(Category category, List<String> result) {
+
+        if (category.getChildrenId() == null || category.getChildrenId().isEmpty()) {
+            return;
+        }
+
+        for (String childId : category.getChildrenId()) {
+
+            result.add(childId);
+
+            try {
+                GetResponse<Category> childResponse = elasticsearchClient.get(
+                        g -> g.index("category").id(childId),
+                        Category.class
+                );
+
+                if (childResponse.found() && childResponse.source() != null) {
+                    collectAllDescendantIds(childResponse.source(), result);
+                }
+
+            } catch (IOException e) {
+                log.error("Failed to load child category {}", childId, e);
+            }
+        }
+    }
 }
