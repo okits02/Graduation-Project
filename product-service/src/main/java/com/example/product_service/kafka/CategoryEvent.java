@@ -17,5 +17,6 @@ public class CategoryEvent {
     String descriptions;
     String imageUrl;
     String parentId;
+    Boolean special;
     List<String> childrentId;
 }

@@ -20,5 +20,6 @@ public class CategoryResponse {
     String description;
     List<MediaResponse> mediaResponse;
     String parentId;
+    Boolean special;
     Set<String> childrenId;
 }

@@ -218,6 +218,7 @@ public class CategoryServiceImpl implements CategoryService {
                         .eventType("CATEGORY_CREATED")
                         .id(category.getId())
                         .name(category.getName())
+                        .special(category.getSpecial())
                         .parentId(category.getParentId())
                         .build();
                 kafkaTemplate.send("category-event", categoryEvent).whenComplete(
@@ -239,6 +240,7 @@ public class CategoryServiceImpl implements CategoryService {
                         .id(category.getId())
                         .name(category.getName())
                         .parentId(category.getParentId())
+                        .special(category.getSpecial())
                         .childrentId(children)
                         .build();
                 kafkaTemplate.send("category-event", categoryEvent).whenComplete(

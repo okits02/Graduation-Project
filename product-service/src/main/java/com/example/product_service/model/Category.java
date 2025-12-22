@@ -27,7 +27,7 @@ public class Category {
     @Field("description")
     String description;
     @Field("special")
-    boolean special;
+    Boolean special;
     @Field("parent_category_id")
     String parentId;
     @Field("children_category_id")

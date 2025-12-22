@@ -16,6 +16,6 @@ public class  CategoryRequest {
     String id;
     String name;
     String description;
-    boolean special;
+    Boolean special;
     String parentId;
 }
