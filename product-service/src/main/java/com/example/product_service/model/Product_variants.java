@@ -11,28 +11,32 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
-@Document(collection = "products")
+@Document(collection = "products_variants")
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Products {
+public class Product_variants {
     @Id
     String id;
-    @Field("name_product")
-    String name;
-    @Field("description")
-    String description;
-    @Field("video_url")
-    String videoUrl;
-    Set<String> categoryId;
-    String brandName;
-    List<String> variants;
-    List<Specifications> specifications;
+    @Field("product_id")
+    String productId;
+    @Field("variant_name")
+    String variant_name;
+    @Field("sku")
+    String sku;
+    @Field("price")
+    BigDecimal price;
+    @Field("sold_quantity")
+    Integer sold;
+    @Field("thumbnail")
+    String thumbnail;
+    @Field("best_specifications")
+    List<Specifications> bestSpecifications;
+    @Field("in_stock")
+    Boolean inStock;
     @CreatedDate
     @Field("create_at")
     LocalDate createAt;

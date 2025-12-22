@@ -1,5 +1,11 @@
 package com.example.product_service.service.Impl;
 
+import com.example.product_service.dto.response.ProductVariantsResponse;
+import com.example.product_service.enums.SpecType;
+import com.example.product_service.model.Product_variants;
+import com.example.product_service.model.Specifications;
+import com.example.product_service.service.ProductVariantsService;
+import com.example.product_service.utils.SkuGenerator;
 import com.okits02.common_lib.dto.PageResponse;
 import com.example.product_service.dto.request.ProductRequest;
 import com.example.product_service.dto.request.ProductUpdateRequest;
@@ -19,6 +25,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +35,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
     private final ProductMappingHelper productMappingHelper;
+    private final ProductVariantsService productVariantsService;
 
     @Override
     public PageResponse<ProductResponse> getAll(int page, int size) {
@@ -44,21 +53,44 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponse getById(String productId) {
         Products product = productRepository.findById(productId)
                 .orElseThrow(() -> new AppException(ProductErrorCode.PRODUCT_NOT_EXISTS));
+        List<ProductVariantsResponse> variantsResponseList = productVariantsService.getListByProductId(productId);
         ProductResponse productResponse = productMappingHelper.map(product);
+        productResponse.setVariantsResponses(variantsResponseList);
         return productResponse;
     }
 
     @Override
     public Products createProduct(ProductRequest request) {
-        Products newProducts = productMapper.toProduct(request);
-        if(productRepository.existsByName(request.getName())) {
+        if (productRepository.existsByName(request.getName())) {
             throw new AppException(ProductErrorCode.PRODUCT_EXISTS);
         }
-        String generatedId = new ObjectId().toHexString();
-        newProducts.setId(generatedId);
-        newProducts.setInStock(false);
-        newProducts.setCreateAt(LocalDate.now());
-        return productRepository.save(newProducts);
+        Products product = Products.builder()
+                .id(new ObjectId().toHexString())
+                .name(request.getName())
+                .description(request.getDescription())
+                .videoUrl(request.getVideoUrl())
+                .categoryId(request.getCategoryId())
+                .brandName(request.getBrandName())
+                .createAt(LocalDate.now())
+                .build();
+        if (request.getSpecifications() != null) {
+            product.setSpecifications(
+                    request.getSpecifications().stream()
+                            .map(spec -> Specifications.builder()
+                                    .key(spec.getKey())
+                                    .value(spec.getValue())
+                                    .type(SpecType.TECH)
+                                    .group(null) // FE sẽ group sau
+                                    .build()
+                            ).toList()
+            );
+        }
+        if (request.getProduct_variants() != null) {
+            List<String> productVariants = productVariantsService.save(request.getProduct_variants(),
+                    product.getId());
+            product.setVariants(productVariants);
+        }
+        return productRepository.save(product);
     }
 
     @Override
@@ -67,6 +99,18 @@ public class ProductServiceImpl implements ProductService {
                 new AppException(ProductErrorCode.PRODUCT_NOT_EXISTS));
         productMapper.updateProduct(products, request);
         products.setCategoryId(request.getCategoryId());
+        List<String> productVariants = productVariantsService.update(request.getProduct_variants(),
+                products.getId());
+        products.setSpecifications(
+                request.getSpecifications().stream()
+                        .map(spec -> Specifications.builder()
+                                .key(spec.getKey())
+                                .value(spec.getValue())
+                                .type(SpecType.TECH)
+                                .group(null) // FE sẽ group sau
+                                .build()
+                        ).toList());
+        products.setVariants(productVariants);
         productRepository.save(products);
         return products;
     }
@@ -74,13 +118,12 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public void DeleteProduct(String productId) {
         productRepository.deleteById(productId);
+        productVariantsService.deleteByProductId(productId);
     }
 
     @Override
-    public void changeStatusInStock(String productId, Boolean inStock) {
-        Products products = productRepository.findById(productId).orElseThrow(()->
-                new AppException(ProductErrorCode.PRODUCT_NOT_EXISTS));
-        productRepository.updateStockById(productId, inStock);
+    public void changeStatusInStock(String sku, Boolean inStock) {
+        productVariantsService.changeStock(sku, inStock);
     }
 
 }

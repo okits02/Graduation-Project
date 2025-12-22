@@ -37,7 +37,7 @@ public class PromotionResponse {
     int usageCount;
     Boolean active;
     List<String> productId;
-    List<String> categoryName;
+    List<String> categoryId;
     Date createAt;
     Date updateAt;
 }

@@ -16,7 +16,7 @@ import java.util.Objects;
 public interface PromotionMapper {
     Promotion toPromotion(PromotionCreationRequest request);
     @Mapping(target = "productId", expression = "java(mapProductIds(promotion))")
-    @Mapping(target = "categoryName", expression = "java(mapCategoryNames(promotion))")
+    @Mapping(target = "categoryId", expression = "java(mapCategoryIds(promotion))")
     PromotionResponse toPromotionResponse(Promotion promotion);
     void updatePromotion(@MappingTarget Promotion promotion, PromotionUpdateRequest request);
 
@@ -27,7 +27,7 @@ public interface PromotionMapper {
                 .toList();
     }
 
-    default List<String> mapCategoryNames(Promotion promotion){
+    default List<String> mapCategoryIds(Promotion promotion){
         return promotion.getPromotionApplyTo().stream()
                 .map(PromotionApplyTo::getCategoryId)
                 .filter(Objects::nonNull)

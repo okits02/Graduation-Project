@@ -4,11 +4,13 @@ package com.example.product_service.helper;
 import com.example.product_service.dto.request.GetMediaRequest;
 import com.example.product_service.dto.response.MediaResponse;
 import com.example.product_service.dto.response.ProductResponse;
+import com.example.product_service.dto.response.ProductVariantsResponse;
 import com.example.product_service.enums.MediaOwnerType;
 import com.example.product_service.mapper.CategoryMapper;
 import com.example.product_service.model.Products;
 import com.example.product_service.repository.CategoryRepository;
 import com.example.product_service.repository.httpsClient.MediaClient;
+import com.example.product_service.service.ProductVariantsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -20,6 +22,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ProductMappingHelper {
     private final CategoryRepository categoryRepository;
+    private final ProductVariantsService productVariantsService;
     private final CategoryMapper categoryMapper;
     private final MediaClient mediaClient;
     public ProductResponse map(final Products products) {
@@ -33,20 +36,15 @@ public class ProductMappingHelper {
         if(responses.getResult() != null){
             listMedia = responses.getResult().getMediaResponseList();
         }
+        List<ProductVariantsResponse> variantsResponses = productVariantsService.getListByProductId(products.getId());
         return ProductResponse.builder()
                 .id(products.getId())
                 .name(products.getName())
                 .listCategory(listCategory)
-                .avgRating(products.getAvgRating())
-                .color(products.getColor())
-                .description(products.getDescription())
-                .sold(products.getSold())
-                .listPrice(products.getListPrice())
-                .inStock(products.getInStock())
-                .avgRating(products.getAvgRating())
                 .videoUrl(products.getVideoUrl())
                 .mediaList(listMedia)
                 .specifications(products.getSpecifications())
+                .variantsResponses(variantsResponses)
                 .createAt(products.getCreateAt())
                 .updateAt(products.getUpdateAt())
                 .build();

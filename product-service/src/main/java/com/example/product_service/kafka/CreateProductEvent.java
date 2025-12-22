@@ -1,6 +1,7 @@
 package com.example.product_service.kafka;
 
 import com.example.product_service.dto.response.CategoryResponse;
+import com.example.product_service.model.Specifications;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,7 +30,7 @@ public class CreateProductEvent {
     double avgRating;
     Integer sold;
     List<String> categories;
-    Map<String, String> specifications;
+    List<Specifications> specifications;
     LocalDate createAt;
     LocalDate updateAt;
 }

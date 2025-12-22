@@ -12,5 +12,5 @@ public interface ProductService {
     public Products createProduct(ProductRequest request);
     public Products updateProduct(ProductUpdateRequest request);
     public void DeleteProduct(String productId);
-    public void changeStatusInStock(String productId, Boolean inStock);
+    public void changeStatusInStock(String sku, Boolean inStock);
 }

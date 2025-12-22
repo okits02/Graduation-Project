@@ -17,12 +17,10 @@ public class ProductUpdateRequest {
     String id;
     String name;
     String description;
-    double listPrice;
-    String color;
-    Integer sold;
-    String thumbNail;
+    String brandName;
     String videoUrl;
-    List<String> imageList;
-    Map<String, String> specifications;
+    double avgRating;
     Set<String> categoryId;
+    List<SpecificationRequest> specifications;
+    List<ProductVariantsRequest> product_variants;
 }

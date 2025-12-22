@@ -1,5 +1,6 @@
 package com.example.product_service.dto.response;
 
+import com.example.product_service.model.Specifications;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -16,18 +17,13 @@ import java.util.Map;
 public class  ProductResponse {
     String id;
     String name;
-    String color;
     String description;
-    BigDecimal listPrice;
-    BigDecimal sellPrice;
-    double avgRating;
-    Integer sold;
     String videoUrl;
-    String thumbNail;
-    Boolean inStock;
+    String Brand;
     List<MediaResponse> mediaList;
+    List<ProductVariantsResponse> variantsResponses;
     List<CategoryResponse> listCategory;
-    Map<String, String> specifications;
+    List<Specifications> specifications;
     LocalDate createAt;
     LocalDate updateAt;
 }

@@ -17,12 +17,11 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductRequest {
     String name;
-    String color;
     String description;
-    BigDecimal listPrice;
-    Integer sold;
+    String brandName;
     String videoUrl;
     double avgRating;
     Set<String> categoryId;
-    Map<String, String> specifications;
+    List<SpecificationRequest> specifications;
+    List<ProductVariantsRequest> product_variants;
 }
