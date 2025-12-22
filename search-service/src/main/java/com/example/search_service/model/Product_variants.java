@@ -1,0 +1,49 @@
+package com.example.search_service.model;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class Product_variants {
+    @Id
+    String id;
+    @Field(value = "product_id", type = FieldType.Keyword)
+    String productId;
+    @Field(type = FieldType.Text)
+    String variant_name;
+    @Field(type = FieldType.Keyword)
+    String sku;
+    @Field(type = FieldType.Double)
+    BigDecimal price;
+    @Field(type = FieldType.Double)
+    BigDecimal sellPrice;
+    @Field(type = FieldType.Integer)
+    Integer sold;
+    @Field(type = FieldType.Text)
+    String thumbnail;
+    @Field(type = FieldType.Nested)
+    List<Specification> bestSpecifications;
+    @Field(type = FieldType.Boolean)
+    Boolean inStock;
+    @CreatedDate
+    @Field("create_at")
+    LocalDate createAt;
+    @LastModifiedDate
+    @Field("update_at")
+    LocalDate updateAt;
+
+}

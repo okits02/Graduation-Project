@@ -16,4 +16,8 @@ public class Specification {
     String key;
     @Field(type = FieldType.Keyword)
     String value;
+    @Field(type = FieldType.Keyword)
+    String type;
+    @Field(type = FieldType.Keyword)
+    String group;
 }

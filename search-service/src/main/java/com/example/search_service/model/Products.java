@@ -24,27 +24,17 @@ public class Products {
     @Field(type = FieldType.Text)
     String name;
     @Field(type = FieldType.Text)
-    String color;
-    @Field(type = FieldType.Text)
     String description;
-    @Field(type = FieldType.Double)
-    BigDecimal listPrice;
-    @Field(type = FieldType.Double)
-    BigDecimal sellPrice;
     @Field(type = FieldType.Nested)
     Set<Promotion> promotions;
-    @Field(type = FieldType.Integer)
-    Integer quantity;
     @Field(type = FieldType.Double)
     double avgRating;
-    @Field(type = FieldType.Integer)
-    Integer sold;
-    @Field(type = FieldType.Text)
-    String thumbnail;
     @Field(type = FieldType.Nested)
     List<String> categoriesId;
     @Field(type = FieldType.Nested)
     List<Specification> specifications;
+    @Field(type = FieldType.Nested)
+    List<Product_variants> productVariants;
     @Field(type = FieldType.Date,
             format = DateFormat.date,
             pattern = "yyy-MM-dd")
@@ -54,28 +44,5 @@ public class Products {
             pattern = "yyy-MM-dd")
     LocalDate updateAt;
 
-    public void calculatorSellPrice() {
-        if (listPrice == null || promotions == null) return;
-        BigDecimal discount = BigDecimal.ZERO;
-        BigDecimal fixedAmount = BigDecimal.ZERO;
-
-        for (Promotion promotion : promotions) {
-            if (Boolean.TRUE.equals(promotion.getActive())) {
-                if (promotion.getDiscountPercent() != null && promotion.getDiscountPercent().compareTo(BigDecimal.ZERO) > 0) {
-                    discount = discount.add(promotion.getDiscountPercent().divide(BigDecimal.valueOf(100)));
-                }
-                if (promotion.getFixedAmount() != null && promotion.getFixedAmount().compareTo(BigDecimal.ZERO) > 0) {
-                    fixedAmount = fixedAmount.add(promotion.getFixedAmount());
-                }
-            }
-        }
-        if (discount.compareTo(BigDecimal.ZERO) > 0) {
-            sellPrice = listPrice.multiply(BigDecimal.ONE.subtract(discount));
-        }
-        if (fixedAmount.compareTo(BigDecimal.ZERO) > 0) {
-            if (sellPrice == null) sellPrice = listPrice;
-            sellPrice = sellPrice.subtract(fixedAmount);
-        }
-    }
 
 }
