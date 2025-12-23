@@ -7,10 +7,13 @@ import com.example.promotion_service.dto.response.PromotionResponse;
 import com.example.promotion_service.model.Promotion;
 import org.springframework.http.ResponseEntity;
 
+import java.util.List;
+
 public interface PromotionService {
     public PromotionResponse createPromotion(PromotionCreationRequest request);
     public PromotionResponse updatePromotion(PromotionUpdateRequest request);
     public PromotionResponse getPromotion(String promotionId);
+    public List<PromotionResponse> getPromotionByCategoryIds(List<String> categoryIds);
     public PageResponse<PromotionResponse> getAllPromotion(int page, int size);
     public void UpdatePromotionStatus(String id);
     public void deletePromotion(String promotionId);

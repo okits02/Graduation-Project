@@ -21,15 +21,13 @@ import java.util.List;
 public class Product_variants {
     @Id
     String id;
-    @Field(value = "product_id", type = FieldType.Keyword)
-    String productId;
     @Field(type = FieldType.Text)
-    String variant_name;
+    String variantName;
     @Field(type = FieldType.Keyword)
     String sku;
-    @Field(type = FieldType.Double)
+    @Field(type = FieldType.Scaled_Float, scalingFactor = 100)
     BigDecimal price;
-    @Field(type = FieldType.Double)
+    @Field(type = FieldType.Scaled_Float, scalingFactor = 100)
     BigDecimal sellPrice;
     @Field(type = FieldType.Integer)
     Integer sold;

@@ -9,10 +9,12 @@ import co.elastic.clients.elasticsearch.core.UpdateByQueryResponse;
 import co.elastic.clients.json.JsonData;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.example.search_service.Repository.ProductsRepository;
+import com.example.search_service.Repository.httpClient.PromotionClient;
 import com.example.search_service.model.Category;
 import com.example.search_service.viewmodel.CategoryGetVM;
 import com.example.search_service.viewmodel.ProductGetListVM;
 import com.example.search_service.viewmodel.ProductGetVM;
+import com.example.search_service.viewmodel.dto.ProductEventDTO;
 import com.example.search_service.viewmodel.dto.UpdatePromotionDTO;
 import com.okits02.common_lib.exception.AppException;
 import com.example.search_service.exceptions.SearchErrorCode;
@@ -50,89 +52,35 @@ public class ProductService {
     private final ElasticsearchOperations elasticsearchOperations;
     private final ElasticsearchClient elasticsearchClient;
     private final CategoryService categoryService;
+    private final PromotionClient promotionClient;
 
 
-    public void createProduct(ProductRequest request) {
+    public void createProduct(ProductEventDTO request) throws IOException {
         Products products = productsMapper.toProducts(request);
-        NativeQuery nativeQuery = NativeQuery.builder()
-                .withQuery(query -> query
-                        .bool(b -> b
-                                .must(must -> must
-                                        .nested(nested -> nested
-                                                .path("categories")
-                                                .query(q -> q
-                                                        .bool(bool -> bool
-                                                                .must(m1 -> m1
-                                                                        .terms(t -> t
-                                                                                .field("categories.name")
-                                                                                .terms(terms -> terms
-                                                                                        .value(products.getCategoriesId()
-                                                                                                .stream()
-                                                                                                .map(FieldValue::of)
-                                                                                                .toList()
-                                                                                        )
-                                                                                )
-                                                                        )
-                                                                )
-                                                        )
-                                                )
-                                        )
-                                )
-                                .must(must1 -> must1
-                                        .nested(nested1 -> nested1
-                                                .path("promotions")
-                                                .query(q1 -> q1
-                                                        .bool(b1 -> b1
-                                                                .must(m1 -> m1
-                                                                        .term(t1 -> t1
-                                                                                .field("promotions.applyTo")
-                                                                                .value("Category")
-                                                                        )
-                                                                ).must(m2 -> m2
-                                                                        .term(t2 -> t2
-                                                                                .field("promotions.active")
-                                                                                .value(true)
-                                                                        )
-                                                                )
-                                                        )
-                                                )
-                                        )
-                                )
-                        )
-                )
-                .withMaxResults(1)
-                .build();
-        if(elasticsearchOperations.indexOps(Products.class).exists()) {
-            SearchHits<Products> searchHits = elasticsearchOperations.search(nativeQuery, Products.class);
-            Set<Promotion> newPromotion = new HashSet<>();
-            if (!searchHits.isEmpty()) {
-                for (SearchHit<Products> hit : searchHits) {
-                    Products products1 = hit.getContent();
-                    for (Promotion pro : products1.getPromotions()) {
-                        if (pro.getApplyTo() != null) {
-                            if (pro.getApplyTo().equals("Category") && pro.getActive().equals(Boolean.TRUE)) {
-                                newPromotion.add(pro);
-                            }
-                        }
-                    }
-                    break;
-                }
-            }
-            products.setPromotions(newPromotion);
-            products.calculatorSellPrice();
-        }
-        productsRepository.save(products);
+        var response = promotionClient.getByCategoryIds(request.getCategoriesId());
+        products.setPromotions(new HashSet<>(response.getResult()));
+        elasticsearchClient.index(i -> i
+                .index("product")
+                .id(products.getId())
+                .document(products)
+        );
     }
 
-    public void updateProduct(ProductRequest request) {
+    public void updateProduct(ProductEventDTO request) {
         Products products = productsRepository.findById(request.getId()).orElseThrow(() ->
                 new AppException(SearchErrorCode.PRODUCT_NOT_EXISTS));
+        boolean different =
+                !new HashSet<>(request.getCategoriesId()).equals(new HashSet<>(products.getCategoriesId()));
+        if(different){
+            var response = promotionClient.getByCategoryIds(request.getCategoriesId());
+            products.setPromotions(new HashSet<>(response.getResult()));
+        }
         productsMapper.updateProduct(products, request);
         productsRepository.save(products);
     }
 
-    public void deleteProduct(String productId) {
-        productsRepository.deleteById(productId);
+    public void deleteProduct(String productId) throws IOException {
+        elasticsearchClient.delete(d -> d.index("product").id(productId));
     }
 
     public void createPromotion(ApplyPromotionEventDTO request) throws IOException {
@@ -332,7 +280,6 @@ public class ProductService {
                 product.setPromotions(new HashSet<>());
             }
             product.getPromotions().add(promotion);
-            product.calculatorSellPrice();
             BulkOperation bulkOperation = BulkOperation.of(b -> b
                     .update(u -> u
                             .index("product")
@@ -384,7 +331,6 @@ public class ProductService {
                 products.setPromotions(new HashSet<>());
             }
             products.getPromotions().add(promotion);
-            products.calculatorSellPrice();
             BulkOperation bulkOperation = BulkOperation.of(b -> b
                     .update(u -> u
                             .index("product")
@@ -445,7 +391,6 @@ public class ProductService {
         if("Product".equalsIgnoreCase(applyTo)){
             query = Query.of(q -> q
                     .bool(b -> b
-                            // product có promotion này
                             .must(m -> m
                                     .nested(n -> n
                                             .path("promotions")
@@ -457,7 +402,6 @@ public class ProductService {
                                             )
                                     )
                             )
-                            // product.id ∈ deleteApplyTo
                             .must(m -> m
                                     .terms(t -> t
                                             .field("id")

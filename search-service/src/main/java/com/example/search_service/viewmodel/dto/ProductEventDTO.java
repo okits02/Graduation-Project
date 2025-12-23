@@ -1,5 +1,7 @@
 package com.example.search_service.viewmodel.dto;
 
+import com.example.search_service.model.Product_variants;
+import com.example.search_service.model.Specification;
 import com.example.search_service.viewmodel.dto.request.CategoryRequest;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -12,23 +14,18 @@ import java.util.Set;
 
 @Data
 @Builder
-@Setter
-@Getter
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductEventDTO {
     String id;
     String name;
-    String color;
     String description;
-    BigDecimal listPrice;
-    BigDecimal sellPrice;
     Integer quantity;
     double avgRating;
-    Integer sold;
-    List<String> categories;
-    Map<String, String> specifications;
+    List<String> categoriesId;
+    List<Specification> specifications;
+    List<Product_variants> productVariants;
     LocalDate createAt;
     LocalDate updateAt;
 }

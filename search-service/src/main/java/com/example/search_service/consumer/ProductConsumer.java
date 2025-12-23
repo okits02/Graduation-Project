@@ -17,6 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -25,7 +27,7 @@ public class ProductConsumer {
 
     @KafkaListener(topics = "product-create-event",
             containerFactory = "createKafkaListenerContainerFactory")
-    public void consumerCreateProduct(String productEvent) throws JsonProcessingException {
+    public void consumerCreateProduct(String productEvent) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
@@ -37,22 +39,7 @@ public class ProductConsumer {
             throw new RuntimeException("Cannot deserialize ProductEvent: " + e.getMessage(), e);
         }
         log.info("Consumer received message: {}", productEvent);
-        ProductRequest productRequest = ProductRequest.builder()
-                .id(productEventDTO.getId())
-                .name(productEventDTO.getName())
-                .description(productEventDTO.getDescription())
-                .listPrice(productEventDTO.getListPrice())
-                .quantity(productEventDTO.getQuantity())
-                .avgRating(productEventDTO.getAvgRating())
-                .sold(productEventDTO.getSold())
-                .categoriesId(productEventDTO.getCategories())
-                .specifications(productEventDTO.getSpecifications())
-                .createAt(productEventDTO.getCreateAt())
-                .updateAt(productEventDTO.getUpdateAt())
-                .build();
-        log.info("Kafka message received: {}", productRequest);
-        log.info("Received ID: {}", productRequest.getId());
-        productService.createProduct(productRequest);
+        productService.createProduct(productEventDTO);
     }
 
     @KafkaListener( topics = "product-update-event",
@@ -64,25 +51,12 @@ public class ProductConsumer {
         objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
         ProductEventDTO productEventDTO;
         productEventDTO = objectMapper.readValue(productEvent, ProductEventDTO.class);
-        ProductRequest productRequest = ProductRequest.builder()
-                .id(productEventDTO.getId())
-                .name(productEventDTO.getName())
-                .description(productEventDTO.getDescription())
-                .listPrice(productEventDTO.getListPrice())
-                .quantity(productEventDTO.getQuantity())
-                .avgRating(productEventDTO.getAvgRating())
-                .sold(productEventDTO.getSold())
-                .categoriesId(productEventDTO.getCategories())
-                .specifications(productEventDTO.getSpecifications())
-                .createAt(productEventDTO.getCreateAt())
-                .updateAt(productEventDTO.getUpdateAt())
-                .build();
-        productService.updateProduct(productRequest);
+        productService.updateProduct(productEventDTO);
     }
 
     @KafkaListener( topics = "product-delete-event",
             containerFactory = "deleteKafkaListenerContainerFactory")
-    public void consumerDeleteProduct(String productEvent) throws JsonProcessingException {
+    public void consumerDeleteProduct(String productEvent) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);

@@ -19,21 +19,7 @@ import java.util.stream.Collectors;
 @Mapper(componentModel = "spring")
 public interface ProductsMapper {
 
-    @Mapping(target = "specifications", source = "specifications", qualifiedByName = "mapSpecifications")
-    Products toProducts(ProductRequest productRequest);
-    @Mapping(target = "specifications", source = "specifications", qualifiedByName = "mapSpecifications")
-    void updateProduct(@MappingTarget Products products, ProductRequest request);
+    Products toProducts(ProductEventDTO request);
+    void updateProduct(@MappingTarget Products products, ProductEventDTO request);
 
-    @Named("mapSpecifications")
-    default List<Specification> mapSpecifications(Map<String, String> specificatons)
-    {
-        if(specificatons == null)
-        {
-            return null;
-        }
-        return specificatons.entrySet().stream()
-                .map(stringStringEntry ->
-                        new Specification(stringStringEntry.getKey(), stringStringEntry.getValue()))
-                .collect(Collectors.toList());
-    }
 }

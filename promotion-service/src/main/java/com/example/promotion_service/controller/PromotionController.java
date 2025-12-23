@@ -100,4 +100,12 @@ public class PromotionController {
         }
     }
 
+    @GetMapping("/internal/get-promotion-by-cate")
+    ApiResponse<List<PromotionResponse>> getByCategoryIds(@RequestParam List<String> categoryIds){
+        return ApiResponse.<List<PromotionResponse>>builder()
+                .code(200)
+                .message("get list promotion successfully!")
+                .result(promotionService.getPromotionByCategoryIds(categoryIds))
+                .build();
+    }
 }

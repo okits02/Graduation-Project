@@ -185,6 +185,31 @@ public class PromotionServiceImpl implements PromotionService {
     }
 
     @Override
+    public List<PromotionResponse> getPromotionByCategoryIds(List<String> categoryIds) {
+        if(categoryIds == null || categoryIds.isEmpty()){
+            return List.of();
+        }
+
+        return categoryIds.stream()
+                .map(promotionRepository::findByCategoryId)
+                .map(PromotionApplyTo::getPromotion)
+                .filter(p -> Boolean.TRUE.equals(p.getActive()))
+                .map(promotion -> PromotionResponse.builder()
+                        .id(promotion.getId())
+                        .name(promotion.getName())
+                        .descriptions(promotion.getDescriptions())
+                        .discountPercent(promotion.getDiscountPercent())
+                        .fixedAmount(promotion.getFixedAmount())
+                        .applyTo(promotion.getApplyTo())
+                        .active(promotion.getActive())
+                        .createAt(promotion.getCreateAt())
+                        .updateAt(promotion.getUpdateAt())
+                        .build()
+                )
+                .toList();
+    }
+
+    @Override
     public PageResponse<PromotionResponse> getAllPromotion(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         var pageData = promotionRepository.findAll(pageable);

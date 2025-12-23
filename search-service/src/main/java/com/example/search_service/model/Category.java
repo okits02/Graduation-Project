@@ -26,7 +26,9 @@ public class Category {
     String description;
     @Field(type = FieldType.Text)
     String imageUrl;
-    @Field(type = FieldType.Text)
+    @Field(type = FieldType.Boolean)
+    Boolean special;
+    @Field(type = FieldType.Keyword)
     String parentId;
     @Field(type = FieldType.Keyword)
     List<String> childrenId;

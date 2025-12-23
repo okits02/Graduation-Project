@@ -80,7 +80,7 @@ public class ProductServiceImpl implements ProductService {
                                     .key(spec.getKey())
                                     .value(spec.getValue())
                                     .type(SpecType.TECH)
-                                    .group(null) // FE sẽ group sau
+                                    .group(spec.getGroup()) // FE sẽ group sau
                                     .build()
                             ).toList()
             );
@@ -107,7 +107,7 @@ public class ProductServiceImpl implements ProductService {
                                 .key(spec.getKey())
                                 .value(spec.getValue())
                                 .type(SpecType.TECH)
-                                .group(null) // FE sẽ group sau
+                                .group(spec.getGroup()) // FE sẽ group sau
                                 .build()
                         ).toList());
         products.setVariants(productVariants);

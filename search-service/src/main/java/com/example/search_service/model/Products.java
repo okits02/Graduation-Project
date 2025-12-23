@@ -25,11 +25,11 @@ public class Products {
     String name;
     @Field(type = FieldType.Text)
     String description;
-    @Field(type = FieldType.Nested)
+    @Field(type = FieldType.Object)
     Set<Promotion> promotions;
     @Field(type = FieldType.Double)
     double avgRating;
-    @Field(type = FieldType.Nested)
+    @Field(type = FieldType.Keyword)
     List<String> categoriesId;
     @Field(type = FieldType.Nested)
     List<Specification> specifications;
