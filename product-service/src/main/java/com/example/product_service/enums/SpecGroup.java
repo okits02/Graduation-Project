@@ -5,6 +5,7 @@ public enum SpecGroup {
     Design,
     Display, //screen, solution
     BasicSpecification,
+    Sound,
     Performance, //CPU, RAM
     Storage, //ROM
     Camera, // Front, rear
