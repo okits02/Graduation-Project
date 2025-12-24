@@ -12,4 +12,7 @@ public enum SpecGroup {
     Battery, // Capacity
     Connectivity, //Wifi, bluetooth
     Appearance, //Color, material
+    Feature,
+    Graphic,
+    OperatingSystem
 }
