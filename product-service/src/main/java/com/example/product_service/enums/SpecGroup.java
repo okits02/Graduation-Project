@@ -10,8 +10,7 @@ public enum SpecGroup {
     Storage, //ROM
     Camera, // Front, rear
     Battery, // Capacity
-    Connectivity, //Wifi, bluetooth
-    Appearance, //Color, material
+    Connectivity, //Wi-fi, bluetooth
     Feature,
     Graphic,
     OperatingSystem

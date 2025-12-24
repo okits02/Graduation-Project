@@ -19,7 +19,7 @@ public class  ProductResponse {
     String name;
     String description;
     String videoUrl;
-    String Brand;
+    String brandName;
     List<MediaResponse> mediaList;
     List<ProductVariantsResponse> variantsResponses;
     List<CategoryResponse> listCategory;
