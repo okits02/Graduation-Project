@@ -48,7 +48,7 @@ public class ProductVariantServiceImpl implements ProductVariantsService {
                             .build();
                     productVariants.setProductId(productId);
                     productVariants.setSku(SkuGenerator.generateSku());
-
+                    productVariants.getBestSpecifications().add(color);
                     ProductVariants save = productVariantsRepository.save(productVariants);
                     return save.getSku();
                 })

@@ -1,6 +1,17 @@
     package com.example.search_service.service;
 
     import co.elastic.clients.elasticsearch._types.FieldValue;
+    import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
+    import org.springframework.data.elasticsearch.core.AggregationsContainer;
+    import org.springframework.data.elasticsearch.core.AggregationsContainer.*;
+    import org.springframework.data.elasticsearch.core.ElasticsearchAggregations;
+    import org.springframework.data.elasticsearch.core.aggregation.Aggregation;
+    import org.springframework.data.elasticsearch.core.aggregation.AggregationContainer;
+    import org.springframework.data.elasticsearch.core.aggregation.ParsedNested;
+    import org.springframework.data.elasticsearch.core.aggregation.ParsedFilter;
+    import org.springframework.data.elasticsearch.core.aggregation.ParsedStringTerms;
+    import org.springframework.data.elasticsearch.core.aggregation.Terms;
+
     import co.elastic.clients.elasticsearch._types.aggregations.StringTermsAggregate;
     import co.elastic.clients.elasticsearch._types.aggregations.StringTermsBucket;
     import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
@@ -17,6 +28,7 @@
     import org.springframework.data.domain.Pageable;
     import org.springframework.data.domain.Sort;
     import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregation;
+    import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregations;
     import org.springframework.data.elasticsearch.client.elc.NativeQuery;
     import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
     import org.springframework.data.elasticsearch.core.*;
@@ -211,6 +223,101 @@
                             })
                     ))
             ));
+        }
+
+        private void buildSpecAggregations(NativeQueryBuilder builder) {
+            Aggregation techAgg = Aggregation.of(a -> a
+                    .nested(n -> n.path("specifications"))
+                    .aggregations("only_tech", Aggregation.of(a2 -> a2
+                            .filter(f -> f
+                                    .term(t -> t
+                                            .field("specifications.type")
+                                            .value("tech")
+                                    )
+                            )
+                            .aggregations("by_key", Aggregation.of(a3 -> a3
+                                    .terms(t -> t
+                                            .field("specifications.key")
+                                            .size(50)
+                                    )
+                                    .aggregations("by_value", Aggregation.of(a4 -> a4
+                                            .terms(t2 -> t2
+                                                    .field("specifications.value")
+                                                    .size(50)
+                                            )
+                                    ))
+                            ))
+                    ))
+            );
+            builder.withAggregation("tech_specs", techAgg);
+
+            Aggregation variantAgg = Aggregation.of(a -> a
+                    .nested(n -> n.path("productVariants"))
+                    .aggregations("best_specs", Aggregation.of(a2 -> a2
+                            .nested(n2 -> n2
+                                    .path("productVariants.bestSpecifications")
+                            )
+                            .aggregations("only_variant", Aggregation.of(a3 -> a3
+                                    .filter(f -> f
+                                            .term(t -> t
+                                                    .field("productVariants.bestSpecifications.type")
+                                                    .value("variant")
+                                            )
+                                    )
+                                    .aggregations("by_key", Aggregation.of(a4 -> a4
+                                            .terms(t2 -> t2
+                                                    .field("productVariants.bestSpecifications.key")
+                                                    .size(50)
+                                            )
+                                            .aggregations("by_value", Aggregation.of(a5 -> a5
+                                                    .terms(t3 -> t3
+                                                            .field("productVariants.bestSpecifications.value")
+                                                            .size(50)
+                                                    )
+                                            ))
+                                    ))
+                            ))
+                    ))
+            );
+            builder.withAggregation("variant_specs", variantAgg);
+        }
+
+        private Map<String, Map<String, Long>> parseTechSpecAgg(SearchHits<Products> hits) {
+
+            Map<String, Map<String, Long>> result = new HashMap<>();
+
+            if (!hits.hasAggregations()) return result;
+
+            ElasticsearchAggregations aggregations =
+                    (ElasticsearchAggregations) hits.getAggregations();
+
+            ParsedNested techNested =
+                    aggregations.get("tech_specs");
+
+            if (techNested == null) return result;
+
+            ParsedFilter onlyTech =
+                    techNested.getAggregations().get("only_tech");
+
+            ParsedStringTerms byKey =
+                    onlyTech.getAggregations().get("by_key");
+
+            for (Terms.Bucket keyBucket : byKey.getBuckets()) {
+
+                String key = keyBucket.getKeyAsString();
+
+                ParsedStringTerms byValue =
+                        keyBucket.getAggregations().get("by_value");
+
+                Map<String, Long> valueMap = new HashMap<>();
+                for (Terms.Bucket v : byValue.getBuckets()) {
+                    valueMap.put(v.getKeyAsString(), v.getDocCount());
+                }
+
+                result.put(key, valueMap);
+            }
+
+            return result;
         }
         private Map<String, Map<String, Long>> getAggregations(SearchHits<Products> searchHits)
         {
