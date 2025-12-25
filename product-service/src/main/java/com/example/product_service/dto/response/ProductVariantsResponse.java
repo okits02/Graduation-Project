@@ -18,7 +18,6 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductVariantsResponse {
     String variant_name;
-    String color;
     String sku;
     BigDecimal price;
     Integer sold;

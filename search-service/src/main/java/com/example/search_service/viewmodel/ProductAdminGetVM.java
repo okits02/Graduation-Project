@@ -17,7 +17,6 @@ public class ProductAdminGetVM {
         return ProductAdminGetVM.builder()
                 .id(products.getId())
                 .name(products.getName())
-                .thumbnailUrl(products.getThumbnail())
                 .build();
     }
 }

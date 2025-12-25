@@ -40,6 +40,7 @@ public class ProductMappingHelper {
         return ProductResponse.builder()
                 .id(products.getId())
                 .name(products.getName())
+                .brandName(products.getBrandName())
                 .listCategory(listCategory)
                 .videoUrl(products.getVideoUrl())
                 .mediaList(listMedia)

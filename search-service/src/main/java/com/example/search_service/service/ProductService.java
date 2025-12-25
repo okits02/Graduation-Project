@@ -11,6 +11,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.example.search_service.Repository.ProductsRepository;
 import com.example.search_service.Repository.httpClient.PromotionClient;
 import com.example.search_service.model.Category;
+import com.example.search_service.model.Product_variants;
 import com.example.search_service.viewmodel.CategoryGetVM;
 import com.example.search_service.viewmodel.ProductGetListVM;
 import com.example.search_service.viewmodel.ProductGetVM;
@@ -31,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.lucene.search.similarities.BasicModelIF;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
@@ -40,6 +42,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.lang.annotation.Native;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -214,27 +217,6 @@ public class ProductService {
                 break;
             }
         }
-
-        if(ctx._source.listPrice != null && ctx._source.promotions != null){
-            double discount = 0.0;
-            double fixedAmount = 0.0;
-            for (def promo : ctx._source.promotions){
-                if(promo.discountPercent != null && promo.discountPercent > 0){
-                    discount += promo.discountPercent/100.0;
-                }
-                if(promo.fixedAmount != null && promo.fixedAmount > 0){
-                    fixedAmount += promo.fixedAmount;
-                }
-            }
-            double sellPrice = ctx._source.listPrice;
-            if(discount > 0){
-                sellPrice = sellPrice * (1 - discount);
-            }
-            if(fixedAmount > 0){
-                sellPrice = sellPrice - fixedAmount;
-            }
-            ctx._source.sellPrice = sellPrice;
-        }
         """;
 
         Map<String, JsonData> params = new HashMap<>();
@@ -289,7 +271,7 @@ public class ProductService {
                             )
                     )
             );
-
+            calculatorListPrice(product);
             operations.add(bulkOperation);
         }
 
@@ -336,6 +318,7 @@ public class ProductService {
                             .index("product")
                             .id(products.getId())
                             .action(a -> a.doc(products))));
+            calculatorListPrice(products);
             bulkOperationList.add(bulkOperation);
         }
         if (!bulkOperationList.isEmpty()) {
@@ -376,6 +359,7 @@ public class ProductService {
                             .index("products")
                             .id(products.getId())
                             .action(a -> a.doc(products))));
+            calculatorListPrice(products);
             operations.add(bulkOperation);
         }
         if (!operations.isEmpty()) {
@@ -417,7 +401,6 @@ public class ProductService {
         }else if("Category".equalsIgnoreCase(applyTo)){
             query = Query.of(q -> q
                     .bool(b -> b
-                            // product có promotion này
                             .must(m -> m
                                     .nested(n -> n
                                             .path("promotions")
@@ -429,7 +412,6 @@ public class ProductService {
                                             )
                                     )
                             )
-                            // product có categoryId ∈ deleteApplyTo
                             .must(m -> m
                                     .terms(t -> t
                                             .field("categoriesId")
@@ -446,36 +428,36 @@ public class ProductService {
             return;
         }
 
-        String scriptSource = """
-            if( ctx._source.promotions != null){
-                for(int i = ctx._source.promotions.size() - 1 ; i>=0; i--){
-                    if(ctx._source.promotions.get(i).id == params.promotionId){
-                        ctx._source.promotions.remove(i);
-                    }
-                }
-            }
-        """;
-
-        Map<String, JsonData> params = new HashMap<>();
-        params.put("promotionId", JsonData.of(promotionId));
-
-        Script script = new Script.Builder()
-                .source(scriptSource)
-                .lang("painless")
-                .params(params)
+        NativeQuery searchQuery = NativeQuery.builder()
+                .withQuery(query)
                 .build();
 
-        UpdateByQueryRequest req = UpdateByQueryRequest.of(b -> b
-                .index("product")
-                .query(query) // ✅ Đã thêm query
-                .script(script)
-        );
+        SearchHits<Products> hits =
+                elasticsearchOperations.search(searchQuery, Products.class);
 
-        elasticsearchClient.updateByQuery(req);
+        List<BulkOperation> bulkOperations = new ArrayList<>();
+
+        for (SearchHit<Products> hit : hits) {
+            Products product = hit.getContent();
+            if (product.getPromotions() == null) continue;
+            product.getPromotions().removeIf(p -> promotionId.equals(p.getId()));
+            calculatorListPrice(product);
+            bulkOperations.add(BulkOperation.of(b -> b
+                    .update(u -> u
+                            .index("product")
+                            .id(product.getId())
+                            .action(a -> a.doc(product))
+                    )
+            ));
+        }
+
+        if (!bulkOperations.isEmpty()) {
+            elasticsearchClient.bulk(b -> b.operations(bulkOperations));
+        }
     }
     public void deletePromotion(ApplyPromotionEventDTO request) throws IOException {
         String promotionId = request.getId();
-        if(promotionId == null) {
+        if (promotionId == null) {
             throw new AppException(SearchErrorCode.ID_OF_PROMOTION_NOT_VALID);
         }
         Query query = Query.of(q -> q
@@ -490,50 +472,32 @@ public class ProductService {
                 )
         );
 
-        String scripSource = """
-                if(ctx._source.promotions != null){
-                    ctx._source.promotions.removeIf(p -> p.id == params.target_id)
-                }
-                
-                if (ctx._source.listPrice != null && ctx._source.promotions != null) {
-                  double discount = 0.0;
-                  double fixedAmount = 0.0;
-                  for (def promo : ctx._source.promotions) {
-                    if (promo.active == true) {
-                      if (promo.discountPercent != null && promo.discountPercent > 0) {
-                        discount += promo.discountPercent / 100.0;
-                      }
-                      if (promo.fixedAmount != null && promo.fixedAmount > 0) {
-                        fixedAmount += promo.fixedAmount;
-                      }
-                    }
-                  }
-                  double sellPrice = ctx._source.listPrice;
-                  if (discount > 0) {
-                    sellPrice = sellPrice * (1 - discount);
-                  }
-                  if (fixedAmount > 0) {
-                    sellPrice = sellPrice - fixedAmount;
-                  }
-                  ctx._source.sellPrice = sellPrice;
-                }
-                """;
-
-        Map<String, JsonData> params = new HashMap<>();
-        if(request.getId() != null) params.put("target_id", JsonData.of(promotionId));
-        Script script = new Script.Builder()
-                .source(scripSource)
-                .lang("painless")
-                .params(params)
+        NativeQuery searchQuery = NativeQuery.builder()
+                .withQuery(query)
                 .build();
 
-        UpdateByQueryRequest req = UpdateByQueryRequest.of(b -> b
-                .index("product")
-                .query(query) // ✅ Đã thêm query
-                .script(script)
-        );
+        SearchHits<Products> hits =
+                elasticsearchOperations.search(searchQuery, Products.class);
 
-        elasticsearchClient.updateByQuery(req);
+        List<BulkOperation> bulkOperations = new ArrayList<>();
+
+        for (SearchHit<Products> hit : hits) {
+            Products product = hit.getContent();
+            if (product.getPromotions() == null) continue;
+            product.getPromotions().removeIf(p -> promotionId.equals(p.getId()));
+            calculatorListPrice(product);
+            bulkOperations.add(BulkOperation.of(b -> b
+                    .update(u -> u
+                            .index("product")
+                            .id(product.getId())
+                            .action(a -> a.doc(product))
+                    )
+            ));
+        }
+
+        if (!bulkOperations.isEmpty()) {
+            elasticsearchClient.bulk(b -> b.operations(bulkOperations));
+        }
     }
 
     public long removeCateInProduct(List<String> categoryId){
@@ -642,5 +606,44 @@ public class ProductService {
                 .pageSize(productsSearchPage.getSize())
                 .totalElements(productsSearchPage.getTotalElements())
                 .build();
+    }
+
+    private void calculatorListPrice(Products products){
+
+        if (products.getProductVariants() == null) return;
+
+        List<Promotion> promotions = new ArrayList<>(products.getPromotions());
+
+        for (Product_variants variant : products.getProductVariants()) {
+            variant.setSellPrice(
+                    calculateSellPriceForVariant(
+                            variant.getPrice(),
+                            promotions
+                    )
+            );
+        }
+    }
+
+    private BigDecimal calculateSellPriceForVariant(
+            BigDecimal price,
+            List<Promotion> promotions
+    ){
+        if(price == null){return BigDecimal.ZERO;}
+        if(promotions == null || promotions.isEmpty()){return price;}
+
+        BigDecimal result = price;
+
+        for(Promotion promotion : promotions){
+            if(Boolean.TRUE.equals(promotion.getActive()) && promotion.getDiscountPercent() != null){
+                BigDecimal percent = promotion.getDiscountPercent()
+                        .divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
+                result = result.subtract(result.multiply(percent));
+            }
+
+            if(Boolean.TRUE.equals(promotion.getActive()) && promotion.getFixedAmount() != null){
+                result = result.subtract(promotion.getFixedAmount());
+            }
+        }
+        return result.max(BigDecimal.ZERO);
     }
 }

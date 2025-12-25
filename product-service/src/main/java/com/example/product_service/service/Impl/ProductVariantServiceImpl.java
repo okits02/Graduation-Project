@@ -3,6 +3,8 @@ package com.example.product_service.service.Impl;
 import com.example.product_service.dto.request.ProductVariantsRequest;
 import com.example.product_service.dto.request.SpecificationRequest;
 import com.example.product_service.dto.response.ProductVariantsResponse;
+import com.example.product_service.enums.SpecGroup;
+import com.example.product_service.enums.SpecType;
 import com.example.product_service.exceptions.ProductErrorCode;
 import com.example.product_service.mapper.ProductVariantsMapper;
 import com.example.product_service.model.Product_variants;
@@ -39,6 +41,12 @@ public class ProductVariantServiceImpl implements ProductVariantsService {
                     }
 
                     Product_variants productVariants = productVariantsMapper.toProductVariants(m);
+                    Specifications color = Specifications.builder()
+                            .key("color")
+                            .value(m.getColor())
+                            .type(SpecType.VARIANT)
+                            .group(SpecGroup.Appearance)
+                            .build();
                     productVariants.setProductId(productId);
                     productVariants.setSku(SkuGenerator.generateSku());
 

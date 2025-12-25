@@ -88,6 +88,7 @@ public class PromotionServiceImpl implements PromotionService {
         }
         promotion.setPromotionApplyTo(promotionApplyTo);
         promotion.setCreateAt(Date.from(Instant.now()));
+        sendKafKaEvent(promotion, "CREATED", new ArrayList<>());
         promotionRepository.save(promotion);
         return promotionMapper.toPromotionResponse(promotion);
     }
@@ -173,6 +174,7 @@ public class PromotionServiceImpl implements PromotionService {
         promotionMapper.updatePromotion(promotion.orElse(null), request);
         promotion.get().getPromotionApplyTo().clear();
         promotion.get().getPromotionApplyTo().addAll(promotionApplyTos);
+        sendKafKaEvent(promotion.get(), "UPDATED", request.getDeleteApplyTo());
         promotionRepository.save(promotion.get());
         return promotionMapper.toPromotionResponse(promotion.orElse(null));
     }
@@ -225,6 +227,7 @@ public class PromotionServiceImpl implements PromotionService {
     public void deletePromotion(String promotionId) {
         Promotion promotion = promotionRepository.findById(promotionId).orElseThrow(() ->
                 new AppException(PromotionErrorCode.PROMOTION_NOT_EXISTS));
+        sendKafKaEvent(promotion, "DELETED", new ArrayList<>());
         promotionRepository.deleteById(promotionId);
     }
 
@@ -256,7 +259,7 @@ public class PromotionServiceImpl implements PromotionService {
                 });
     }
 
-    private void SendKafKaEvent(Promotion promotion, String eventType, List<String> DeleteApplyTo){
+    private void sendKafKaEvent(Promotion promotion, String eventType, List<String> DeleteApplyTo){
         Set<String> categoryIds = new HashSet<>();
         Set<String> productIds = new HashSet<>();
         if(promotion.getApplyTo().equals(ApplyTo.Category)){

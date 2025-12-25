@@ -17,6 +17,7 @@ import java.util.Map;
 public class  ProductResponse {
     String id;
     String name;
+    String brandName;
     String description;
     String videoUrl;
     String Brand;
