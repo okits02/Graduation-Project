@@ -25,6 +25,8 @@ public class Product_variants {
     String productId;
     @Field("variant_name")
     String variant_name;
+    @Field("color")
+    String color;
     @Field("sku")
     String sku;
     @Field("price")

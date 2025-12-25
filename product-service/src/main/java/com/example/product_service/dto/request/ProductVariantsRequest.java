@@ -11,7 +11,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductVariantsRequest {
     String sku;
-    String variants_name;
+    String variant_name;
     String color;
     BigDecimal price;
     List<SpecificationRequest> bestSpecifications;
