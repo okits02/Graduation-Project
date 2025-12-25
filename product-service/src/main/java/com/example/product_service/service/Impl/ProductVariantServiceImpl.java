@@ -45,7 +45,7 @@ public class ProductVariantServiceImpl implements ProductVariantsService {
                             .key("color")
                             .value(m.getColor())
                             .type(SpecType.VARIANT)
-                            .group(SpecGroup.Appearance)
+                            .group(SpecGroup.General)
                             .build();
                     productVariants.setProductId(productId);
                     productVariants.setSku(SkuGenerator.generateSku());
