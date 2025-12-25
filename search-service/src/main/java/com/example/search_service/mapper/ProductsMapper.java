@@ -5,7 +5,6 @@ import com.example.search_service.model.Products;
 import com.example.search_service.model.Specification;
 import com.example.search_service.viewmodel.dto.ProductEventDTO;
 import com.example.search_service.viewmodel.dto.request.CategoryRequest;
-import com.example.search_service.viewmodel.dto.request.ProductRequest;
 import jdk.jfr.Name;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

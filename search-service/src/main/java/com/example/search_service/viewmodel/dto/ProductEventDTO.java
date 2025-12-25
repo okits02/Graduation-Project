@@ -1,16 +1,12 @@
 package com.example.search_service.viewmodel.dto;
 
-import com.example.search_service.model.Product_variants;
+import com.example.search_service.model.ProductVariants;
 import com.example.search_service.model.Specification;
-import com.example.search_service.viewmodel.dto.request.CategoryRequest;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 @Data
 @Builder
@@ -25,7 +21,7 @@ public class ProductEventDTO {
     double avgRating;
     List<String> categoriesId;
     List<Specification> specifications;
-    List<Product_variants> productVariants;
+    List<ProductVariants> productVariants;
     LocalDate createAt;
     LocalDate updateAt;
 }

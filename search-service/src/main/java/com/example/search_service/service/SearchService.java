@@ -8,6 +8,7 @@
     import com.example.search_service.model.Category;
     import com.example.search_service.model.Products;
     import com.example.search_service.viewmodel.*;
+    import com.example.search_service.viewmodel.dto.SpecificationFilterDTO;
     import com.example.search_service.viewmodel.dto.request.AdminSearchRequest;
     import com.okits02.common_lib.dto.PageResponse;
     import lombok.RequiredArgsConstructor;
@@ -35,8 +36,9 @@
         public ProductGetListVM searchProductAdvance(String keyword,
                                                      Integer page,
                                                      Integer size,
+                                                     String brandName,
                                                      String category,
-                                                     List<Map<String, String>> attributes,
+                                                     List<SpecificationFilterDTO> attributes,
                                                      Double minPrice,
                                                      Double maxPrice,
                                                      SortType sortType)
@@ -52,9 +54,9 @@
                 return b;
             }));
             nativeQueryBuilder.withFilter(f -> f.bool(b -> {
-                extractCategory(category, "categories", b);
+                extractCategory(category, b);
                 extractAttributes(attributes, "specifications", b);
-                extractRange(minPrice, maxPrice, "sellPrice", b);
+                extractRange(minPrice, maxPrice, b);
                 return b;
             }));
 
@@ -88,7 +90,7 @@
                 categoryService.getCategoryByIds(categoryIds);
             List<ProductGetVM> productGetVMList = productsSearchHits.stream().map(i -> ProductGetVM
                     .fromEntity(i.getContent(), categoryMap)).toList();
-            return ProductGetListVM.builder()
+            return ProductGetListVM.<ProductGetVM>builder()
                     .productGetVMList(productGetVMList)
                     .currentPages(productsSearchPage.getNumber())
                     .totalPage(productsSearchPage.getTotalPages())
@@ -98,7 +100,7 @@
                     .build();
         }
 
-        public PageResponse<ProductAdminGetVM> searchProductAdmin(int page, int size, AdminSearchRequest request){
+        public ProductGetListVM searchProductAdmin(int page, int size, AdminSearchRequest request){
             NativeQueryBuilder nativeQueryBuilder = NativeQuery.builder();
             nativeQueryBuilder.withQuery(q -> q.bool(b -> {
                 if(request.getProductName() != null && !request.getProductName().isBlank()){
@@ -115,48 +117,73 @@
             SearchHits<Products> searchHits = elasticsearchOperations.search(nativeQueryBuilder.build(), Products.class);
             SearchPage<Products> productsSearchPage = SearchHitSupport.searchPageFor(
                     searchHits, nativeQueryBuilder.getPageable());
-            List<ProductAdminGetVM> productAdminGetVMS = searchHits.stream()
-                    .map(m -> ProductAdminGetVM.fromEntity(m.getContent())).toList();
-            return PageResponse.<ProductAdminGetVM>builder()
-                    .currentPage(productsSearchPage.getNumber())
+            List<Products> products = searchHits.stream().map(SearchHit::getContent).toList();
+            Set<String> categoryIds = products.stream()
+                    .flatMap(p -> p.getCategoriesId().stream())
+                    .collect(Collectors.toSet());
+            Map<String, CategoryGetVM> categoryMap =
+                    categoryService.getCategoryByIds(categoryIds);
+            List<ProductGetVM> productGetVMList = searchHits.stream().map(i -> ProductGetVM
+                    .fromEntity(i.getContent(), categoryMap)).toList();
+            return ProductGetListVM.<ProductGetVM>builder()
+                    .productGetVMList(productGetVMList)
+                    .currentPages(productsSearchPage.getNumber())
                     .totalPage(productsSearchPage.getTotalPages())
                     .pageSize(productsSearchPage.getSize())
                     .totalElements(productsSearchPage.getTotalElements())
-                    .data(productAdminGetVMS)
                     .build();
         }
 
-        private void extractAttributes(List<Map<String, String>> attributes, String productField, BoolQuery.Builder b) {
-            if (attributes == null || attributes.isEmpty()) {
-                return;
-            }
-            for (Map<String, String> attr : attributes)
-            {
-                b.must(m -> m
-                        .nested(nested -> nested
-                                .path(productField)
-                                .query(q -> q
-                                        .bool(bl -> bl
-                                                .must(must1 -> must1
-                                                        .term(t1 -> t1
-                                                                .field(productField + ".key")
-                                                                .value(attr.get("key"))
-                                                        )
-                                                )
-                                                .must(must2 -> must2
-                                                        .term(t2 -> t2
-                                                                .field(productField + ".value")
-                                                                .value(attr.get("value"))
-                                                        )
-                                                )
-                                        )
-                                )
-                        )
-                );
+        private void extractAttributes(List<SpecificationFilterDTO> attributes,
+                                       String productField, BoolQuery.Builder b) {
+            if (attributes == null || attributes.isEmpty()) return;
+
+            for (SpecificationFilterDTO attr : attributes) {
+                if ("tech".equals(attr.getType())) {
+                    b.must(m -> m.nested(n -> n
+                            .path("specifications")
+                            .query(q -> q.bool(bl -> bl
+                                    .must(ms -> ms.term(t -> t
+                                            .field("specifications.key")
+                                            .value(attr.getKey())
+                                    ))
+                                    .must(ms -> ms.term(t -> t
+                                            .field("specifications.value")
+                                            .value(attr.getValue())
+                                    ))
+                                    .must(ms -> ms.term(t -> t
+                                            .field("specifications.type")
+                                            .value("tech")
+                                    ))
+                            ))
+                    ));
+                }
+                if ("variant".equals(attr.getType())) {
+                    b.must(m -> m.nested(n1 -> n1
+                            .path("productVariants")
+                            .query(q1 -> q1.nested(n2 -> n2
+                                    .path("productVariants.bestSpecifications")
+                                    .query(q2 -> q2.bool(bl -> bl
+                                            .must(ms -> ms.term(t -> t
+                                                    .field("productVariants.bestSpecifications.key")
+                                                    .value(attr.getKey())
+                                            ))
+                                            .must(ms -> ms.term(t -> t
+                                                    .field("productVariants.bestSpecifications.value")
+                                                    .value(attr.getValue())
+                                            ))
+                                            .must(ms -> ms.term(t -> t
+                                                    .field("productVariants.bestSpecifications.type")
+                                                    .value("variant")
+                                            ))
+                                    ))
+                            ))
+                    ));
+                }
             }
         }
 
-        private void extractCategory(String category, String productField, BoolQuery.Builder b)
+        private void extractCategory(String category, BoolQuery.Builder b)
         {
             if(category == null || category.isEmpty())
             {
@@ -170,20 +197,20 @@
             );
         }
 
-        private void extractRange(Number min, Number max, String productField, BoolQuery.Builder b) {
-            if(min != null && max != null){
-                b.must(m1 -> m1
-                        .range(r -> r
-                                .number(number -> {
-                                    number.field(productField);
-                                    if(min != null) number.gte(min.doubleValue());
-                                    if(max != null) number.lte(max.doubleValue());
-                                    return number;
-                                    }
-                                )
-                        )
-                );
-            }
+        private void extractRange(Number min, Number max, BoolQuery.Builder b) {
+            if (min == null && max == null) return;
+
+            b.must(m -> m.nested(n -> n
+                    .path("productVariants")
+                    .query(q -> q.range(r -> r
+                            .number(num -> {
+                                num.field("productVariants.sellPrice");
+                                if (min != null) num.gte(min.doubleValue());
+                                if (max != null) num.lte(max.doubleValue());
+                                return num;
+                            })
+                    ))
+            ));
         }
         private Map<String, Map<String, Long>> getAggregations(SearchHits<Products> searchHits)
         {

@@ -18,7 +18,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Product_variants {
+public class ProductVariants {
     @Id
     String id;
     @Field(type = FieldType.Text)

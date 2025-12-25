@@ -10,8 +10,7 @@ import co.elastic.clients.json.JsonData;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.example.search_service.Repository.ProductsRepository;
 import com.example.search_service.Repository.httpClient.PromotionClient;
-import com.example.search_service.model.Category;
-import com.example.search_service.model.Product_variants;
+import com.example.search_service.model.ProductVariants;
 import com.example.search_service.viewmodel.CategoryGetVM;
 import com.example.search_service.viewmodel.ProductGetListVM;
 import com.example.search_service.viewmodel.ProductGetVM;
@@ -20,19 +19,15 @@ import com.example.search_service.viewmodel.dto.UpdatePromotionDTO;
 import com.okits02.common_lib.exception.AppException;
 import com.example.search_service.exceptions.SearchErrorCode;
 import com.example.search_service.mapper.ProductsMapper;
-import com.example.search_service.mapper.PromotionMapper;
 import com.example.search_service.model.Products;
 import com.example.search_service.model.Promotion;
-import com.example.search_service.viewmodel.ProductDetailsVM;
 import com.example.search_service.viewmodel.dto.ApplyPromotionEventDTO;
 import com.example.search_service.viewmodel.dto.StatusPromotionDTO;
 import com.example.search_service.viewmodel.dto.request.ApplyThumbnailRequest;
-import com.example.search_service.viewmodel.dto.request.ProductRequest;
 import lombok.RequiredArgsConstructor;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.lucene.search.similarities.BasicModelIF;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
@@ -40,7 +35,6 @@ import org.springframework.data.elasticsearch.core.*;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.lang.annotation.Native;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
@@ -539,7 +533,7 @@ public class ProductService {
         }
     }
 
-    public void AppyThumbnailToProduct(ApplyThumbnailRequest request){
+    public void applyThumbnailToProduct(ApplyThumbnailRequest request){
         if(request == null || request.getOwnerId() == null || request.getOwnerId().isBlank()
                 || request.getUrl() == null || request.getUrl().isBlank()){
             throw new AppException(SearchErrorCode.INVALID_REQUEST);
@@ -564,13 +558,25 @@ public class ProductService {
         }
     }
 
-    public ProductDetailsVM getDetailsProduct(String productId){
-        Optional<Products> products = productsRepository.findById(productId);
-        if(products.isEmpty()){
+    public ProductGetVM getDetailsProduct(String productId){
+        NativeQuery nativeQuery = NativeQuery.builder()
+                .withQuery(q -> q
+                        .term(t -> t
+                                .field("id")
+                                .value(productId)
+                        )
+                )
+                .build();
+        SearchHits<Products> hits = elasticsearchOperations.search(nativeQuery, Products.class);
+        if(hits.isEmpty()){
             throw new AppException(SearchErrorCode.PRODUCT_NOT_EXISTS);
         }
-        ProductDetailsVM productDetailsVM = ProductDetailsVM.fromEntity(products.get());
-        return productDetailsVM;
+        Products products = hits.getSearchHit(0).getContent();
+        Set<String> categoryIds = new HashSet<>(products.getCategoriesId());
+        Map<String, CategoryGetVM> categoryMap =
+                categoryService.getCategoryByIds(categoryIds);
+        ProductGetVM productGetVM = ProductGetVM.fromEntity(products, categoryMap);
+        return productGetVM;
     }
 
     public ProductGetListVM getByListIds(List<String> productIds, int page, int size){
@@ -599,7 +605,7 @@ public class ProductService {
                 categoryService.getCategoryByIds(categoryIds);
         List<ProductGetVM> productGetVMList = productsSearchHits.stream().map(i -> ProductGetVM
                 .fromEntity(i.getContent(), categoryMap)).toList();
-        return ProductGetListVM.builder()
+        return ProductGetListVM.<ProductGetVM>builder()
                 .productGetVMList(productGetVMList)
                 .currentPages(productsSearchPage.getNumber())
                 .totalPage(productsSearchPage.getTotalPages())
@@ -614,7 +620,7 @@ public class ProductService {
 
         List<Promotion> promotions = new ArrayList<>(products.getPromotions());
 
-        for (Product_variants variant : products.getProductVariants()) {
+        for (ProductVariants variant : products.getProductVariants()) {
             variant.setSellPrice(
                     calculateSellPriceForVariant(
                             variant.getPrice(),

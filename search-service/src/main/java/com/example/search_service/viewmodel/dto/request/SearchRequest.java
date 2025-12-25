@@ -1,6 +1,7 @@
 package com.example.search_service.viewmodel.dto.request;
 
 import com.example.search_service.constant.SortType;
+import com.example.search_service.viewmodel.dto.SpecificationFilterDTO;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -14,9 +15,9 @@ import java.util.Map;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SearchRequest {
     String keyword;
-    String color;
+    String brandName;
     String category;
-    List<Map<String, String>> attributes;
+    List<SpecificationFilterDTO> attributes;
     Double minPrice;
     Double maxPrice;
     SortType sortType;

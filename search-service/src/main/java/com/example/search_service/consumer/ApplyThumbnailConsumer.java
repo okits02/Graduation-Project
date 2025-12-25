@@ -25,7 +25,7 @@ public class ApplyThumbnailConsumer {
         ApplyThumbnailEventDTO applyThumbnailEventDTO = null;
         applyThumbnailEventDTO = objectMapper.readValue(applyThumbnailEvent, ApplyThumbnailEventDTO.class);
         switch (applyThumbnailEventDTO.getMediaOwnerType()){
-            case "PRODUCT" -> productService.AppyThumbnailToProduct(ApplyThumbnailRequest.builder()
+            case "PRODUCT" -> productService.applyThumbnailToProduct(ApplyThumbnailRequest.builder()
                     .ownerId(applyThumbnailEventDTO.getOwnerId())
                     .url(applyThumbnailEventDTO.getUrl())
                     .build());

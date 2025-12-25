@@ -11,14 +11,13 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-
 @Document(collection = "products_variants")
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Product_variants {
+public class ProductVariants {
     @Id
     String id;
     @Field("product_id")

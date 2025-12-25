@@ -5,10 +5,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.*;
 
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 @Document(indexName = "product")
@@ -34,7 +32,7 @@ public class Products {
     @Field(type = FieldType.Nested)
     List<Specification> specifications;
     @Field(type = FieldType.Nested)
-    List<Product_variants> productVariants;
+    List<ProductVariants> productVariants;
     @Field(type = FieldType.Date,
             format = DateFormat.date,
             pattern = "yyy-MM-dd")

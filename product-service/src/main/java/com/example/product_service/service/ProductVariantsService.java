@@ -2,7 +2,6 @@ package com.example.product_service.service;
 
 import com.example.product_service.dto.request.ProductVariantsRequest;
 import com.example.product_service.dto.response.ProductVariantsResponse;
-import com.example.product_service.model.Product_variants;
 
 import java.util.List;
 

@@ -2,8 +2,6 @@ package com.example.search_service.consumer;
 
 import com.example.search_service.service.CategoryService;
 import com.example.search_service.viewmodel.dto.CategoryEventDTO;
-import com.example.search_service.viewmodel.dto.ProductEventDTO;
-import com.example.search_service.viewmodel.dto.request.ProductRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;

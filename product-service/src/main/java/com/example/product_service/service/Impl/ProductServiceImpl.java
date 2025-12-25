@@ -2,10 +2,8 @@ package com.example.product_service.service.Impl;
 
 import com.example.product_service.dto.response.ProductVariantsResponse;
 import com.example.product_service.enums.SpecType;
-import com.example.product_service.model.Product_variants;
 import com.example.product_service.model.Specifications;
 import com.example.product_service.service.ProductVariantsService;
-import com.example.product_service.utils.SkuGenerator;
 import com.okits02.common_lib.dto.PageResponse;
 import com.example.product_service.dto.request.ProductRequest;
 import com.example.product_service.dto.request.ProductUpdateRequest;
@@ -26,7 +24,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -107,7 +104,7 @@ public class ProductServiceImpl implements ProductService {
                                 .key(spec.getKey())
                                 .value(spec.getValue())
                                 .type(SpecType.TECH)
-                                .group(spec.getGroup()) // FE sẽ group sau
+                                .group(spec.getGroup())
                                 .build()
                         ).toList());
         products.setVariants(productVariants);

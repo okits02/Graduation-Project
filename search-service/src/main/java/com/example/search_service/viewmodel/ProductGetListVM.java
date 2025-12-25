@@ -11,8 +11,8 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ProductGetListVM {
-    List<ProductGetVM> productGetVMList;
+public class ProductGetListVM<T> {
+    List<T> productGetVMList;
     int currentPages;
     int totalPage;
     int pageSize;

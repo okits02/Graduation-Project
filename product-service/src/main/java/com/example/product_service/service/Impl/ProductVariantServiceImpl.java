@@ -1,13 +1,12 @@
 package com.example.product_service.service.Impl;
 
 import com.example.product_service.dto.request.ProductVariantsRequest;
-import com.example.product_service.dto.request.SpecificationRequest;
 import com.example.product_service.dto.response.ProductVariantsResponse;
 import com.example.product_service.enums.SpecGroup;
 import com.example.product_service.enums.SpecType;
 import com.example.product_service.exceptions.ProductErrorCode;
 import com.example.product_service.mapper.ProductVariantsMapper;
-import com.example.product_service.model.Product_variants;
+import com.example.product_service.model.ProductVariants;
 import com.example.product_service.model.Specifications;
 import com.example.product_service.repository.ProductVariantsRepository;
 import com.example.product_service.service.ProductVariantsService;
@@ -40,17 +39,17 @@ public class ProductVariantServiceImpl implements ProductVariantsService {
                         throw new AppException(ProductErrorCode.PRODUCT_VARIANTS_EXISTS);
                     }
 
-                    Product_variants productVariants = productVariantsMapper.toProductVariants(m);
+                    ProductVariants productVariants = productVariantsMapper.toProductVariants(m);
                     Specifications color = Specifications.builder()
                             .key("color")
                             .value(m.getColor())
                             .type(SpecType.VARIANT)
-                            .group(SpecGroup.Appearance)
+                            .group(SpecGroup.General)
                             .build();
                     productVariants.setProductId(productId);
                     productVariants.setSku(SkuGenerator.generateSku());
 
-                    Product_variants save = productVariantsRepository.save(productVariants);
+                    ProductVariants save = productVariantsRepository.save(productVariants);
                     return save.getSku();
                 })
                 .toList();
@@ -66,7 +65,7 @@ public class ProductVariantServiceImpl implements ProductVariantsService {
 
         List<String> responses = request.stream()
                 .map(m -> {
-                    Product_variants variant = productVariantsRepository.findBySku(m.getSku());
+                    ProductVariants variant = productVariantsRepository.findBySku(m.getSku());
                     if(variant == null){
                         throw new AppException(ProductErrorCode.PRODUCT_VARIANTS_NOT_FOUND);
                     }
@@ -103,7 +102,7 @@ public class ProductVariantServiceImpl implements ProductVariantsService {
                         }
                     }
                     productVariantsMapper.updateProduct(variant, m);
-                    Product_variants save = productVariantsRepository.save(variant);
+                    ProductVariants save = productVariantsRepository.save(variant);
                     return save.getSku();
                 })
                 .toList();
@@ -113,7 +112,7 @@ public class ProductVariantServiceImpl implements ProductVariantsService {
 
     @Override
     public List<ProductVariantsResponse> getListByProductId(String productId) {
-        List<Product_variants> variants = productVariantsRepository.findByProductId(productId);
+        List<ProductVariants> variants = productVariantsRepository.findByProductId(productId);
         if(variants == null || variants.isEmpty()){
             throw new AppException(ProductErrorCode.PRODUCT_VARIANTS_NOT_FOUND);
         }
@@ -122,7 +121,7 @@ public class ProductVariantServiceImpl implements ProductVariantsService {
 
     @Override
     public void deleteBySku(String sku) {
-        Product_variants variant = productVariantsRepository.findBySku(sku);
+        ProductVariants variant = productVariantsRepository.findBySku(sku);
         if(variant == null){
             throw new AppException(ProductErrorCode.PRODUCT_VARIANTS_NOT_FOUND);
         }
@@ -131,11 +130,11 @@ public class ProductVariantServiceImpl implements ProductVariantsService {
 
     @Override
     public void deleteByProductId(String productId) {
-        List<Product_variants> variants = productVariantsRepository.findByProductId(productId);
+        List<ProductVariants> variants = productVariantsRepository.findByProductId(productId);
         if(variants == null || variants.isEmpty()){
             throw new AppException(ProductErrorCode.PRODUCT_VARIANTS_NOT_FOUND);
         }
-        for (Product_variants variant : variants){
+        for (ProductVariants variant : variants){
             productVariantsRepository.delete(variant);
         }
     }
@@ -143,7 +142,7 @@ public class ProductVariantServiceImpl implements ProductVariantsService {
 
     @Override
     public void changeStock(String sku, Boolean inStock) {
-        Product_variants variant = productVariantsRepository.findBySku(sku);
+        ProductVariants variant = productVariantsRepository.findBySku(sku);
         if(variant == null){
             throw new AppException(ProductErrorCode.PRODUCT_VARIANTS_NOT_FOUND);
         }
