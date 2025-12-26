@@ -2,7 +2,11 @@ package com.example.product_service.service.Impl;
 
 import com.example.product_service.dto.response.ProductVariantsResponse;
 import com.example.product_service.enums.SpecType;
+import com.example.product_service.kafka.CreateProductEvent;
+import com.example.product_service.kafka.DeleteProductEvent;
+import com.example.product_service.model.ProductVariants;
 import com.example.product_service.model.Specifications;
+import com.example.product_service.service.CategoryService;
 import com.example.product_service.service.ProductVariantsService;
 import com.okits02.common_lib.dto.PageResponse;
 import com.example.product_service.dto.request.ProductRequest;
@@ -20,10 +24,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +40,8 @@ public class ProductServiceImpl implements ProductService {
     private final ProductMapper productMapper;
     private final ProductMappingHelper productMappingHelper;
     private final ProductVariantsService productVariantsService;
+    private final CategoryService categoryService;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Override
     public PageResponse<ProductResponse> getAll(int page, int size) {
@@ -87,18 +96,19 @@ public class ProductServiceImpl implements ProductService {
                     product.getId());
             product.setVariants(productVariants);
         }
+        sendKafkaEvent(product, "CREATED");
         return productRepository.save(product);
     }
 
     @Override
     public Products updateProduct(ProductUpdateRequest request) {
-        Products products = productRepository.findById(request.getId()).orElseThrow(()->
+        Products product = productRepository.findById(request.getId()).orElseThrow(()->
                 new AppException(ProductErrorCode.PRODUCT_NOT_EXISTS));
-        productMapper.updateProduct(products, request);
-        products.setCategoryId(request.getCategoryId());
+        productMapper.updateProduct(product, request);
+        product.setCategoryId(request.getCategoryId());
         List<String> productVariants = productVariantsService.update(request.getProduct_variants(),
-                products.getId());
-        products.setSpecifications(
+                product.getId());
+        product.setSpecifications(
                 request.getSpecifications().stream()
                         .map(spec -> Specifications.builder()
                                 .key(spec.getKey())
@@ -107,14 +117,20 @@ public class ProductServiceImpl implements ProductService {
                                 .group(spec.getGroup())
                                 .build()
                         ).toList());
-        products.setVariants(productVariants);
-        productRepository.save(products);
-        return products;
+        product.setVariants(productVariants);
+        sendKafkaEvent(product, "UPDATED");
+        productRepository.save(product);
+        return product;
     }
 
     @Override
     public void DeleteProduct(String productId) {
-        productRepository.deleteById(productId);
+        Optional<Products> product = productRepository.findById(productId);
+        if(product.get() == null ){
+            throw new AppException(ProductErrorCode.PRODUCT_NOT_EXISTS);
+        }
+        sendKafkaEvent(product.get(), "DELETED");
+        productRepository.delete(product.get());
         productVariantsService.deleteByProductId(productId);
     }
 
@@ -123,4 +139,60 @@ public class ProductServiceImpl implements ProductService {
         productVariantsService.changeStock(sku, inStock);
     }
 
+    private void sendKafkaEvent(Products product, String typeEvent){
+        if(typeEvent == null){
+            return;
+        }
+        switch (typeEvent){
+            case "CREATED" -> {
+                CreateProductEvent createProductEvent = createEventProduct(product);
+                kafkaTemplate.send("product-create-event", createProductEvent).whenComplete(
+                        (result, ex) -> {
+                            if(ex != null)
+                            {
+                                System.err.println("Failed to send message" + ex.getMessage());
+                            }else
+                            {
+                                System.err.println("send message successfully" + result.getProducerRecord());
+                            }
+                        });
+            }
+            case "UPDATED" -> {
+                CreateProductEvent createProductEvent = createEventProduct(product);
+                kafkaTemplate.send("product-update-event", createProductEvent).whenComplete(
+                        (result, ex) -> {
+                            if(ex != null)
+                            {
+                                System.err.println("Failed to send message" + ex.getMessage());
+                            }else
+                            {
+                                System.err.println("send message successfully" + result.getProducerRecord());
+                            }
+                        });
+            }
+            case "DELETED" -> {
+                DeleteProductEvent deleteProductEvent = DeleteProductEvent.builder()
+                        .productId(product.getId())
+                        .build();
+                kafkaTemplate.send("product-delete-event", deleteProductEvent);
+            }
+        }
+    }
+    private CreateProductEvent createEventProduct(Products product)
+    {
+        Set<String> currentCateId = product.getCategoryId();
+        List<String> categoryList = categoryService.getCategoryHierarchy(currentCateId);
+        CreateProductEvent createProductEvent = CreateProductEvent.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .brand(product.getBrandName())
+                .description(product.getDescription())
+                .categoriesId(categoryList)
+                .specifications(product.getSpecifications())
+                .productVariants(productVariantsService.getVariantForKafkaEvent(product.getId()))
+                .createAt(product.getCreateAt())
+                .updateAt(product.getUpdateAt())
+                .build();
+        return  createProductEvent;
+    }
 }

@@ -28,7 +28,6 @@ import static com.example.promotion_service.enums.UsageType.LIMITED;
 @Slf4j
 public class PromotionController {
     private final PromotionService promotionService;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @PostMapping("/create")
     ResponseEntity<ApiResponse<PromotionResponse>> createPromotion(@RequestBody PromotionCreationRequest request)

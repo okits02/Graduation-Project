@@ -21,6 +21,8 @@ public class Products {
     String id;
     @Field(type = FieldType.Text)
     String name;
+    @Field(type = FieldType.Keyword)
+    private String brand;
     @Field(type = FieldType.Text)
     String description;
     @Field(type = FieldType.Object)

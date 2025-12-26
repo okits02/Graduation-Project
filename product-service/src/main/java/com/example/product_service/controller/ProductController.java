@@ -36,7 +36,6 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProductController {
     ProductService productService;
-    MediaClient mediaClient;
     CategoryService categoryService;
     ProductMappingHelper productMappingHelper;
     KafkaTemplate<String, Object> kafkaTemplate;
@@ -49,17 +48,6 @@ public class ProductController {
     {
         try{
             Products product = productService.createProduct(request);
-            CreateProductEvent createProductEvent = createEventProduct(product);
-            kafkaTemplate.send("product-create-event", createProductEvent).whenComplete(
-                    (result, ex) -> {
-                        if(ex != null)
-                        {
-                            System.err.println("Failed to send message" + ex.getMessage());
-                        }else
-                        {
-                            System.err.println("send message successfully" + result.getProducerRecord());
-                        }
-                    });
             return ApiResponse.<ProductResponse>builder()
                     .code(200)
                     .result(productMappingHelper.map(product))
@@ -80,17 +68,6 @@ public class ProductController {
     {
         try{
             Products product = productService.updateProduct(request);
-            CreateProductEvent createProductEvent = createEventProduct(product);
-            kafkaTemplate.send("product-update-event", createProductEvent).whenComplete(
-                    (result, ex) -> {
-                        if(ex != null)
-                        {
-                            System.err.println("Failed to send message" + ex.getMessage());
-                        }else
-                        {
-                            System.err.println("send message successfully" + result.getProducerRecord());
-                        }
-                    });
             ProductResponse productResponse = productMappingHelper.map(product);
             return ApiResponse.<ProductResponse>builder()
                     .code(200)
@@ -149,10 +126,6 @@ public class ProductController {
     {
         try {
             productService.DeleteProduct(productId);
-            DeleteProductEvent deleteProductEvent = DeleteProductEvent.builder()
-                    .productId(productId)
-                    .build();
-            kafkaTemplate.send("product-delete-event", deleteProductEvent);
             return ResponseEntity.ok(ApiResponse.builder()
                     .code(200)
                     .message("Product delete successfully")
@@ -166,19 +139,5 @@ public class ProductController {
         }
     }
 
-    private CreateProductEvent createEventProduct(Products product)
-    {
-        Set<String> currentCateId = product.getCategoryId();
-        List<String> categoryList = categoryService.getCategoryHierarchy(currentCateId);
-        CreateProductEvent createProductEvent = CreateProductEvent.builder()
-                .id(product.getId())
-                .name(product.getName())
-                .description(product.getDescription())
-                .categories(categoryList)
-                .specifications(product.getSpecifications())
-                .createAt(product.getCreateAt())
-                .updateAt(product.getUpdateAt())
-                .build();
-        return  createProductEvent;
-    }
+
 }

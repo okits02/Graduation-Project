@@ -23,7 +23,7 @@ public class ProductVariants {
     @Field("product_id")
     String productId;
     @Field("variant_name")
-    String variant_name;
+    String variantName;
     @Field("color")
     String color;
     @Field("sku")

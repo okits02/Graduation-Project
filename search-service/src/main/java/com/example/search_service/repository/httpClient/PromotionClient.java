@@ -1,10 +1,11 @@
-package com.example.search_service.Repository.httpClient;
+package com.example.search_service.repository.httpClient;
 
 import com.example.search_service.model.Promotion;
 import com.example.search_service.viewmodel.dto.ApiResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;

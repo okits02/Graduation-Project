@@ -16,6 +16,7 @@ import java.util.List;
 public class ProductEventDTO {
     String id;
     String name;
+    String brand;
     String description;
     Integer quantity;
     double avgRating;

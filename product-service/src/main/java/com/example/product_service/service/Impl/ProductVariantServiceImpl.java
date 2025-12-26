@@ -120,6 +120,15 @@ public class ProductVariantServiceImpl implements ProductVariantsService {
     }
 
     @Override
+    public List<ProductVariants> getVariantForKafkaEvent(String productId) {
+        List<ProductVariants> variants = productVariantsRepository.findByProductId(productId);
+        if(variants == null || variants.isEmpty()){
+            throw new AppException(ProductErrorCode.PRODUCT_VARIANTS_NOT_FOUND);
+        }
+        return variants;
+    }
+
+    @Override
     public void deleteBySku(String sku) {
         ProductVariants variant = productVariantsRepository.findBySku(sku);
         if(variant == null){

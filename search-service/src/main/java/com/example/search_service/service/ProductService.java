@@ -8,8 +8,8 @@ import co.elastic.clients.elasticsearch._types.Script;
 import co.elastic.clients.elasticsearch.core.UpdateByQueryResponse;
 import co.elastic.clients.json.JsonData;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import com.example.search_service.Repository.ProductsRepository;
-import com.example.search_service.Repository.httpClient.PromotionClient;
+import com.example.search_service.repository.ProductsRepository;
+import com.example.search_service.repository.httpClient.PromotionClient;
 import com.example.search_service.model.ProductVariants;
 import com.example.search_service.viewmodel.CategoryGetVM;
 import com.example.search_service.viewmodel.ProductGetListVM;
@@ -33,6 +33,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -56,6 +58,7 @@ public class ProductService {
         Products products = productsMapper.toProducts(request);
         var response = promotionClient.getByCategoryIds(request.getCategoriesId());
         products.setPromotions(new HashSet<>(response.getResult()));
+        calculatorListPrice(products);
         elasticsearchClient.index(i -> i
                 .index("product")
                 .id(products.getId())
@@ -73,6 +76,7 @@ public class ProductService {
             products.setPromotions(new HashSet<>(response.getResult()));
         }
         productsMapper.updateProduct(products, request);
+        calculatorListPrice(products);
         productsRepository.save(products);
     }
 

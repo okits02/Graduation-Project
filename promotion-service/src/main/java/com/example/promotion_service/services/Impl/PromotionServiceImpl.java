@@ -188,24 +188,27 @@ public class PromotionServiceImpl implements PromotionService {
 
     @Override
     public List<PromotionResponse> getPromotionByCategoryIds(List<String> categoryIds) {
-        if(categoryIds == null || categoryIds.isEmpty()){
+
+        if (categoryIds == null || categoryIds.isEmpty()) {
             return List.of();
         }
 
         return categoryIds.stream()
-                .map(promotionRepository::findByCategoryId)
+                .map(applyToRepository::findByCategoryId)
+                .flatMap(List::stream)
                 .map(PromotionApplyTo::getPromotion)
+                .filter(Objects::nonNull)
                 .filter(p -> Boolean.TRUE.equals(p.getActive()))
-                .map(promotion -> PromotionResponse.builder()
-                        .id(promotion.getId())
-                        .name(promotion.getName())
-                        .descriptions(promotion.getDescriptions())
-                        .discountPercent(promotion.getDiscountPercent())
-                        .fixedAmount(promotion.getFixedAmount())
-                        .applyTo(promotion.getApplyTo())
-                        .active(promotion.getActive())
-                        .createAt(promotion.getCreateAt())
-                        .updateAt(promotion.getUpdateAt())
+                .map(p -> PromotionResponse.builder()
+                        .id(p.getId())
+                        .name(p.getName())
+                        .descriptions(p.getDescriptions())
+                        .discountPercent(p.getDiscountPercent())
+                        .fixedAmount(p.getFixedAmount())
+                        .applyTo(p.getApplyTo())
+                        .active(p.getActive())
+                        .createAt(p.getCreateAt())
+                        .updateAt(p.getUpdateAt())
                         .build()
                 )
                 .toList();

@@ -37,12 +37,6 @@ public class ProductController {
                         request.getSortType()));
     }
 
-    @GetMapping("/search_suggest")
-    public ResponseEntity<ProductNameGetListVm> productSearchAutoComplete(@RequestParam String keyword)
-    {
-        return ResponseEntity.ok(searchService.autoCompleteProductName(keyword));
-    }
-
     @GetMapping("/internal/get-product/{productId}")
     public ResponseEntity<ApiResponse<ProductGetVM>> getDetailsProduct(@PathVariable String productId){
         return ResponseEntity.ok(ApiResponse.<ProductGetVM>builder()

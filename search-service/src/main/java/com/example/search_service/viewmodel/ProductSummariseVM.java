@@ -10,6 +10,7 @@ import lombok.experimental.FieldDefaults;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 @Data
 @Builder
@@ -63,10 +64,11 @@ public class ProductSummariseVM {
             return null;
         }
 
-        return products.getProductVariants()
+        Optional<ProductVariants> bestSoldVariant = products.getProductVariants()
                 .stream()
                 .filter(v -> v.getSold() != null)
-                .max(Comparator.comparing(ProductVariants::getSold))
-                .orElse(null);
+                .max(Comparator.comparing(ProductVariants::getSold));
+
+        return bestSoldVariant.orElse(products.getProductVariants().get(0));
     }
 }

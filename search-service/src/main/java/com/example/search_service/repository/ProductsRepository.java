@@ -1,4 +1,4 @@
-package com.example.search_service.Repository;
+package com.example.search_service.repository;
 
 import com.example.search_service.model.Products;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;

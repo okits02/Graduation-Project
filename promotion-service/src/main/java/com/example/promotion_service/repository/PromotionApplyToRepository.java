@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 public interface PromotionApplyToRepository extends JpaRepository<PromotionApplyTo, String> {
     @Query("Select p From PromotionApplyTo p Where p.promotion.id = :promotionId")
     PromotionApplyTo findByPromotionId(@NotNull String promotionId);
@@ -46,4 +48,14 @@ public interface PromotionApplyToRepository extends JpaRepository<PromotionApply
             @Param("promotionId") String promotionId,
             @Param("categoryId") String categoryId
     );
+
+    @Query(
+            value = """
+        SELECT *
+        FROM promotion_apply_to
+        WHERE category_id = :categoryId
+    """,
+            nativeQuery = true
+    )
+    List<PromotionApplyTo> findByCategoryId(@Param("categoryId") String categoryId);
 }

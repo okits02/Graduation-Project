@@ -17,5 +17,4 @@ public interface PromotionRepository extends JpaRepository<Promotion, String> {
     List<Promotion> findExpiredPromotion(@Param("now")LocalDateTime now);
     void deleteById(String promotionId);
 
-    PromotionApplyTo findByCategoryId(String categoryId);
 }

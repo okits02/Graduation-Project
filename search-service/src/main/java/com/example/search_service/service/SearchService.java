@@ -1,19 +1,11 @@
     package com.example.search_service.service;
 
     import co.elastic.clients.elasticsearch._types.FieldValue;
-    import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
-    import org.springframework.data.elasticsearch.core.AggregationsContainer;
-    import org.springframework.data.elasticsearch.core.AggregationsContainer.*;
-    import org.springframework.data.elasticsearch.core.ElasticsearchAggregations;
-    import org.springframework.data.elasticsearch.core.aggregation.Aggregation;
-    import org.springframework.data.elasticsearch.core.aggregation.AggregationContainer;
-    import org.springframework.data.elasticsearch.core.aggregation.ParsedNested;
-    import org.springframework.data.elasticsearch.core.aggregation.ParsedFilter;
-    import org.springframework.data.elasticsearch.core.aggregation.ParsedStringTerms;
-    import org.springframework.data.elasticsearch.core.aggregation.Terms;
+    import co.elastic.clients.elasticsearch._types.SortMode;
+    import co.elastic.clients.elasticsearch._types.SortOrder;
+    import co.elastic.clients.elasticsearch._types.aggregations.*;
+    import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregation;
 
-    import co.elastic.clients.elasticsearch._types.aggregations.StringTermsAggregate;
-    import co.elastic.clients.elasticsearch._types.aggregations.StringTermsBucket;
     import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
     import com.example.search_service.constant.SortType;
     import com.example.search_service.model.Category;
@@ -21,14 +13,11 @@
     import com.example.search_service.viewmodel.*;
     import com.example.search_service.viewmodel.dto.SpecificationFilterDTO;
     import com.example.search_service.viewmodel.dto.request.AdminSearchRequest;
-    import com.okits02.common_lib.dto.PageResponse;
     import lombok.RequiredArgsConstructor;
     import lombok.extern.slf4j.Slf4j;
     import org.springframework.data.domain.PageRequest;
     import org.springframework.data.domain.Pageable;
     import org.springframework.data.domain.Sort;
-    import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregation;
-    import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregations;
     import org.springframework.data.elasticsearch.client.elc.NativeQuery;
     import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
     import org.springframework.data.elasticsearch.core.*;
@@ -69,46 +58,57 @@
                 extractCategory(category, b);
                 extractAttributes(attributes, "specifications", b);
                 extractRange(minPrice, maxPrice, b);
+                extractBrandName(brandName, "brand", b);
                 return b;
             }));
-
             switch (sortType)
             {
                 case DEFAULT -> {
                     break;
                 }
                 case PRICE_ASC -> {
-                    nativeQueryBuilder.withSort(Sort.by(Sort.Direction.ASC, "sellPrice"));
-                    break;
+                    nativeQueryBuilder.withSort(s -> s
+                            .field(f -> f
+                                    .field("productVariants.sellPrice")
+                                    .order(SortOrder.Asc)
+                                    .nested(n -> n.path("productVariants"))
+                                    .mode(SortMode.Min)
+                            )
+                    );
                 }
                 case PRICE_DESC -> {
-                    nativeQueryBuilder.withSort(Sort.by(Sort.Direction.DESC, "sellPrice"));
-                    break;
+                    nativeQueryBuilder.withSort(s -> s
+                            .field(f -> f
+                                    .field("productVariants.sellPrice")
+                                    .order(SortOrder.Desc)
+                                    .nested(n -> n.path("productVariants"))
+                                    .mode(SortMode.Max)
+                            )
+                    );
                 }
                 case RATING_ASC -> {
                     nativeQueryBuilder.withSort(Sort.by(Sort.Direction.ASC, "avgRating"));
                     break;
                 }
             }
+            buildSpecAggregations(nativeQueryBuilder);
+            log.error("ES QUERY = {}", nativeQueryBuilder.getQuery());
             nativeQueryBuilder.withPageable(PageRequest.of(page, size));
             SearchHits<Products> productsSearchHits = elasticsearchOperations.search(nativeQueryBuilder.build(), Products.class);
             SearchPage<Products> productsSearchPage = SearchHitSupport.searchPageFor(
                     productsSearchHits, nativeQueryBuilder.getPageable());
-            List<Products> products = productsSearchHits.stream().map(SearchHit::getContent).toList();
-            Set<String> categoryIds = products.stream()
-                    .flatMap(p -> p.getCategoriesId().stream())
-                    .collect(Collectors.toSet());
-            Map<String, CategoryGetVM> categoryMap =
-                categoryService.getCategoryByIds(categoryIds);
-            List<ProductGetVM> productGetVMList = productsSearchHits.stream().map(i -> ProductGetVM
-                    .fromEntity(i.getContent(), categoryMap)).toList();
-            return ProductGetListVM.<ProductGetVM>builder()
+            log.info("search hits", productsSearchHits.get());
+            List<ProductSummariseVM> productGetVMList = productsSearchHits.stream().map(i -> ProductSummariseVM
+                    .fromEntity(i.getContent())).toList();
+            Map<String, Map<String, Long>> techAggregations = getAggregationTech(productsSearchHits);
+            Map<String, Map<String, Long>> variantSpecAggregations = getAggregationsVariants(productsSearchHits);
+            return ProductGetListVM.<ProductSummariseVM>builder()
                     .productGetVMList(productGetVMList)
                     .currentPages(productsSearchPage.getNumber())
                     .totalPage(productsSearchPage.getTotalPages())
                     .pageSize(productsSearchPage.getSize())
                     .totalElements(productsSearchPage.getTotalElements())
-                    .aggregations(getAggregations(productsSearchHits))
+                    .aggregations(mergeAggMaps(techAggregations, variantSpecAggregations))
                     .build();
         }
 
@@ -151,7 +151,7 @@
             if (attributes == null || attributes.isEmpty()) return;
 
             for (SpecificationFilterDTO attr : attributes) {
-                if ("tech".equals(attr.getType())) {
+                if ("TECH".equals(attr.getType())) {
                     b.must(m -> m.nested(n -> n
                             .path("specifications")
                             .query(q -> q.bool(bl -> bl
@@ -170,7 +170,7 @@
                             ))
                     ));
                 }
-                if ("variant".equals(attr.getType())) {
+                if ("VARIANT".equals(attr.getType())) {
                     b.must(m -> m.nested(n1 -> n1
                             .path("productVariants")
                             .query(q1 -> q1.nested(n2 -> n2
@@ -193,6 +193,127 @@
                     ));
                 }
             }
+        }
+
+        public Map<String, Map<String, Long>> getAggregationTech(SearchHits<Products> hits){
+            Map<String, Map<String, Long>> result = new HashMap<>();
+
+            AggregationsContainer<?> container = hits.getAggregations();
+            if (container == null) return result;
+
+            List<ElasticsearchAggregation> aggs =
+                    (List<ElasticsearchAggregation>) container.aggregations();
+
+            ElasticsearchAggregation techAggWrapper = aggs.stream()
+                    .filter(a -> "tech_specs".equals(a.aggregation().getName()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (techAggWrapper == null) return result;
+
+            Aggregate aggregate = techAggWrapper.aggregation().getAggregate();
+            NestedAggregate nested = aggregate.nested();
+
+            FilterAggregate onlyTech =
+                    nested.aggregations().get("only_tech").filter();
+
+            StringTermsAggregate byKey =
+                    onlyTech.aggregations().get("by_key").sterms();
+
+            for (StringTermsBucket keyBucket : byKey.buckets().array()) {
+
+                String key = keyBucket.key().stringValue();
+                StringTermsAggregate byValue =
+                        keyBucket.aggregations().get("by_value").sterms();
+
+                Map<String, Long> valueMap = new HashMap<>();
+                for (StringTermsBucket valueBucket : byValue.buckets().array()) {
+                    valueMap.put(
+                            valueBucket.key().stringValue(),
+                            valueBucket.docCount()
+                    );
+                }
+                result.put(key, valueMap);
+            }
+
+            return result;
+        }
+
+        public Map<String, Map<String, Long>> getAggregationsVariants(SearchHits<Products> hits){
+            Map<String, Map<String, Long>> result = new HashMap<>();
+            AggregationsContainer<?> container = hits.getAggregations();
+            if (container == null) {
+                return result;
+            }
+
+            List<ElasticsearchAggregation> aggs =
+                    (List<ElasticsearchAggregation>) container.aggregations();
+
+            ElasticsearchAggregation variantAggWrapper = aggs.stream()
+                    .filter(a -> "variant_specs".equals(a.aggregation().getName()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (variantAggWrapper == null) return result;
+
+            Aggregate variantAgg = variantAggWrapper.aggregation().getAggregate();
+            if (!variantAgg.isNested()) return result;
+            NestedAggregate variantNested = variantAgg.nested();
+            Aggregate bestSpecsAgg = variantNested.aggregations().get("best_specs");
+            if (bestSpecsAgg == null || !bestSpecsAgg.isNested()) return result;
+
+            NestedAggregate bestSpecsNested = bestSpecsAgg.nested();
+            Aggregate onlyVariantAgg = bestSpecsNested.aggregations().get("only_variant");
+            if (onlyVariantAgg == null || !onlyVariantAgg.isFilter()) return result;
+
+            FilterAggregate onlyVariant = onlyVariantAgg.filter();
+
+            Aggregate byKeyAgg = onlyVariant.aggregations().get("by_key");
+            if (byKeyAgg == null || !byKeyAgg.isSterms()) return result;
+
+            StringTermsAggregate byKey = byKeyAgg.sterms();
+
+            for (StringTermsBucket keyBucket : byKey.buckets().array()) {
+                String key = keyBucket.key().stringValue();
+
+                Aggregate byValueAgg = keyBucket.aggregations().get("by_value");
+                if (byValueAgg == null || !byValueAgg.isSterms()) continue;
+
+                StringTermsAggregate byValue = byValueAgg.sterms();
+                Map<String, Long> valueMap = new HashMap<>();
+
+                for (StringTermsBucket valueBucket : byValue.buckets().array()) {
+                    valueMap.put(
+                            valueBucket.key().stringValue(),
+                            valueBucket.docCount()
+                    );
+                }
+
+                result.put(key, valueMap);
+            }
+
+            return result;
+        }
+
+        public Map<String, Map<String, Long>> mergeAggMaps(
+                Map<String, Map<String, Long>> techMap,
+                Map<String, Map<String, Long>> variantMap) {
+
+            Map<String, Map<String, Long>> result = new HashMap<>();
+            techMap.forEach((key, valueMap) ->
+                    result.put(key, new HashMap<>(valueMap))
+            );
+            variantMap.forEach((key, valueMap) -> {
+
+                Map<String, Long> targetValueMap =
+                        result.computeIfAbsent(key, k -> new HashMap<>());
+
+                valueMap.forEach((value, count) ->
+                        targetValueMap.merge(value, count, Long::sum)
+                );
+            });
+
+            return result;
         }
 
         private void extractCategory(String category, BoolQuery.Builder b)
@@ -225,6 +346,24 @@
             ));
         }
 
+        private void extractBrandName(String strField, String productField, BoolQuery.Builder b){
+            if (strField == null || strField.isBlank()) return;
+
+            String[] strFields = strField.split(",");
+
+            b.must(m -> m.bool(bb -> {
+                for (String str : strFields) {
+                    bb.should(s -> s
+                            .term(t -> t
+                                    .field(productField)
+                                    .value(str)
+                            )
+                    );
+                }
+                bb.minimumShouldMatch("1");
+                return bb;
+            }));
+        }
         private void buildSpecAggregations(NativeQueryBuilder builder) {
             Aggregation techAgg = Aggregation.of(a -> a
                     .nested(n -> n.path("specifications"))
@@ -232,7 +371,7 @@
                             .filter(f -> f
                                     .term(t -> t
                                             .field("specifications.type")
-                                            .value("tech")
+                                            .value("TECH")
                                     )
                             )
                             .aggregations("by_key", Aggregation.of(a3 -> a3
@@ -261,7 +400,7 @@
                                     .filter(f -> f
                                             .term(t -> t
                                                     .field("productVariants.bestSpecifications.type")
-                                                    .value("variant")
+                                                    .value("VARIANT")
                                             )
                                     )
                                     .aggregations("by_key", Aggregation.of(a4 -> a4
@@ -282,73 +421,7 @@
             builder.withAggregation("variant_specs", variantAgg);
         }
 
-        private Map<String, Map<String, Long>> parseTechSpecAgg(SearchHits<Products> hits) {
 
-            Map<String, Map<String, Long>> result = new HashMap<>();
-
-            if (!hits.hasAggregations()) return result;
-
-            ElasticsearchAggregations aggregations =
-                    (ElasticsearchAggregations) hits.getAggregations();
-
-            ParsedNested techNested =
-                    aggregations.get("tech_specs");
-
-            if (techNested == null) return result;
-
-            ParsedFilter onlyTech =
-                    techNested.getAggregations().get("only_tech");
-
-            ParsedStringTerms byKey =
-                    onlyTech.getAggregations().get("by_key");
-
-            for (Terms.Bucket keyBucket : byKey.getBuckets()) {
-
-                String key = keyBucket.getKeyAsString();
-
-                ParsedStringTerms byValue =
-                        keyBucket.getAggregations().get("by_value");
-
-                Map<String, Long> valueMap = new HashMap<>();
-                for (Terms.Bucket v : byValue.getBuckets()) {
-                    valueMap.put(v.getKeyAsString(), v.getDocCount());
-                }
-
-                result.put(key, valueMap);
-            }
-
-            return result;
-        }
-        private Map<String, Map<String, Long>> getAggregations(SearchHits<Products> searchHits)
-        {
-            List<org.springframework.data.elasticsearch.client.elc.Aggregation> aggregations = new ArrayList<>();
-            if(searchHits.hasAggregations())
-            {
-                ((List<ElasticsearchAggregation>)searchHits.getAggregations().aggregations())
-                        .forEach(elsAgg -> aggregations.add(elsAgg.aggregation()));
-            }
-            Map<String, Map<String, Long>> aggregationsMap = new HashMap<>();
-            aggregations.forEach(aggregation -> {
-                Map<String, Long> agg = new HashMap<>();
-                StringTermsAggregate stringTermsAggregate = (StringTermsAggregate) aggregation.getAggregate()._get();
-                List<StringTermsBucket> stringTermsBuckets =
-                        (List<StringTermsBucket>) stringTermsAggregate.buckets()._get();
-                stringTermsBuckets.forEach(bucket -> agg.put(bucket.key()._get().toString(), bucket.docCount()));
-                aggregationsMap.put(aggregation.getName(), agg);
-                });
-            return aggregationsMap;
-        }
-
-        public ProductNameGetListVm autoCompleteProductName(final String keyword){
-            NativeQuery nativeQuery = NativeQuery.builder().withQuery(q -> q
-                    .matchPhrasePrefix(m -> m.field("name").query(keyword)))
-                    .withSourceFilter(new FetchSourceFilter(
-                            true, new String[]{"name"}, null
-                    )).build();
-            SearchHits<Products> result = elasticsearchOperations.search(nativeQuery, Products.class);
-            List<Products> products = result.stream().map(SearchHit::getContent).toList();
-            return new ProductNameGetListVm(products.stream().map(ProductNameGetVm::fromModel).toList());
-        }
 
         public CategoryGetListVM autocompleteCategory(String prefix, int size, int page) {
             Pageable pageable = PageRequest.of(page, size);
