@@ -36,9 +36,7 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProductController {
     ProductService productService;
-    CategoryService categoryService;
     ProductMappingHelper productMappingHelper;
-    KafkaTemplate<String, Object> kafkaTemplate;
 
     @Operation(summary = "admin create product", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/create")

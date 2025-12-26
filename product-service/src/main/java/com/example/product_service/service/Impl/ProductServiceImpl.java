@@ -4,7 +4,6 @@ import com.example.product_service.dto.response.ProductVariantsResponse;
 import com.example.product_service.enums.SpecType;
 import com.example.product_service.kafka.CreateProductEvent;
 import com.example.product_service.kafka.DeleteProductEvent;
-import com.example.product_service.model.ProductVariants;
 import com.example.product_service.model.Specifications;
 import com.example.product_service.service.CategoryService;
 import com.example.product_service.service.ProductVariantsService;
@@ -107,7 +106,7 @@ public class ProductServiceImpl implements ProductService {
                 new AppException(ProductErrorCode.PRODUCT_NOT_EXISTS));
         productMapper.updateProduct(product, request);
         product.setCategoryId(request.getCategoryId());
-        List<String> productVariants = productVariantsService.update(request.getProduct_variants(),
+        List<String> productVariants = productVariantsService.update(request.getProductVariants(),
                 product.getId());
         product.setSpecifications(
                 request.getSpecifications().stream()

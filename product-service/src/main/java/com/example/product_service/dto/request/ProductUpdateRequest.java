@@ -3,9 +3,7 @@ package com.example.product_service.dto.request;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 @Data
@@ -22,5 +20,5 @@ public class ProductUpdateRequest {
     double avgRating;
     Set<String> categoryId;
     List<SpecificationRequest> specifications;
-    List<ProductVariantsRequest> product_variants;
+    List<ProductVariantsRequest> productVariants;
 }
