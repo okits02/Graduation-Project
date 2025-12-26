@@ -17,7 +17,7 @@ import java.util.List;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductVariantsResponse {
-    String variant_name;
+    String variantName;
     String sku;
     BigDecimal price;
     Integer sold;

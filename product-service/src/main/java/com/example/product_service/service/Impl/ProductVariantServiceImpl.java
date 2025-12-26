@@ -33,7 +33,7 @@ public class ProductVariantServiceImpl implements ProductVariantsService {
                 .map(m -> {
                     if (productVariantsRepository.existsByProductIdAndNameAndColor(
                             productId,
-                            m.getVariant_name(),
+                            m.getVariantName(),
                             m.getColor()
                     )) {
                         throw new AppException(ProductErrorCode.PRODUCT_VARIANTS_EXISTS);
@@ -81,7 +81,7 @@ public class ProductVariantServiceImpl implements ProductVariantsService {
                         if(!m.getColor().equals(oldColor)){
                             if (productVariantsRepository.existsByProductIdAndNameAndColor(
                                     productId,
-                                    m.getVariant_name(),
+                                    m.getVariantName(),
                                     m.getColor()
                             )) {
                                 throw new AppException(ProductErrorCode.PRODUCT_VARIANTS_EXISTS);

@@ -23,5 +23,5 @@ public class ProductRequest {
     double avgRating;
     Set<String> categoryId;
     List<SpecificationRequest> specifications;
-    List<ProductVariantsRequest> product_variants;
+    List<ProductVariantsRequest> productVariants;
 }

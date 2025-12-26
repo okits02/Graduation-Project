@@ -86,18 +86,19 @@ public class ProductServiceImpl implements ProductService {
                                     .key(spec.getKey())
                                     .value(spec.getValue())
                                     .type(SpecType.TECH)
-                                    .group(spec.getGroup()) // FE sẽ group sau
+                                    .group(spec.getGroup())
                                     .build()
                             ).toList()
             );
         }
-        if (request.getProduct_variants() != null) {
-            List<String> productVariants = productVariantsService.save(request.getProduct_variants(),
+        if (request.getProductVariants() != null) {
+            List<String> productVariants = productVariantsService.save(request.getProductVariants(),
                     product.getId());
             product.setVariants(productVariants);
         }
+        Products response = productRepository.save(product);
         sendKafkaEvent(product, "CREATED");
-        return productRepository.save(product);
+        return response;
     }
 
     @Override
