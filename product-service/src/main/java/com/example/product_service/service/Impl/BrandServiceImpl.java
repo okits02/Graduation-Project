@@ -44,6 +44,7 @@ public class BrandServiceImpl implements BrandService {
         brandRepository.save(brand);
         return BrandResponse.builder()
                 .name(brand.getName())
+                .categoryId(brand.getCategoryId())
                 .build();
     }
 
@@ -65,6 +66,7 @@ public class BrandServiceImpl implements BrandService {
         brandRepository.save(brand);
         return BrandResponse.builder()
                 .name(brand.getName())
+                .categoryId(brand.getCategoryId())
                 .build();
     }
 
@@ -75,6 +77,7 @@ public class BrandServiceImpl implements BrandService {
                 -> BrandResponse
                 .builder()
                 .name(m.getName())
+                .categoryId(m.getCategoryId())
                 .build()
         ).toList();
     }
