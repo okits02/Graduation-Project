@@ -37,7 +37,7 @@ public class ImageController {
     public ResponseEntity<ApiResponse<ListMediaResponse>> uploadImage(
             @ModelAttribute ImageProductPostRequest request) throws IOException {
         ListMediaResponse listMediaResponse = imageService
-                .imageProduct(request.getThumbnail(), request.getImageProducts(), request.getProductId());
+                .imageProduct(request.getImageProducts(), request.getProductId());
         MediaResponse mediaResponse =
                 listMediaResponse.getMediaResponseList().stream()
                         .filter(m -> m.getMediaPurpose() == MediaPurpose.THUMBNAIL)

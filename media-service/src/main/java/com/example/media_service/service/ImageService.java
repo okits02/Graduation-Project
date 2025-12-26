@@ -10,8 +10,7 @@ import java.io.IOException;
 import java.util.List;
 
 public interface ImageService {
-    public ListMediaResponse imageProduct(MultipartFile thumbNailFile,
-                                          List<MultipartFile> imageProductFile,
+    public ListMediaResponse imageProduct(List<MultipartFile> imageProductFile,
                                           String productId) throws IOException;
     public MediaResponse imageCategory(MultipartFile thumbNailFile, String categoryId) throws IOException;
     public MediaResponse changeThumbnail(String oldThumbnailUrl, MultipartFile newThumbnail, String productId) throws IOException;

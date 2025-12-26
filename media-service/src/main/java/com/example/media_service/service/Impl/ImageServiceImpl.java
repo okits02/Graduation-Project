@@ -32,18 +32,10 @@ public class ImageServiceImpl implements ImageService {
     private final MediaMapper mediaMapper;
 
     @Override
-    public ListMediaResponse imageProduct(MultipartFile thumbNailFile,
-                                          List<MultipartFile> imageProductFile,
+    public ListMediaResponse imageProduct(List<MultipartFile> imageProductFile,
                                           String productId) throws IOException {
-        String thumbnailUrl = "";
         List<String> imageProductUrl = new ArrayList<>();
         List<MediaResponse> responses = new ArrayList<>();
-        if (thumbNailFile != null) {
-            Media thumbnail = uploadAndSave(thumbNailFile, productId, MediaOwnerType.PRODUCT, MediaPurpose.THUMBNAIL);
-            thumbnail.setPosition(0);
-            responses.add(mediaMapper.toMediaResponse(mediaRepository.save(thumbnail)));
-            thumbnailUrl = thumbnail.getUrl();
-        }
         Integer currentPosition = mediaRepository.findMaxPositionByOwnerIdAndPurpose(productId, MediaPurpose.GALLERY.name())
                 .orElse(0);
         for (MultipartFile file : imageProductFile) {

@@ -26,6 +26,7 @@ public class CategoryMappingHelper {
                 .name(category.getName())
                 .description(category.getDescription())
                 .parentId(category.getParentId())
+                .special(category.getSpecial())
                 .mediaResponse(mediaResponse)
                 .childrenId(category.getChildrenId())
                 .build();
