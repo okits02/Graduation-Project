@@ -12,7 +12,12 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Table(name = "stock_in_item")
+@Table(
+        name = "inventory",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"product_id", "sku"})
+        }
+)
 public class StockInItem {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -22,6 +27,8 @@ public class StockInItem {
     String productId;
     @Column(name = "product_name")
     String productName;
+    @Column(name = "sku")
+    String sku;
     @Column(name = "quantity")
     Integer quantity;
     @Column(name = "unit_cost")
@@ -33,17 +40,9 @@ public class StockInItem {
     @JoinColumn(name = "stock_in_id")
     StockIn stockIn;
 
-    void calculatorTotalCost(){
-        if (unitCost == null || quantity == null) {
-            totalCost = BigDecimal.ZERO;
-        } else {
-            totalCost = unitCost.multiply(BigDecimal.valueOf(quantity));
-        }
-    }
-
     @PrePersist
     @PreUpdate
-    public void prePersist() {
-        calculatorTotalCost();
+    public void calculate() {
+        totalCost = unitCost.multiply(BigDecimal.valueOf(quantity));
     }
 }

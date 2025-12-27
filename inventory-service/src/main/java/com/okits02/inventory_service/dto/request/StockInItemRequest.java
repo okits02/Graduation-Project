@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class StockInItemRequest {
     String productId;
+    String sku;
     String productName;
     @QuantityConstraint(message = "Quantity must not null and greater than 0")
     Integer quantity;

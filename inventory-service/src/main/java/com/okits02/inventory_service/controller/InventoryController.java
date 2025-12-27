@@ -19,14 +19,15 @@ public class InventoryController {
     private final InventoryService inventoryService;
 
 
-    @GetMapping("/get/{productId}")
-    public ApiResponse<InventoryResponse> getByProductId(
-            @PathVariable String productId
+    @GetMapping("/get")
+    public ApiResponse<InventoryResponse> getByProductIdAndSku(
+            @RequestParam String productId,
+            @RequestParam String sku
     ){
         return ApiResponse.<InventoryResponse>builder()
                 .code(200)
                 .message("Get product information at inventory success!")
-                .result(inventoryService.getByProductId(productId))
+                .result(inventoryService.getByProductIdAndSku(productId, sku))
                 .build();
     }
 
@@ -44,8 +45,8 @@ public class InventoryController {
     public ApiResponse<?> decreaseStock(
             @RequestBody InventoryAdjustmentRequest request
     ){
-        Inventory inventory = inventoryService.decreaseStock(request.getProductId(), request.getQuantity(),
-                request.getOrderId());
+        Inventory inventory = inventoryService.decreaseStock(request.getProductId(), request.getSku(),
+                request.getQuantity(), request.getOrderId());
         return ApiResponse.builder()
                 .code(200)
                 .message("Decrease success!")
@@ -56,8 +57,8 @@ public class InventoryController {
     public ApiResponse<?> increaseStock(
             @RequestBody InventoryAdjustmentRequest request
     ){
-        Inventory inventory = inventoryService.increaseStock(request.getProductId(), request.getQuantity(),
-                request.getOrderId());
+        Inventory inventory = inventoryService.increaseStock(request.getProductId(), request.getSku(),
+                request.getQuantity(), request.getOrderId());
         return ApiResponse.builder()
                 .code(200)
                 .message("increase success!")

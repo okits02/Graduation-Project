@@ -58,10 +58,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponse getById(String productId) {
         Products product = productRepository.findById(productId)
                 .orElseThrow(() -> new AppException(ProductErrorCode.PRODUCT_NOT_EXISTS));
-        List<ProductVariantsResponse> variantsResponseList = productVariantsService.getListByProductId(productId);
-        ProductResponse productResponse = productMappingHelper.map(product);
-        productResponse.setVariantsResponses(variantsResponseList);
-        return productResponse;
+        return productMappingHelper.map(product);
     }
 
     @Override

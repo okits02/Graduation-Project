@@ -13,12 +13,13 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class InventoryTransactionResponse {
-    private String id;
-    private String productId;
-    private TransactionType transactionType;
-    private Integer quantity;
-    private String referenceId;
-    private ReferenceType referenceType;
-    private String note;
-    private LocalDateTime createdAt;
+    String id;
+    String productId;
+    String sku;
+    TransactionType transactionType;
+    Integer quantity;
+    String referenceId;
+    ReferenceType referenceType;
+    String note;
+    LocalDateTime createdAt;
 }

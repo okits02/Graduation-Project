@@ -12,5 +12,6 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class IsInStockRequest {
     String productId;
+    String sku;
     Integer quantity;
 }

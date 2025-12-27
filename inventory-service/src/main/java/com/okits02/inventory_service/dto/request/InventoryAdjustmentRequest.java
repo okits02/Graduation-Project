@@ -12,6 +12,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class InventoryAdjustmentRequest {
     String productId;
+    String sku;
     Integer quantity;
     String orderId;
 }

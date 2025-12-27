@@ -91,6 +91,7 @@ public class StockInServiceImpl implements StockInService {
                         .totalAmount(stockIn.getTotalAmount())
                         .items(stockIn.getItems().stream().map(item -> StockInItemResponse.builder()
                                 .productId(item.getProductId())
+                                .sku(item.getSku())
                                 .quantity(item.getQuantity())
                                 .unitCost(item.getUnitCost())
                                 .totalCost(item.getTotalCost())
@@ -138,6 +139,7 @@ public class StockInServiceImpl implements StockInService {
         for(StockInItemRequest item : request){
             StockInItem stockInItem = StockInItem.builder()
                     .productId(item.getProductId())
+                    .sku(item.getSku())
                     .productName(item.getProductName())
                     .quantity(item.getQuantity())
                     .unitCost(item.getUnitCost())

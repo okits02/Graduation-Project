@@ -33,26 +33,21 @@ public class StockIn {
     String note;
     LocalDateTime createdAt = LocalDateTime.now();
 
-    @OneToMany(mappedBy = "stockIn", cascade = CascadeType.ALL)
+
+    @OneToMany(
+            mappedBy = "stockIn",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
     List<StockInItem> items;
 
-    void calculatorTotalAmount(){
-        if (items == null || items.isEmpty()) {
-            totalAmount = BigDecimal.ZERO;
-            return;
-        }
 
-        totalAmount = items.stream()
-                .peek(StockInItem::calculatorTotalCost) // đảm bảo mỗi item đã tính totalCost
-                .map(StockInItem::getTotalCost)
-                .filter(Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-    }
     @PrePersist
     @PreUpdate
-    public void prePersist() {
-        calculatorTotalAmount();
+    public void calculateTotal() {
+        totalAmount = items.stream()
+                .map(StockInItem::getTotalCost)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }
 

@@ -22,13 +22,19 @@ public class Inventory {
 
     @Column(name = "product_id")
     String productId;
+    @Column(name = "sku")
+    String sku;
     @Column(name = "product_name")
     String productName;
     @Column(name = "quantity")
     Integer quantity;
 
-    LocalDateTime updateAt;
+    LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "inventory", cascade = CascadeType.ALL, orphanRemoval = true)
     List<InventoryTransaction> transactions;
+    public void apply(int delta) {
+        this.quantity += delta;
+        this.updatedAt = LocalDateTime.now();
+    }
 }

@@ -14,7 +14,13 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Table(name = "inventory_transaction")
+@Table(
+        name = "inventory_transaction",
+        indexes = {
+                @Index(name = "idx_inventory_sku", columnList = "sku"),
+                @Index(name = "idx_inventory_product", columnList = "productId")
+        }
+)
 public class InventoryTransaction {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -26,6 +32,9 @@ public class InventoryTransaction {
 
     @Column(nullable = false)
     String productId;
+
+    @Column(nullable = false)
+    String sku;
 
     @Enumerated(EnumType.STRING)
     TransactionType transactionType;
@@ -40,4 +49,9 @@ public class InventoryTransaction {
     String note;
 
     LocalDateTime createdAt = LocalDateTime.now();
+    public int delta() {
+        return transactionType == TransactionType.IN
+                ? quantity
+                : -quantity;
+    }
 }

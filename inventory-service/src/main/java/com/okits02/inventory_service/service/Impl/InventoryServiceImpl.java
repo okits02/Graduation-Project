@@ -21,6 +21,7 @@ import com.okits02.inventory_service.repository.InventoryTransactionRepository;
 import com.okits02.inventory_service.service.InventoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -28,7 +29,11 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
+import static org.apache.commons.lang.StringUtils.isBlank;
 
 @Service
 @Slf4j
@@ -42,140 +47,173 @@ public class InventoryServiceImpl implements InventoryService {
 
     @Override
     public void save(List<StockInItemRequest> request, String stockInId) {
-
+        List<String> touchedProductIds = new ArrayList<>();
         for (StockInItemRequest item : request) {
-            Inventory inventory = inventoryRepository.findByProductId(item.getProductId());
-            if (inventory == null) {
-                throw new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS);
-            }
+            Inventory inventory = inventoryRepository.findByProductIdAndSku(item.getProductId(),
+                    item.getSku()).orElseThrow(() ->
+                    new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS));
+            boolean wasInStock = isProductInStock(item.getProductId());
             if(inventory.getQuantity() == 0){
-                productStockEvent(item.getProductId(), true);
+                productStockEvent(item.getProductId(), item.getSku(),true);
             }
             int newQuantity = inventory.getQuantity() + item.getQuantity();
             inventory.setQuantity(newQuantity);
 
-            InventoryTransaction transaction = InventoryTransaction.builder()
-                    .inventory(inventory)
-                    .productId(item.getProductId())
-                    .transactionType(TransactionType.IN)
-                    .quantity(item.getQuantity())
-                    .referenceId(stockInId)
-                    .referenceType(ReferenceType.STOCK_IN)
-                    .note("Stock in product " + item.getProductId())
-                    .createdAt(LocalDateTime.now())
-                    .build();
-            inventory.getTransactions().add(transaction);
+            InventoryTransaction tx = buildTransaction(
+                    inventory,
+                    item.getProductId(),
+                    item.getSku(),
+                    TransactionType.IN,
+                    item.getQuantity(),
+                    stockInId,
+                    ReferenceType.STOCK_IN,
+                    "Stock in product " + item.getProductId() + " sku " + item.getSku()
+            );
+            applyTransaction(inventory, tx);
+
             inventoryRepository.save(inventory);
+
+            if (!touchedProductIds.contains(item.getProductId())) {
+                touchedProductIds.add(item.getProductId());
+            }
+            boolean nowInStock = isProductInStock(item.getSku());
+            if (wasInStock != nowInStock) {
+                productStockEvent(item.getProductId(), item.getSku(), nowInStock);
+            }
         }
     }
 
     @Override
     public void createProduct(ProductEventDTO request) {
-        Inventory newProduct = Inventory.builder()
-                .productId(request.getId())
-                .productName(request.getName())
-                .quantity(0)
-                .build();
-        inventoryRepository.save(newProduct);
+        if (request == null || request.getProductVariants() == null || request.getProductVariants().isEmpty()) {
+            return;
+        }
+
+        String productId = request.getId();
+        String productName = request.getName();
+        for(var variant : request.getProductVariants()){
+            if (variant == null || isBlank(variant.getSku())) continue;
+            String sku = variant.getSku();
+            String fullName = buildFullName(productName, variant.getVariantName());
+
+            inventoryRepository.findByProductIdAndSku(productId, sku).ifPresentOrElse(
+                    existing -> {
+                        existing.setProductName(fullName);
+                        existing.setUpdatedAt(LocalDateTime.now());
+                        inventoryRepository.save(existing);
+                    }, () -> {
+                        Inventory inv = Inventory.builder()
+                                .productId(productId)
+                                .sku(sku)
+                                .productName(fullName)
+                                .quantity(0)
+                                .transactions(new ArrayList<>())
+                                .build();
+                        try {
+                            inventoryRepository.save(inv);
+                        }catch (DataIntegrityViolationException e) {
+                            log.warn("Inventory already exists for productId={} sku={}, ignore duplicate create", productId, sku);
+                        }
+                    }
+            );
+        }
     }
 
     @Override
     public boolean checkIsStock(IsInStockRequest request) {
-        Inventory inventory = inventoryRepository.findByProductId(request.getProductId());
-        if(inventory == null){
-            throw new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS);
+        if (request == null || isBlank(request.getProductId()) || isBlank(request.getSku()) || request.getQuantity() == null) {
+            return false;
         }
+        Inventory inventory = inventoryRepository.findByProductIdAndSku(request.getProductId(), request.getSku())
+                .orElseThrow(() -> new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS));
+
         return request.getQuantity() <= inventory.getQuantity();
     }
 
     @Override
     public void delete(String productId) {
-        Inventory inventory = inventoryRepository.findByProductId(productId);
-        if(inventory == null){
+
+        boolean wasInStock = isProductInStock(productId);
+
+        List<Inventory> inventories = inventoryRepository.findAllByProductId(productId);
+        if (inventories == null || inventories.isEmpty()) {
             throw new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS);
         }
-        productStockEvent(productId, false);
-        inventoryRepository.delete(inventory);
+
+        inventoryRepository.deleteAll(inventories);
+        if (wasInStock) {
+            productStockEvent(productId, "",false);
+        }
     }
 
     @Override
-    public InventoryResponse getByProductId(String productId) {
-        Inventory inventory = inventoryRepository.findByProductId(productId);
+    public InventoryResponse getByProductIdAndSku(String productId, String sku) {
+        Optional<Inventory> inventory = inventoryRepository.findByProductIdAndSku(productId, sku);
         log.info(inventory.toString());
         if(inventory == null){
             throw new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS);
         }
-        InventoryResponse inventoryResponse = inventoryMapper.toInventoryResponse(inventory);
+        InventoryResponse inventoryResponse = inventoryMapper.toInventoryResponse(inventory.get());
         log.info(inventoryResponse.toString());
-        return inventoryMapper.toInventoryResponse(inventory);
+        return inventoryMapper.toInventoryResponse(inventory.get());
     }
 
     @Override
-    public Inventory increaseStock(String productId, int quantity, String orderId) {
+    public Inventory increaseStock(String productId, String sku, int quantity, String orderId) {
 
-        Inventory inventory = inventoryRepository.findByProductId(productId);
-        if (inventory == null) {
-            throw new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS);
+        Inventory inventory = inventoryRepository.findByProductIdAndSku(productId, sku).orElseThrow(() ->
+            new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS)
+        );
+        boolean wasInStock = isProductInStock(sku);
+
+
+        InventoryTransaction tx = buildTransaction(
+                inventory,
+                productId,
+                sku,
+                TransactionType.OUT,
+                quantity,
+                orderId,
+                ReferenceType.ORDER,
+                "Manual increase");
+        applyTransaction(inventory, tx);
+        Inventory saved = inventoryRepository.save(inventory);
+
+        boolean nowInStock = isProductInStock(sku);
+        if (wasInStock != nowInStock) {
+            productStockEvent(productId, sku, nowInStock);
         }
-
-        boolean wasOutOfStock = inventory.getQuantity() == 0;
-
-        inventory.setQuantity(inventory.getQuantity() + quantity);
-
-        InventoryTransaction tran = InventoryTransaction.builder()
-                .inventory(inventory)
-                .productId(productId)
-                .transactionType(TransactionType.IN)
-                .quantity(quantity)
-                .referenceType(ReferenceType.MANUAL)
-                .referenceId(orderId)
-                .note("Manual increase")
-                .createdAt(LocalDateTime.now())
-                .build();
-
-        inventory.getTransactions().add(tran);
-
-        if (wasOutOfStock) {
-            productStockEvent(productId, true);
-        }
-
-        return inventoryRepository.save(inventory);
+        return saved;
     }
 
     @Override
-    public Inventory decreaseStock(String productId, int quantity, String orderId) {
+    public Inventory decreaseStock(String productId, String sku, int quantity, String orderId) {
 
-        Inventory inventory = inventoryRepository.findByProductId(productId);
-        if (inventory == null) {
-            throw new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS);
-        }
+        Inventory inventory = inventoryRepository.findByProductIdAndSku(productId, sku).orElseThrow(() ->
+                new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS));
+        boolean wasInStock = isProductInStock(productId);
 
-        if (quantity > inventory.getQuantity()) {
+        if(quantity > inventory.getQuantity()){
             throw new AppException(InventoryErrorCode.PRODUCT_NOT_ENOUGH);
         }
 
-        int oldQty = inventory.getQuantity();
-        int newQty = oldQty - quantity;
-        inventory.setQuantity(newQty);
+        InventoryTransaction tx = buildTransaction(
+                inventory,
+                productId,
+                sku,
+                TransactionType.OUT,
+                quantity,
+                orderId,
+                ReferenceType.ORDER,
+                "Decrease stock"
+        );
+        Inventory saved = inventoryRepository.save(inventory);
 
-        InventoryTransaction tran = InventoryTransaction.builder()
-                .inventory(inventory)
-                .productId(productId)
-                .transactionType(TransactionType.OUT)
-                .quantity(quantity)
-                .referenceType(ReferenceType.ORDER)
-                .referenceId(orderId)
-                .note("Decrease stock")
-                .createdAt(LocalDateTime.now())
-                .build();
-
-        inventory.getTransactions().add(tran);
-
-        if (newQty == 0) {
-            productStockEvent(productId, false);
+        boolean nowInStock = isProductInStock(sku);
+        if (wasInStock != nowInStock) {
+            productStockEvent(productId, sku,nowInStock);
         }
-
-        return inventoryRepository.save(inventory);
+        return saved;
     }
 
     @Override
@@ -212,9 +250,47 @@ public class InventoryServiceImpl implements InventoryService {
                 .build();
     }
 
-    private void productStockEvent(String productId, Boolean isInStock){
+    private void applyTransaction(Inventory inventory, InventoryTransaction tx) {
+        if (inventory.getTransactions() == null) {
+            inventory.setTransactions(new ArrayList<>());
+        }
+
+        inventory.getTransactions().add(tx);
+
+        int delta = (tx.getTransactionType() == TransactionType.IN) ? tx.getQuantity() : -tx.getQuantity();
+        inventory.setQuantity(inventory.getQuantity() + delta);
+        inventory.setUpdatedAt(LocalDateTime.now());
+    }
+
+    private InventoryTransaction buildTransaction(
+            Inventory inventory,
+            String productId,
+            String sku,
+            TransactionType type,
+            int quantity,
+            String referenceId,
+            ReferenceType referenceType,
+            String note
+    ) {
+        return InventoryTransaction.builder()
+                .inventory(inventory)
+                .productId(productId)
+                .sku(sku)
+                .transactionType(type)
+                .quantity(Math.abs(quantity))
+                .referenceId(referenceId)
+                .referenceType(referenceType)
+                .note(note)
+                .createdAt(LocalDateTime.now())
+                .build();
+    }
+    private boolean isProductInStock(String sku) {
+        return inventoryRepository.existsBySkuAndQuantityGreaterThan(sku, 0);
+    }
+    private void productStockEvent(String productId, String sku, Boolean isInStock){
         ChangeStatusStockEvent event = ChangeStatusStockEvent.builder()
                 .productId(productId)
+                .sku(sku)
                 .inStock(isInStock)
                 .build();
         kafkaTemplate.send("change-status-event", event).whenComplete(
@@ -226,5 +302,10 @@ public class InventoryServiceImpl implements InventoryService {
                         System.err.println("send message successfully" + result.getProducerRecord());
                     }
                 });
+    }
+
+    private String buildFullName(String productName, String variantName) {
+        if (isBlank(variantName)) return productName;
+        return productName + " - " + variantName;
     }
 }

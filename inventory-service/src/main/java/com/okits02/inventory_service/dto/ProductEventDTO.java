@@ -20,4 +20,5 @@ import java.util.Map;
 public class ProductEventDTO {
     String id;
     String name;
+    List<ProductVariantsEventDTO> productVariants;
 }
