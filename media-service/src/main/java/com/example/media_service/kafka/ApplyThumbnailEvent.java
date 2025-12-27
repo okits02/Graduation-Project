@@ -10,6 +10,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ApplyThumbnailEvent {
+    String productId;
     String ownerId;
     String mediaOwnerType;
     String url;

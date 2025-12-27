@@ -52,8 +52,9 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public MediaResponse imageCategory(MultipartFile thumbNailFile, String categoryId) throws IOException {
-        Media media = uploadAndSave(thumbNailFile, categoryId, MediaOwnerType.CATEGORY, MediaPurpose.THUMBNAIL);
+    public MediaResponse uploadImage(MultipartFile thumbNailFile,
+                                     String ownerId, MediaOwnerType mediaOwnerType) throws IOException {
+        Media media = uploadAndSave(thumbNailFile,ownerId, mediaOwnerType, MediaPurpose.THUMBNAIL);
         return mediaMapper.toMediaResponse(mediaRepository.save(media));
     }
 

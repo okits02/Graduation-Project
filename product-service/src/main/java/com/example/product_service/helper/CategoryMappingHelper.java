@@ -17,9 +17,9 @@ public class CategoryMappingHelper {
     private final MediaClient mediaClient;
     public CategoryResponse map(Category category){
         var response = mediaClient.getMedia(category.getId(), MediaOwnerType.CATEGORY).getBody();
-        List<MediaResponse> mediaResponse = new ArrayList<>();
+        String thumbnailUrl = null;
         if(response.getResult() != null){
-            mediaResponse = response.getResult().getMediaResponseList();
+            thumbnailUrl = response.getResult().getMediaResponseList().get(0).getUrl();
         }
         return CategoryResponse.builder()
                 .id(category.getId())
@@ -27,7 +27,7 @@ public class CategoryMappingHelper {
                 .description(category.getDescription())
                 .parentId(category.getParentId())
                 .special(category.getSpecial())
-                .mediaResponse(mediaResponse)
+                .thumbnail(thumbnailUrl)
                 .childrenId(category.getChildrenId())
                 .build();
     }

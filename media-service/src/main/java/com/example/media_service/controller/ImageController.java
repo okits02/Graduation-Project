@@ -4,7 +4,6 @@ import com.okits02.common_lib.dto.ApiResponse;
 import com.example.media_service.dto.request.*;
 import com.example.media_service.dto.response.ListMediaResponse;
 import com.example.media_service.dto.response.MediaResponse;
-import com.example.media_service.dto.response.ProductImageResponse;
 import com.example.media_service.enums.MediaOwnerType;
 import com.example.media_service.enums.MediaPurpose;
 import com.example.media_service.kafka.ApplyThumbnailEvent;
@@ -17,10 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.List;
 
 @Slf4j
 @RestController
@@ -46,8 +43,8 @@ public class ImageController {
 
 
         if(mediaResponse != null) {
-            ApplyThumbnailEvent applyThumbnailEvent = createEvent(
-                    mediaResponse.getOwnerId(), mediaResponse.getUrl(), MediaOwnerType.PRODUCT
+            ApplyThumbnailEvent applyThumbnailEvent = createEvent(mediaResponse.getOwnerId(), request.getProductId(),
+                    mediaResponse.getUrl(), MediaOwnerType.PRODUCT
             );
             kafkaTemplate.send("apply-thumbnail-event", applyThumbnailEvent).whenComplete(
                     (result, ex) -> {
@@ -71,18 +68,6 @@ public class ImageController {
     ) throws IOException {
         MediaResponse mediaResponse = imageService.changeThumbnail(request.getOldThumbnailUrl(),
                 request.getNewThumbnail(), request.getProductId());
-        ApplyThumbnailEvent applyThumbnailEvent = createEvent(
-                mediaResponse.getOwnerId(), mediaResponse.getUrl(), MediaOwnerType.PRODUCT
-        );
-        kafkaTemplate.send("product-apply-thumbnail-event", applyThumbnailEvent).whenComplete(
-                (result, ex) -> {
-                    if(ex != null)
-                    {
-                        System.err.println("Failed to send message" + ex.getMessage());
-                    }else {
-                        System.err.println("send message successfully" + result.getProducerRecord());
-                    }
-                });
         return ResponseEntity.ok(ApiResponse.<MediaResponse>builder()
                 .code(200)
                 .message("Chang photo thumbnail successfully")
@@ -104,12 +89,13 @@ public class ImageController {
     }
 
     @PostMapping("/category/media")
-    public ResponseEntity<ApiResponse<MediaResponse>> uploadCateImage(
+    public ResponseEntity<ApiResponse<MediaResponse>> uploadImage(
             @ModelAttribute ImageUploadRequest request
             ) throws IOException {
-        MediaResponse mediaResponse = imageService.imageCategory(request.getMultipartFile(), request.getOwnerId());
+        MediaResponse mediaResponse = imageService.uploadImage(request.getMultipartFile(),
+                request.getOwnerId(), request.getMediaOwnerType());
         ApplyThumbnailEvent applyThumbnailEvent = createEvent(
-                mediaResponse.getOwnerId(), mediaResponse.getUrl(), MediaOwnerType.CATEGORY
+                mediaResponse.getOwnerId(), request.getProductId(), mediaResponse.getUrl(), mediaResponse.getOwnerType()
         );
         kafkaTemplate.send("apply-thumbnail-event", applyThumbnailEvent).whenComplete(
                 (result, ex) -> {
@@ -173,11 +159,16 @@ public class ImageController {
     }
 
 
-    private ApplyThumbnailEvent createEvent(String productId, String url, MediaOwnerType mediaOwnerType){
-        return ApplyThumbnailEvent.builder()
-                .ownerId(productId)
+    private ApplyThumbnailEvent createEvent(String ownerId, String productId,
+                                            String url, MediaOwnerType mediaOwnerType){
+        ApplyThumbnailEvent applyThumbnailEvent = ApplyThumbnailEvent.builder()
+                .ownerId(ownerId)
                 .mediaOwnerType(String.valueOf(mediaOwnerType))
                 .url(url)
                 .build();
+        if(productId != null){
+            applyThumbnailEvent.setProductId(productId);
+        }
+        return applyThumbnailEvent;
     }
 }

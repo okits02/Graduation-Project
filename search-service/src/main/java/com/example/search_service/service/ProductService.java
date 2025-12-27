@@ -538,25 +538,48 @@ public class ProductService {
     }
 
     public void applyThumbnailToProduct(ApplyThumbnailRequest request){
-        if(request == null || request.getOwnerId() == null || request.getOwnerId().isBlank()
-                || request.getUrl() == null || request.getUrl().isBlank()){
+        if (request == null
+                || request.getOwnerId() == null || request.getOwnerId().isBlank()
+                || request.getOwnerId() == null || request.getOwnerId().isBlank()
+                || request.getUrl() == null || request.getUrl().isBlank()) {
             throw new AppException(SearchErrorCode.INVALID_REQUEST);
         }
-        try{
+
+        try {
             boolean exists = elasticsearchClient.exists(e -> e
                     .index("product")
-                    .id(request.getOwnerId()))
-                    .value();
+                    .id(request.getProductId())
+            ).value();
 
-            if(!exists){
+            if (!exists) {
                 throw new AppException(SearchErrorCode.PRODUCT_NOT_EXISTS);
             }
+
             elasticsearchClient.update(u -> u
-                    .index("product")
-                    .id(request.getOwnerId())
-                    .doc(Map.of("thumbnail", request.getUrl())),
+                            .index("product")
+                            .id(request.getProductId())
+                            .script(s -> s
+                                    .lang("painless")
+                                    .source(
+                                            """
+                                                    if (ctx._source.productVariants != null) {
+                                                        for (int i = 0; i < ctx._source.productVariants.size(); i++) {
+                                                            if (ctx._source.productVariants[i].sku == params.sku) {
+                                                                ctx._source.productVariants[i].thumbnail = params.url;
+                                                                break;
+                                                            }
+                                                        }
+                                                    }
+                                            """
+                                    )
+                                    .params(Map.of(
+                                            "sku", JsonData.of(request.getOwnerId()),
+                                            "url", JsonData.of(request.getUrl())
+                                    ))
+                            ),
                     Products.class
             );
+
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

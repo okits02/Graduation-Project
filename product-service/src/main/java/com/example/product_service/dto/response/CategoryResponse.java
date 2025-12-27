@@ -18,7 +18,7 @@ public class CategoryResponse {
     String id;
     String name;
     String description;
-    List<MediaResponse> mediaResponse;
+    String thumbnail;
     String parentId;
     Boolean special;
     Set<String> childrenId;

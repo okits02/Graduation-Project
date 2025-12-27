@@ -11,6 +11,8 @@ import java.util.List;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class BrandResponse {
+    String id;
+    String thumbnailUrl;
     String name;
     List<String> categoryId;
 }

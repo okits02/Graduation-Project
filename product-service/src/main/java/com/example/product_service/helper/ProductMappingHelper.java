@@ -37,6 +37,24 @@ public class ProductMappingHelper {
             listMedia = responses.getResult().getMediaResponseList();
         }
         List<ProductVariantsResponse> variantsResponses = productVariantsService.getListByProductId(products.getId());
+        variantsResponses.forEach(variant -> {
+            var variantMediaResponse =
+                    mediaClient.getMedia(variant.getSku(), MediaOwnerType.PRODUCT_VARIANT).getBody();
+
+            if (variantMediaResponse != null
+                    && variantMediaResponse.getResult() != null
+                    && !variantMediaResponse.getResult().getMediaResponseList().isEmpty()) {
+
+                String thumbnailUrl = variantMediaResponse
+                        .getResult()
+                        .getMediaResponseList()
+                        .get(0)
+                        .getUrl();
+
+                variant.setThumbnail(thumbnailUrl);
+            }
+        });
+
         return ProductResponse.builder()
                 .id(products.getId())
                 .name(products.getName())

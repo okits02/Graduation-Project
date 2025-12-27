@@ -2,12 +2,14 @@ package com.example.product_service.service.Impl;
 
 import com.example.product_service.dto.request.BrandCreationRequest;
 import com.example.product_service.dto.response.BrandResponse;
+import com.example.product_service.enums.MediaOwnerType;
 import com.example.product_service.exceptions.ProductErrorCode;
 import com.example.product_service.mapper.BrandMapper;
 import com.example.product_service.model.Brand;
 import com.example.product_service.model.Category;
 import com.example.product_service.repository.BrandRepository;
 import com.example.product_service.repository.CategoryRepository;
+import com.example.product_service.repository.httpsClient.MediaClient;
 import com.example.product_service.service.BrandService;
 import com.okits02.common_lib.exception.AppException;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ public class BrandServiceImpl implements BrandService {
     private final BrandRepository brandRepository;
     private final CategoryRepository categoryRepository;
     private final BrandMapper brandMapper;
+    private final MediaClient mediaClient;
     @Override
     public BrandResponse save(BrandCreationRequest request) {
         if(brandRepository.existsByName(request.getName())){
@@ -43,6 +46,7 @@ public class BrandServiceImpl implements BrandService {
         brand.setCategoryId(request.getCategoryId());
         brandRepository.save(brand);
         return BrandResponse.builder()
+                .id(brand.getId())
                 .name(brand.getName())
                 .categoryId(brand.getCategoryId())
                 .build();
@@ -65,7 +69,9 @@ public class BrandServiceImpl implements BrandService {
         brand.setCategoryId(request.getCategoryId());
         brandRepository.save(brand);
         return BrandResponse.builder()
+                .id(brand.getId())
                 .name(brand.getName())
+                .thumbnailUrl(getThumbnail(brand))
                 .categoryId(brand.getCategoryId())
                 .build();
     }
@@ -73,13 +79,15 @@ public class BrandServiceImpl implements BrandService {
     @Override
     public List<BrandResponse> getList() {
         List<Brand> brands = brandRepository.findAll();
-        return brands.stream().map(m
-                -> BrandResponse
-                .builder()
-                .name(m.getName())
-                .categoryId(m.getCategoryId())
-                .build()
-        ).toList();
+            return brands.stream().map(m
+                    -> BrandResponse
+                    .builder()
+                    .id(m.getId())
+                    .name(m.getName())
+                    .thumbnailUrl(getThumbnail(m))
+                    .categoryId(m.getCategoryId())
+                    .build()
+            ).toList();
     }
 
     @Override
@@ -89,5 +97,22 @@ public class BrandServiceImpl implements BrandService {
         }
         Brand brand = brandRepository.findByName(name);
         brandRepository.delete(brand);
+    }
+
+    private String getThumbnail(Brand brand){
+        var variantMediaResponse =
+                mediaClient.getMedia(brand.getId(), MediaOwnerType.PRODUCT_VARIANT).getBody();
+        String thumbnailUrl = null;
+        if (variantMediaResponse != null
+                && variantMediaResponse.getResult() != null
+                && !variantMediaResponse.getResult().getMediaResponseList().isEmpty()) {
+
+            thumbnailUrl = variantMediaResponse
+                    .getResult()
+                    .getMediaResponseList()
+                    .get(0)
+                    .getUrl();
+        }
+        return thumbnailUrl;
     }
 }
