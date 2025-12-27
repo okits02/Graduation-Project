@@ -18,8 +18,14 @@ public class CategoryMappingHelper {
     public CategoryResponse map(Category category){
         var response = mediaClient.getMedia(category.getId(), MediaOwnerType.CATEGORY).getBody();
         String thumbnailUrl = null;
-        if(response.getResult() != null){
-            thumbnailUrl = response.getResult().getMediaResponseList().get(0).getUrl();
+        if (response.getResult() != null
+                && response.getResult().getMediaResponseList() != null
+                && !response.getResult().getMediaResponseList().isEmpty()) {
+
+            thumbnailUrl = response.getResult()
+                    .getMediaResponseList()
+                    .get(0)
+                    .getUrl();
         }
         return CategoryResponse.builder()
                 .id(category.getId())
