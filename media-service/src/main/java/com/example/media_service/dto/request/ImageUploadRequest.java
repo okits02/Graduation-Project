@@ -19,7 +19,7 @@ public class ImageUploadRequest {
     String productId;
     String ownerId;
     MediaOwnerType mediaOwnerType;
-    @ThumbnailFileValidConstraint(allowedTypes = {"image/jpeg", "image/png", "image/gif"},
+    @ThumbnailFileValidConstraint(allowedTypes = {"image/jpeg", "image/png", "image/gif", "image/webp"},
             message = "File type not allowed. Allowed types are: JPEG, PNG, GIF")
     MultipartFile multipartFile;
 }

@@ -17,7 +17,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ImageProductPostRequest {
     String productId;
-    @ListFileImageConstraint(allowedTypes = {"image/jpeg", "image/png", "image/gif"},
+    @ListFileImageConstraint(allowedTypes = {"image/jpeg", "image/png", "image/gif", "image/webp"},
             message = "File type not allowed. Allowed types are: JPEG, PNG, GIF")
     List<MultipartFile> imageProducts;
 }

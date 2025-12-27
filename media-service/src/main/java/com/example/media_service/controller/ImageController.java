@@ -40,22 +40,6 @@ public class ImageController {
                         .filter(m -> m.getMediaPurpose() == MediaPurpose.THUMBNAIL)
                         .findFirst()
                         .orElse(null);
-
-
-        if(mediaResponse != null) {
-            ApplyThumbnailEvent applyThumbnailEvent = createEvent(mediaResponse.getOwnerId(), request.getProductId(),
-                    mediaResponse.getUrl(), MediaOwnerType.PRODUCT
-            );
-            kafkaTemplate.send("apply-thumbnail-event", applyThumbnailEvent).whenComplete(
-                    (result, ex) -> {
-                        if(ex != null)
-                        {
-                            System.err.println("Failed to send message" + ex.getMessage());
-                        }else {
-                            System.err.println("send message successfully" + result.getProducerRecord());
-                        }
-            });
-        }
         return ResponseEntity.ok(ApiResponse.<ListMediaResponse>builder()
                 .code(200)
                 .message("upload file successfully")
