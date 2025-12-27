@@ -88,7 +88,7 @@ public class ImageController {
                 .build());
     }
 
-    @PostMapping("/category/media")
+    @PostMapping("/thumbnail")
     public ResponseEntity<ApiResponse<MediaResponse>> uploadImage(
             @ModelAttribute ImageUploadRequest request
             ) throws IOException {
