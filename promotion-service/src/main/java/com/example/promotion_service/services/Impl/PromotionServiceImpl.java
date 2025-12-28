@@ -53,42 +53,44 @@ public class PromotionServiceImpl implements PromotionService {
             throw new AppException(PromotionErrorCode.PROMOTION_EXISTS);
         }
         Promotion promotion = promotionMapper.toPromotion(request);
-        promotion.setPromotionKind(PromotionKind.AUTO);
-        List<PromotionApplyTo> promotionApplyTo = new ArrayList<>();
-        switch (request.getApplyTo())
-        {
-            case Product -> {
-                if (request.getProductId() != null && !request.getProductId().isEmpty()) {
-                    for(String id : request.getProductId()){
-                        promotionApplyTo.add(PromotionApplyTo.builder()
-                                        .promotion(promotion)
-                                        .productId(id)
-                                .build());
+        if(request.getPromotionKind().equals(PromotionKind.AUTO)) {
+            List<PromotionApplyTo> promotionApplyTo = new ArrayList<>();
+            switch (request.getApplyTo()) {
+                case Product -> {
+                    if (request.getProductId() != null && !request.getProductId().isEmpty()) {
+                        for (String id : request.getProductId()) {
+                            promotionApplyTo.add(PromotionApplyTo.builder()
+                                    .promotion(promotion)
+                                    .productId(id)
+                                    .build());
+                        }
+                    } else {
+                        throw new AppException(PromotionErrorCode.INVALID_PRODUCT_IDS);
                     }
-                }else{
-                    throw new AppException(PromotionErrorCode.INVALID_PRODUCT_IDS);
                 }
-            }
 
-            case Category -> {
-                if(request.getCategoryId() != null && !request.getCategoryId().isEmpty()){
-                    if(!checkValidLevel(request.getCategoryId())){
-                        throw new AppException(PromotionErrorCode.INVALID_LEVEL_CATEGORY);
+                case Category -> {
+                    if (request.getCategoryId() != null && !request.getCategoryId().isEmpty()) {
+                        if (!checkValidLevel(request.getCategoryId())) {
+                            throw new AppException(PromotionErrorCode.INVALID_LEVEL_CATEGORY);
+                        }
+                        for (String id : request.getCategoryId()) {
+                            promotionApplyTo.add(PromotionApplyTo.builder()
+                                    .promotion(promotion)
+                                    .categoryId(id)
+                                    .build());
+                        }
+                    } else {
+                        throw new AppException(PromotionErrorCode.INVALID_CATEGORY_IDS);
                     }
-                    for(String id : request.getCategoryId()){
-                        promotionApplyTo.add(PromotionApplyTo.builder()
-                                        .promotion(promotion)
-                                        .categoryId(id)
-                                .build());
-                    }
-                }else{
-                    throw new AppException(PromotionErrorCode.INVALID_CATEGORY_IDS);
                 }
             }
+            promotion.setPromotionApplyTo(promotionApplyTo);
+            promotion.setCreateAt(Date.from(Instant.now()));
+            sendKafKaEvent(promotion, "CREATED", new ArrayList<>());
+        }else if(request.getPromotionKind().equals(PromotionKind.VOUCHER)){
+
         }
-        promotion.setPromotionApplyTo(promotionApplyTo);
-        promotion.setCreateAt(Date.from(Instant.now()));
-        sendKafKaEvent(promotion, "CREATED", new ArrayList<>());
         promotionRepository.save(promotion);
         return promotionMapper.toPromotionResponse(promotion);
     }

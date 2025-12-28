@@ -12,7 +12,7 @@ public interface ImageService {
     public ListMediaResponse imageProduct(List<MultipartFile> imageProductFile,
                                           String productId) throws IOException;
     public MediaResponse uploadImage(MultipartFile thumbNailFile, String ownerId, MediaOwnerType mediaOwnerType) throws IOException;
-    public MediaResponse changeThumbnail(String oldThumbnailUrl, MultipartFile newThumbnail, String productId) throws IOException;
+    public MediaResponse changeThumbnail(String oldThumbnailUrl, MultipartFile newThumbnail, String sku) throws IOException;
     public ListMediaResponse changeImageProduct(List<MultipartFile> listFileImage, String productId ) throws IOException;
     public void deleteByOwnerId(String OwnerId, MediaOwnerType mediaOwnerType);
     public ListMediaResponse getMedia(String ownerId, MediaOwnerType mediaOwnerType);

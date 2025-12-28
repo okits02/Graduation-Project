@@ -12,7 +12,8 @@ import org.springframework.web.multipart.MultipartFile;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ChangeThumbnailRequest {
+    String productId;
     MultipartFile newThumbnail;
     String oldThumbnailUrl;
-    String productId;
+    String sku;
 }

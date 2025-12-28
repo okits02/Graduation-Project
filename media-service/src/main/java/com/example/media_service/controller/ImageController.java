@@ -50,8 +50,21 @@ public class ImageController {
     public ResponseEntity<ApiResponse<MediaResponse>> changeThumbnail(
             @ModelAttribute ChangeThumbnailRequest request
     ) throws IOException {
+
         MediaResponse mediaResponse = imageService.changeThumbnail(request.getOldThumbnailUrl(),
-                request.getNewThumbnail(), request.getProductId());
+                request.getNewThumbnail(), request.getSku());
+        ApplyThumbnailEvent applyThumbnailEvent = createEvent(
+                mediaResponse.getOwnerId(), request.getProductId(), mediaResponse.getUrl(), mediaResponse.getOwnerType()
+        );
+        kafkaTemplate.send("apply-thumbnail-event", applyThumbnailEvent).whenComplete(
+                (result, ex) -> {
+                    if(ex != null)
+                    {
+                        System.err.println("Failed to send message" + ex.getMessage());
+                    }else {
+                        System.err.println("send message successfully" + result.getProducerRecord());
+                    }
+                });
         return ResponseEntity.ok(ApiResponse.<MediaResponse>builder()
                 .code(200)
                 .message("Chang photo thumbnail successfully")
