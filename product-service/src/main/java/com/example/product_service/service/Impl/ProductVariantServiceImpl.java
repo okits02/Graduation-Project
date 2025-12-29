@@ -87,6 +87,9 @@ public class ProductVariantServiceImpl implements ProductVariantsService {
                     ProductVariants update = productVariantsRepository.save(variants);
                     skuResult.add(update.getSku());
                 }
+                case DELETE -> {
+                    deleteBySku(v.getSku());
+                }
             }
         }
         return skuResult;

@@ -217,82 +217,82 @@
             return result;
         }
 
-        public Map<String, Map<String, Long>> getAggregationsVariants(SearchHits<Products> hits){
-            Map<String, Map<String, Long>> result = new HashMap<>();
-            AggregationsContainer<?> container = hits.getAggregations();
-            if (container == null) {
-                return result;
-            }
+//        public Map<String, Map<String, Long>> getAggregationsVariants(SearchHits<Products> hits){
+//            Map<String, Map<String, Long>> result = new HashMap<>();
+//            AggregationsContainer<?> container = hits.getAggregations();
+//            if (container == null) {
+//                return result;
+//            }
+//
+//            List<ElasticsearchAggregation> aggs =
+//                    (List<ElasticsearchAggregation>) container.aggregations();
+//
+//            ElasticsearchAggregation variantAggWrapper = aggs.stream()
+//                    .filter(a -> "variant_specs".equals(a.aggregation().getName()))
+//                    .findFirst()
+//                    .orElse(null);
+//
+//            if (variantAggWrapper == null) return result;
+//
+//            Aggregate variantAgg = variantAggWrapper.aggregation().getAggregate();
+//            if (!variantAgg.isNested()) return result;
+//            NestedAggregate variantNested = variantAgg.nested();
+//            Aggregate bestSpecsAgg = variantNested.aggregations().get("best_specs");
+//            if (bestSpecsAgg == null || !bestSpecsAgg.isNested()) return result;
+//
+//            NestedAggregate bestSpecsNested = bestSpecsAgg.nested();
+//            Aggregate onlyVariantAgg = bestSpecsNested.aggregations().get("only_variant");
+//            if (onlyVariantAgg == null || !onlyVariantAgg.isFilter()) return result;
+//
+//            FilterAggregate onlyVariant = onlyVariantAgg.filter();
+//
+//            Aggregate byKeyAgg = onlyVariant.aggregations().get("by_key");
+//            if (byKeyAgg == null || !byKeyAgg.isSterms()) return result;
+//
+//            StringTermsAggregate byKey = byKeyAgg.sterms();
+//
+//            for (StringTermsBucket keyBucket : byKey.buckets().array()) {
+//                String key = keyBucket.key().stringValue();
+//
+//                Aggregate byValueAgg = keyBucket.aggregations().get("by_value");
+//                if (byValueAgg == null || !byValueAgg.isSterms()) continue;
+//
+//                StringTermsAggregate byValue = byValueAgg.sterms();
+//                Map<String, Long> valueMap = new HashMap<>();
+//
+//                for (StringTermsBucket valueBucket : byValue.buckets().array()) {
+//                    valueMap.put(
+//                            valueBucket.key().stringValue(),
+//                            valueBucket.docCount()
+//                    );
+//                }
+//
+//                result.put(key, valueMap);
+//            }
+//
+//            return result;
+//        }
 
-            List<ElasticsearchAggregation> aggs =
-                    (List<ElasticsearchAggregation>) container.aggregations();
-
-            ElasticsearchAggregation variantAggWrapper = aggs.stream()
-                    .filter(a -> "variant_specs".equals(a.aggregation().getName()))
-                    .findFirst()
-                    .orElse(null);
-
-            if (variantAggWrapper == null) return result;
-
-            Aggregate variantAgg = variantAggWrapper.aggregation().getAggregate();
-            if (!variantAgg.isNested()) return result;
-            NestedAggregate variantNested = variantAgg.nested();
-            Aggregate bestSpecsAgg = variantNested.aggregations().get("best_specs");
-            if (bestSpecsAgg == null || !bestSpecsAgg.isNested()) return result;
-
-            NestedAggregate bestSpecsNested = bestSpecsAgg.nested();
-            Aggregate onlyVariantAgg = bestSpecsNested.aggregations().get("only_variant");
-            if (onlyVariantAgg == null || !onlyVariantAgg.isFilter()) return result;
-
-            FilterAggregate onlyVariant = onlyVariantAgg.filter();
-
-            Aggregate byKeyAgg = onlyVariant.aggregations().get("by_key");
-            if (byKeyAgg == null || !byKeyAgg.isSterms()) return result;
-
-            StringTermsAggregate byKey = byKeyAgg.sterms();
-
-            for (StringTermsBucket keyBucket : byKey.buckets().array()) {
-                String key = keyBucket.key().stringValue();
-
-                Aggregate byValueAgg = keyBucket.aggregations().get("by_value");
-                if (byValueAgg == null || !byValueAgg.isSterms()) continue;
-
-                StringTermsAggregate byValue = byValueAgg.sterms();
-                Map<String, Long> valueMap = new HashMap<>();
-
-                for (StringTermsBucket valueBucket : byValue.buckets().array()) {
-                    valueMap.put(
-                            valueBucket.key().stringValue(),
-                            valueBucket.docCount()
-                    );
-                }
-
-                result.put(key, valueMap);
-            }
-
-            return result;
-        }
-
-        public Map<String, Map<String, Long>> mergeAggMaps(
-                Map<String, Map<String, Long>> techMap,
-                Map<String, Map<String, Long>> variantMap) {
-
-            Map<String, Map<String, Long>> result = new HashMap<>();
-            techMap.forEach((key, valueMap) ->
-                    result.put(key, new HashMap<>(valueMap))
-            );
-            variantMap.forEach((key, valueMap) -> {
-
-                Map<String, Long> targetValueMap =
-                        result.computeIfAbsent(key, k -> new HashMap<>());
-
-                valueMap.forEach((value, count) ->
-                        targetValueMap.merge(value, count, Long::sum)
-                );
-            });
-
-            return result;
-        }
+//        public Map<String, Map<String, Long>> mergeAggMaps(
+//                Map<String, Map<String, Long>> techMap,
+//                Map<String, Map<String, Long>> variantMap) {
+//
+//            Map<String, Map<String, Long>> result = new HashMap<>();
+//            techMap.forEach((key, valueMap) ->
+//                    result.put(key, new HashMap<>(valueMap))
+//            );
+//            variantMap.forEach((key, valueMap) -> {
+//
+//                Map<String, Long> targetValueMap =
+//                        result.computeIfAbsent(key, k -> new HashMap<>());
+//
+//                valueMap.forEach((value, count) ->
+//                        targetValueMap.merge(value, count, Long::sum)
+//                );
+//            });
+//
+//            return result;
+//        }
 
         private void extractCategory(String category, BoolQuery.Builder b)
         {
