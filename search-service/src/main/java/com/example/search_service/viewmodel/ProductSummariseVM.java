@@ -24,7 +24,6 @@ public class ProductSummariseVM {
     String thumbnailUrl;
     String price;
     String listPrice;
-    List<Specification> bestSpecifications;
     List<Specification> specifications;
     @JsonFormat(pattern = "yyyy-MM-dd")
     LocalDate createAt;
@@ -52,7 +51,6 @@ public class ProductSummariseVM {
                 .listPrice(bestVariant.getSellPrice() != null
                         ? bestVariant.getSellPrice().toString()
                         : null)
-                .bestSpecifications(bestVariant.getBestSpecifications())
                 .specifications(products.getSpecifications())
                 .createAt(products.getCreateAt())
                 .updateAt(products.getUpdateAt())

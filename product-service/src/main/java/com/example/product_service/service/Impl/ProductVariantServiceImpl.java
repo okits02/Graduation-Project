@@ -4,6 +4,7 @@ import com.example.product_service.dto.request.ProductVariantsRequest;
 import com.example.product_service.dto.response.ProductVariantsResponse;
 import com.example.product_service.enums.SpecGroup;
 import com.example.product_service.enums.SpecType;
+import com.example.product_service.enums.VariantAction;
 import com.example.product_service.exceptions.ProductErrorCode;
 import com.example.product_service.mapper.ProductVariantsMapper;
 import com.example.product_service.model.ProductVariants;
@@ -15,6 +16,7 @@ import com.okits02.common_lib.exception.AppException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -38,17 +40,9 @@ public class ProductVariantServiceImpl implements ProductVariantsService {
                     )) {
                         throw new AppException(ProductErrorCode.PRODUCT_VARIANTS_EXISTS);
                     }
-
                     ProductVariants productVariants = productVariantsMapper.toProductVariants(m);
-                    Specifications color = Specifications.builder()
-                            .key("color")
-                            .value(m.getColor())
-                            .type(SpecType.VARIANT)
-                            .group(SpecGroup.General)
-                            .build();
                     productVariants.setProductId(productId);
                     productVariants.setSku(SkuGenerator.generateSku());
-                    productVariants.getBestSpecifications().add(color);
                     ProductVariants save = productVariantsRepository.save(productVariants);
                     return save.getSku();
                 })
@@ -62,52 +56,40 @@ public class ProductVariantServiceImpl implements ProductVariantsService {
         if (request == null || request.isEmpty()) {
             return List.of();
         }
+        List<String> skuResult = new ArrayList<>();
 
-        List<String> responses = request.stream()
-                .map(m -> {
-                    ProductVariants variant = productVariantsRepository.findBySku(m.getSku());
-                    if(variant == null){
-                        throw new AppException(ProductErrorCode.PRODUCT_VARIANTS_NOT_FOUND);
+        for(ProductVariantsRequest v : request){
+            switch (v.getAction()){
+                case CREATE -> {
+                    if (productVariantsRepository.existsByProductIdAndNameAndColor(
+                            productId,
+                            v.getVariantName(),
+                            v.getColor()
+                    )) {
+                        throw new AppException(ProductErrorCode.PRODUCT_VARIANTS_EXISTS);
                     }
-                    if (!variant.getProductId().equals(productId)) {
-                        throw new AppException(ProductErrorCode.INVALID_PRODUCT_VARIANT);
+                    ProductVariants productVariants = productVariantsMapper.toProductVariants(v);
+                    productVariants.setProductId(productId);
+                    productVariants.setSku(SkuGenerator.generateSku());
+                    ProductVariants save = productVariantsRepository.save(productVariants);
+                    skuResult.add(save.getSku());
+                }
+                case UPDATE -> {
+                    if (productVariantsRepository.existsByProductIdAndNameAndColor(
+                            productId,
+                            v.getVariantName(),
+                            v.getColor()
+                    )){
+                        throw new AppException(ProductErrorCode.PRODUCT_VARIANTS_EXISTS);
                     }
-                    if(m.getColor() != null){
-                        String oldColor = variant.getBestSpecifications().stream()
-                                .filter(s -> "color".equalsIgnoreCase(s.getKey()))
-                                .map(Specifications::getValue)
-                                .findFirst()
-                                .orElse(null);
-                        if(!m.getColor().equals(oldColor)){
-                            if (productVariantsRepository.existsByProductIdAndNameAndColor(
-                                    productId,
-                                    m.getVariantName(),
-                                    m.getColor()
-                            )) {
-                                throw new AppException(ProductErrorCode.PRODUCT_VARIANTS_EXISTS);
-                            }
-                            List<Specifications> specs = variant.getBestSpecifications();
-                            Specifications colorSpec = specs.stream()
-                                    .filter(s -> "color".equalsIgnoreCase(s.getKey()))
-                                    .findFirst()
-                                    .orElse(null);
-                            if(colorSpec != null){
-                                colorSpec.setValue(m.getColor());
-                            }else {
-                                specs.add(Specifications.builder()
-                                        .key("color")
-                                        .value(m.getColor())
-                                        .build());
-                            }
-                        }
-                    }
-                    productVariantsMapper.updateProduct(variant, m);
-                    ProductVariants save = productVariantsRepository.save(variant);
-                    return save.getSku();
-                })
-                .toList();
-
-        return responses;
+                    ProductVariants variants = productVariantsRepository.findBySku(v.getSku());
+                    productVariantsMapper.updateProduct(variants, v);
+                    ProductVariants update = productVariantsRepository.save(variants);
+                    skuResult.add(update.getSku());
+                }
+            }
+        }
+        return skuResult;
     }
 
     @Override

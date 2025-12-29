@@ -31,6 +31,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -86,10 +87,41 @@ public class PromotionServiceImpl implements PromotionService {
                 }
             }
             promotion.setPromotionApplyTo(promotionApplyTo);
-            promotion.setCreateAt(Date.from(Instant.now()));
+            promotion.setCreateAt(LocalDate.now());
             sendKafKaEvent(promotion, "CREATED", new ArrayList<>());
         }else if(request.getPromotionKind().equals(PromotionKind.VOUCHER)){
 
+            List<PromotionApplyTo> promotionApplyTo = new ArrayList<>();
+            switch (request.getApplyTo()) {
+                case Product -> {
+                    if (request.getProductId() != null && !request.getProductId().isEmpty()) {
+                        for (String id : request.getProductId()) {
+                            promotionApplyTo.add(PromotionApplyTo.builder()
+                                    .promotion(promotion)
+                                    .productId(id)
+                                    .build());
+                        }
+                    } else {
+                        throw new AppException(PromotionErrorCode.INVALID_PRODUCT_IDS);
+                    }
+                }
+
+                case Category -> {
+                    if (request.getCategoryId() != null && !request.getCategoryId().isEmpty()) {
+                        if (!checkValidLevel(request.getCategoryId())) {
+                            throw new AppException(PromotionErrorCode.INVALID_LEVEL_CATEGORY);
+                        }
+                        for (String id : request.getCategoryId()) {
+                            promotionApplyTo.add(PromotionApplyTo.builder()
+                                    .promotion(promotion)
+                                    .categoryId(id)
+                                    .build());
+                        }
+                    } else {
+                        throw new AppException(PromotionErrorCode.INVALID_CATEGORY_IDS);
+                    }
+                }
+            }
         }
         promotionRepository.save(promotion);
         return promotionMapper.toPromotionResponse(promotion);

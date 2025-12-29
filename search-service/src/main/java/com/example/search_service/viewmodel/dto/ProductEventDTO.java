@@ -14,6 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductEventDTO {
+    String eventType;
     String id;
     String name;
     String brand;

@@ -1,8 +1,7 @@
 package com.example.product_service.service.Impl;
 
-import com.example.product_service.dto.response.ProductVariantsResponse;
 import com.example.product_service.enums.SpecType;
-import com.example.product_service.kafka.CreateProductEvent;
+import com.example.product_service.kafka.ProductEvent;
 import com.example.product_service.kafka.DeleteProductEvent;
 import com.example.product_service.model.Specifications;
 import com.example.product_service.service.CategoryService;
@@ -27,6 +26,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -142,8 +142,8 @@ public class ProductServiceImpl implements ProductService {
         }
         switch (typeEvent){
             case "CREATED" -> {
-                CreateProductEvent createProductEvent = createEventProduct(product);
-                kafkaTemplate.send("product-create-event", createProductEvent).whenComplete(
+                ProductEvent productEvent = createEventProduct(product, typeEvent);
+                kafkaTemplate.send("product-event", productEvent).whenComplete(
                         (result, ex) -> {
                             if(ex != null)
                             {
@@ -155,8 +155,8 @@ public class ProductServiceImpl implements ProductService {
                         });
             }
             case "UPDATED" -> {
-                CreateProductEvent createProductEvent = createEventProduct(product);
-                kafkaTemplate.send("product-update-event", createProductEvent).whenComplete(
+                ProductEvent productEvent = createEventProduct(product, typeEvent);
+                kafkaTemplate.send("product-event", productEvent).whenComplete(
                         (result, ex) -> {
                             if(ex != null)
                             {
@@ -168,18 +168,29 @@ public class ProductServiceImpl implements ProductService {
                         });
             }
             case "DELETED" -> {
-                DeleteProductEvent deleteProductEvent = DeleteProductEvent.builder()
-                        .productId(product.getId())
-                        .build();
-                kafkaTemplate.send("product-delete-event", deleteProductEvent);
+                ProductEvent productEvent = createEventProduct(product, typeEvent);
+                kafkaTemplate.send("product-event", productEvent).whenComplete(
+                        (result, ex) -> {
+                            if(ex != null)
+                            {
+                                System.err.println("Failed to send message" + ex.getMessage());
+                            }else
+                            {
+                                System.err.println("send message successfully" + result.getProducerRecord());
+                            }
+                        });
             }
         }
     }
-    private CreateProductEvent createEventProduct(Products product)
+    private ProductEvent createEventProduct(Products product, String eventType)
     {
-        Set<String> currentCateId = product.getCategoryId();
-        List<String> categoryList = categoryService.getCategoryHierarchy(currentCateId);
-        CreateProductEvent createProductEvent = CreateProductEvent.builder()
+        List<String> categoryList = new ArrayList<>();
+        if(!product.getCategoryId().isEmpty()) {
+            Set<String> currentCateId = product.getCategoryId();
+            categoryList = categoryService.getCategoryHierarchy(currentCateId);
+        }
+        ProductEvent productEvent = ProductEvent.builder()
+                .eventType(eventType)
                 .id(product.getId())
                 .name(product.getName())
                 .brand(product.getBrandName())
@@ -190,6 +201,6 @@ public class ProductServiceImpl implements ProductService {
                 .createAt(product.getCreateAt())
                 .updateAt(product.getUpdateAt())
                 .build();
-        return  createProductEvent;
+        return productEvent;
     }
 }

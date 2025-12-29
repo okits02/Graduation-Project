@@ -28,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.constraints.LuhnCheck;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
@@ -67,17 +68,29 @@ public class ProductService {
     }
 
     public void updateProduct(ProductEventDTO request) {
-        Products products = productsRepository.findById(request.getId()).orElseThrow(() ->
-                new AppException(SearchErrorCode.PRODUCT_NOT_EXISTS));
-        boolean different =
-                !new HashSet<>(request.getCategoriesId()).equals(new HashSet<>(products.getCategoriesId()));
-        if(different){
-            var response = promotionClient.getByCategoryIds(request.getCategoriesId());
-            products.setPromotions(new HashSet<>(response.getResult()));
+        Products product = productsRepository.findById(request.getId())
+                .orElseThrow(() ->
+                        new AppException(SearchErrorCode.PRODUCT_NOT_EXISTS)
+                );
+        if (isCategoryChanged(request.getCategoriesId(), product.getCategoriesId())) {
+
+            if (request.getCategoriesId() != null && !request.getCategoriesId().isEmpty()) {
+                var response =
+                        promotionClient.getByCategoryIds(request.getCategoriesId());
+
+                product.setPromotions(
+                        response.getResult() != null
+                                ? new HashSet<>(response.getResult())
+                                : Set.of()
+                );
+            } else {
+                product.setPromotions(Set.of());
+            }
         }
-        productsMapper.updateProduct(products, request);
-        calculatorListPrice(products);
-        productsRepository.save(products);
+        productsMapper.updateProduct(product, request);
+        product.setProductVariants(request.getProductVariants());
+        calculatorListPrice(product);
+        productsRepository.save(product);
     }
 
     public void deleteProduct(String productId) throws IOException {
@@ -679,4 +692,17 @@ public class ProductService {
         }
         return result.max(BigDecimal.ZERO);
     }
+
+    private Boolean isCategoryChanged(
+            List<String> newCategory,
+            List<String> oldCategory
+    ){
+        if (newCategory == null && oldCategory == null) {
+            return false;
+        }
+        if (newCategory == null || oldCategory == null) {
+            return true;
+        }
+        return !new HashSet<>(newCategory)
+                .equals(new HashSet<>(oldCategory));    }
 }

@@ -7,6 +7,7 @@ import com.example.promotion_service.enums.UsageType;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.cglib.core.Local;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -39,13 +40,15 @@ public class Promotion {
     Date startDate;
     Date endDate;
     Double minimumOrderPurchaseAmount;
+    Double maxDiscountAmount;
     int usageLimited;
     int usageCount;
+    int usageLimitPerUser;
     Boolean active;
     @OneToMany(mappedBy = "promotion", cascade = CascadeType.ALL, orphanRemoval = true)
     List<PromotionApplyTo> promotionApplyTo = new ArrayList<>();
-    Date createAt;
-    Date updateAt;
+    LocalDate createAt;
+    LocalDate updateAt;
 
     @Override
     public boolean equals(Object object)

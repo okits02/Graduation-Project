@@ -34,8 +34,6 @@ public class ProductVariants {
     Integer sold;
     @Field("thumbnail")
     String thumbnail;
-    @Field("best_specifications")
-    List<Specifications> bestSpecifications;
     @Field("in_stock")
     Boolean inStock;
     @CreatedDate

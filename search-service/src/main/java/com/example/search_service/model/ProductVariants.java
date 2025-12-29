@@ -25,6 +25,8 @@ public class ProductVariants {
     String variantName;
     @Field(type = FieldType.Keyword)
     String sku;
+    @Field(type = FieldType.Keyword)
+    String color;
     @Field(type = FieldType.Scaled_Float, scalingFactor = 100)
     BigDecimal price;
     @Field(type = FieldType.Scaled_Float, scalingFactor = 100)
@@ -33,8 +35,6 @@ public class ProductVariants {
     Integer sold;
     @Field(type = FieldType.Text)
     String thumbnail;
-    @Field(type = FieldType.Nested)
-    List<Specification> bestSpecifications;
     @Field(type = FieldType.Boolean)
     Boolean inStock;
     @CreatedDate

@@ -101,14 +101,14 @@
             List<ProductSummariseVM> productGetVMList = productsSearchHits.stream().map(i -> ProductSummariseVM
                     .fromEntity(i.getContent())).toList();
             Map<String, Map<String, Long>> techAggregations = getAggregationTech(productsSearchHits);
-            Map<String, Map<String, Long>> variantSpecAggregations = getAggregationsVariants(productsSearchHits);
+            //Map<String, Map<String, Long>> variantSpecAggregations = getAggregationsVariants(productsSearchHits);
             return ProductGetListVM.<ProductSummariseVM>builder()
                     .productGetVMList(productGetVMList)
                     .currentPages(productsSearchPage.getNumber())
                     .totalPage(productsSearchPage.getTotalPages())
                     .pageSize(productsSearchPage.getSize())
                     .totalElements(productsSearchPage.getTotalElements())
-                    .aggregations(mergeAggMaps(techAggregations, variantSpecAggregations))
+                    .aggregations(techAggregations)
                     .build();
         }
 
@@ -166,28 +166,6 @@
                                     .must(ms -> ms.term(t -> t
                                             .field("specifications.type")
                                             .value("tech")
-                                    ))
-                            ))
-                    ));
-                }
-                if ("VARIANT".equals(attr.getType())) {
-                    b.must(m -> m.nested(n1 -> n1
-                            .path("productVariants")
-                            .query(q1 -> q1.nested(n2 -> n2
-                                    .path("productVariants.bestSpecifications")
-                                    .query(q2 -> q2.bool(bl -> bl
-                                            .must(ms -> ms.term(t -> t
-                                                    .field("productVariants.bestSpecifications.key")
-                                                    .value(attr.getKey())
-                                            ))
-                                            .must(ms -> ms.term(t -> t
-                                                    .field("productVariants.bestSpecifications.value")
-                                                    .value(attr.getValue())
-                                            ))
-                                            .must(ms -> ms.term(t -> t
-                                                    .field("productVariants.bestSpecifications.type")
-                                                    .value("variant")
-                                            ))
                                     ))
                             ))
                     ));

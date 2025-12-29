@@ -8,25 +8,11 @@ import org.springframework.kafka.config.TopicBuilder;
 @Configuration
 public class kafkaConfig {
     @Bean
-    public NewTopic createProductsTopic(){return TopicBuilder.name("product-create-event")
+    public NewTopic productsTopic(){return TopicBuilder.name("product-event")
             .partitions(3)
             .replicas(2)
             .build();
     }
-
-    @Bean
-    public NewTopic updateProductsTopic(){return TopicBuilder.name("product-update-event")
-            .partitions(3)
-            .replicas(2)
-            .build();
-    }
-
-    @Bean
-    public NewTopic deleteProductsTopic(){return TopicBuilder.name("product-delete-event")
-            .replicas(2)
-            .partitions(3)
-            .build();}
-
     @Bean
     public NewTopic categoryTopic(){return TopicBuilder.name("category-event")
             .replicas(2)

@@ -21,61 +21,24 @@ import java.util.Map;
 public class KafkaConsumerConfig {
 
     @Bean
-    public ConsumerFactory<String, String> createConsumerFactory() {
+    public ConsumerFactory<String, String> productConsumerFactory() {
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9094");
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "create-product");
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "create-consumer");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         return new DefaultKafkaConsumerFactory<>(props);
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, String> createKafkaListenerContainerFactory() {
+    public ConcurrentKafkaListenerContainerFactory<String, String> productKafkaListenerContainerFactory() {
         ConcurrentKafkaListenerContainerFactory<String, String> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(createConsumerFactory());
+        factory.setConsumerFactory(productConsumerFactory());
         factory.setConcurrency(3);
         return factory;
     }
 
-    @Bean
-    public ConsumerFactory<String, String> updateConsumerFactory() {
-        Map<String, Object> props = new HashMap<>();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9094");
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "update-product");
-        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        return new DefaultKafkaConsumerFactory<>(props);
-    }
-
-    @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, String> updateKafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, String> factory =
-                new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(updateConsumerFactory());
-        factory.setConcurrency(3);
-        return factory;
-    }
-
-    @Bean
-    public ConsumerFactory<String, String> deleteConsumerFactory(){
-        Map<String, Object> props = new HashMap<>();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9094");
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "delete-product");
-        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        return new DefaultKafkaConsumerFactory<>(props);
-    }
-
-    @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, String> deleteKafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, String> factory =
-                new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(deleteConsumerFactory());
-        factory.setConcurrency(3);
-        return factory;
-    }
 
     @Bean
     public ConsumerFactory<String, String> createPromotionFactory(){
