@@ -41,15 +41,9 @@ public class CategoryServiceImpl implements CategoryService {
 
 
     @Override
-    public PageResponse<CategoryResponse> finAll(int Page, int Size) {
-        Pageable pageable = PageRequest.of(Page, Size);
-        var pageData = categoryRepository.findAll(pageable);
-        return PageResponse.<CategoryResponse>builder()
-                .currentPage(Page)
-                .pageSize(pageData.getSize())
-                .totalElements(pageData.getTotalElements())
-                .data(pageData.getContent().stream().map(categoryMappingHelper::map).toList())
-                .build();
+    public List<CategoryResponse> finAll() {
+        var categoryList = categoryRepository.findAll();
+        return categoryList.stream().map(categoryMapper::toCategoryResponse).toList();
     }
 
     @Override

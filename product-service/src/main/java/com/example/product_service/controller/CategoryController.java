@@ -63,21 +63,12 @@ public class CategoryController {
 
     @Operation(summary = "get all category")
     @GetMapping("/getAll")
-    ResponseEntity<ApiResponse<PageResponse<CategoryResponse>>> getAllCate(@RequestParam(defaultValue = "1") int page,
-                                                                           @RequestParam(defaultValue = "10") int size)
+    ResponseEntity<ApiResponse<List<CategoryResponse>>> getAllCate()
     {
-        if(page <= 0 || size <= 0)
-        {
-            return ResponseEntity.badRequest().body(
-                    ApiResponse.<PageResponse<CategoryResponse>>builder()
-                            .code(400)
-                            .message("Page index must be non-negative and size must be greater than zero")
-                            .build());
-        }
         return ResponseEntity.ok(
-                ApiResponse.<PageResponse<CategoryResponse>>builder()
+                ApiResponse.<List<CategoryResponse>>builder()
                         .code(200)
-                        .result(categoryService.finAll(page - 1, size))
+                        .result(categoryService.finAll())
                         .build());
     }
 

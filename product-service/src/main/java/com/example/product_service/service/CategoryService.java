@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Set;
 
 public interface CategoryService {
-    public PageResponse<CategoryResponse> finAll(int Page, int Size);
+    public List<CategoryResponse> finAll();
     public CategoryResponse findById(String categoryId);
     public Category createCate(CategoryRequest request);
     public CategoryResponse updateCate(CategoryRequest request);
