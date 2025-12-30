@@ -17,8 +17,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
-@Setter
-@Getter
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class OrderCreationRequest implements Serializable {
@@ -28,4 +26,5 @@ public class OrderCreationRequest implements Serializable {
     String addressId;
     String voucher;
     List<OrderItemRequest> items;
+    List<String> categoryId;
 }

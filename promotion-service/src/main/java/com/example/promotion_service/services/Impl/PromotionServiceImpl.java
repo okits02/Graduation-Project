@@ -1,7 +1,7 @@
 package com.example.promotion_service.services.Impl;
 
 import com.example.promotion_service.dto.request.CategoryLevelValidateRequest;
-import com.example.promotion_service.dto.request.CheckValidVoucher;
+import com.example.promotion_service.dto.request.CheckValidVoucherRequest;
 import com.example.promotion_service.dto.request.PromotionCreationRequest;
 import com.example.promotion_service.dto.request.PromotionUpdateRequest;
 import com.example.promotion_service.enums.ApplyTo;
@@ -9,8 +9,10 @@ import com.example.promotion_service.enums.PromotionKind;
 import com.example.promotion_service.kafka.PromotionEvent;
 import com.example.promotion_service.kafka.StatusEvent;
 import com.example.promotion_service.kafka.UpdatePromotionEvent;
+import com.example.promotion_service.model.PromotionUsage;
+import com.example.promotion_service.repository.PromotionUsageRepository;
 import com.example.promotion_service.repository.httpClient.ProductClient;
-import com.okits02.common_lib.dto.ApiResponse;
+import com.example.promotion_service.repository.httpClient.UserClient;
 import com.okits02.common_lib.dto.PageResponse;
 import com.example.promotion_service.dto.response.PromotionResponse;
 import com.okits02.common_lib.exception.AppException;
@@ -26,27 +28,28 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.example.promotion_service.enums.UsageType.LIMITED;
+import static com.example.promotion_service.exception.PromotionErrorCode.*;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class PromotionServiceImpl implements PromotionService {
     private final PromotionRepository promotionRepository;
+    private final PromotionUsageRepository promotionUsageRepository;
     private final PromotionApplyToRepository applyToRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final PromotionMapper promotionMapper;
     private final ProductClient productClient;
+    private final UserClient userClient;
 
     @Override
     public PromotionResponse createPromotion(PromotionCreationRequest request) {
@@ -278,14 +281,119 @@ public class PromotionServiceImpl implements PromotionService {
     }
 
     @Override
-    public List<PromotionResponse> getPromotionForOrder(CheckValidVoucher request) {
-
-        return null;
+    public List<PromotionResponse> getPromotionForOrder(CheckValidVoucherRequest request) {
+        String userId = getUserId();
+        List<Promotion> promotionList = promotionRepository.findApplicablePromotions(
+                request.getToday(),
+                request.getTotalAmount(),
+                request.getProductId(),
+                request.getCategoryId(),
+                request.getVoucherCode(),
+                userId
+        );
+        return promotionList.stream().map(promotionMapper::toPromotionResponse).toList();
     }
 
     @Override
-    public PromotionResponse checkValidVoucher(CheckValidVoucher request) {
-        return null;
+    public PromotionResponse checkValidVoucher(CheckValidVoucherRequest request) {
+        String userId = getUserId();
+
+        Promotion promotion = promotionRepository
+                .findByVoucherCode(request.getVoucherCode());
+
+        if (promotion == null) {
+            throw new AppException(PromotionErrorCode.PROMOTION_NOT_EXISTS);
+        }
+
+        Date today = request.getToday();
+        if (today.before(promotion.getStartDate())
+                || today.after(promotion.getEndDate())) {
+            throw new AppException(PromotionErrorCode.PROMOTION_EXPIRED);
+        }
+
+        if (request.getTotalAmount()
+                < promotion.getMinimumOrderPurchaseAmount()) {
+            throw new AppException(PromotionErrorCode.PROMOTION_NOT_VALID_FOR_ORDER);
+        }
+
+        long userUsage =
+                promotionUsageRepository
+                        .countByPromotionIdAndUserId(
+                                promotion.getId(), userId
+                        );
+
+        if (promotion.getUsageLimitPerUser() > 0
+                && userUsage >= promotion.getUsageLimitPerUser()) {
+            throw new AppException(PromotionErrorCode.PROMOTION_USED_LIMIT);
+        }
+
+        if (promotion.getUsageCount()
+                >= promotion.getUsageLimited()) {
+            throw new AppException(PromotionErrorCode.PROMOTION_OUT_OF_QUOTA);
+        }
+
+        return PromotionResponse.builder()
+                .fixedAmount(promotion.getFixedAmount())
+                .discountPercent(promotion.getDiscountPercent())
+                .minimumOrderPurchaseAmount(
+                        promotion.getMinimumOrderPurchaseAmount()
+                )
+                .maxDiscountAmount(promotion.getMaxDiscountAmount())
+                .build();
+    }
+
+    public void applyVoucherToOrder(
+            String voucherCode,
+            String orderId
+    ) {
+        String userId = getUserId();
+
+        Promotion promotion = promotionRepository
+                .findByVoucherCode(voucherCode);
+        if (promotion == null) {
+            throw new AppException(PromotionErrorCode.PROMOTION_NOT_EXISTS);
+        }
+
+        if (promotionUsageRepository
+                .countByPromotionIdAndOrderId(
+                        promotion.getId(), orderId
+                ) > 0) {
+            return;
+        }
+
+        if (promotion.getUsageCount()
+                >= promotion.getUsageLimited()) {
+            throw new AppException(PromotionErrorCode.PROMOTION_OUT_OF_QUOTA);
+        }
+
+        promotion.setUsageCount(
+                promotion.getUsageCount() + 1
+        );
+        promotionRepository.save(promotion);
+
+        promotionUsageRepository.save(
+                PromotionUsage.builder()
+                        .promotion(promotion)
+                        .userId(userId)
+                        .orderId(orderId)
+                        .build()
+        );
+    }
+    public void rollbackVoucher(String orderId) {
+
+        PromotionUsage usage =
+                promotionUsageRepository
+                        .findByOrderId(orderId);
+
+        if (usage == null) return;
+
+        Promotion promotion = usage.getPromotion();
+        promotion.setUsageCount(
+                promotion.getUsageCount() - 1
+        );
+
+        promotionRepository.save(promotion);
+        promotionUsageRepository.delete(usage);
     }
 
     @Override
@@ -405,5 +513,13 @@ public class PromotionServiceImpl implements PromotionService {
                         });
             }
         }
+    }
+
+    private String getUserId(){
+        ServletRequestAttributes servletRequestAttributes =
+                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
+        var apiResponse = userClient.getUserId(authHeader);
+        return apiResponse.getResult().getUserId();
     }
 }

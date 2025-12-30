@@ -1,23 +1,18 @@
 package com.example.promotion_service.controller;
 
+import com.example.promotion_service.dto.request.CheckValidVoucherRequest;
 import com.example.promotion_service.dto.request.PromotionCreationRequest;
 import com.example.promotion_service.dto.request.PromotionUpdateRequest;
-import com.example.promotion_service.kafka.UpdatePromotionEvent;
-import com.example.promotion_service.model.Promotion;
 import com.okits02.common_lib.dto.ApiResponse;
 import com.okits02.common_lib.dto.PageResponse;
 import com.example.promotion_service.dto.response.PromotionResponse;
 import com.okits02.common_lib.exception.AppException;
 import com.example.promotion_service.exception.PromotionErrorCode;
-import com.example.promotion_service.kafka.PromotionEvent;
-import com.example.promotion_service.kafka.StatusEvent;
 import com.example.promotion_service.services.PromotionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.shaded.com.google.protobuf.Api;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -123,5 +118,41 @@ public class PromotionController {
     }
 
     @PostMapping("/voucher")
-    ApiResponse<PromotionResponse> checkValidVoucher()
+    ApiResponse<List<PromotionResponse>> getListVoucherForOrder(@RequestBody CheckValidVoucherRequest request){
+        return ApiResponse.<List<PromotionResponse>>builder()
+                .code(200)
+                .message("get list voucher successfully!")
+                .result(promotionService.getPromotionForOrder(request))
+                .build();
+    }
+
+    @PostMapping("/internal/voucher/check")
+    ApiResponse<PromotionResponse> checkValidForOrder(
+            @RequestParam CheckValidVoucherRequest request){
+        return ApiResponse.<PromotionResponse>builder()
+                .code(200)
+                .message("voucher is valid")
+                .result(promotionService.checkValidVoucher(request))
+                .build();
+    }
+    @PostMapping("/internal/voucher/applyForOrder")
+    ApiResponse<?> applyForOrder(
+                    @RequestParam String orderId,
+                    @RequestParam String voucherCode){
+        promotionService.applyVoucherToOrder(orderId, voucherCode);
+        return ApiResponse.builder()
+                .code(200)
+                .message("apply voucher for order is successfully")
+                .build();
+    }
+
+    @PostMapping("internal/voucher/rollBack")
+    ApiResponse<?> rollBackVoucher(
+            @RequestParam String orderId
+    ){
+        return ApiResponse.builder()
+                .code(200)
+                .message("Roll back voucher successfully")
+                .build();
+    }
 }

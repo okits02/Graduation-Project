@@ -20,7 +20,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Promotion {
+public  class Promotion {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
