@@ -121,4 +121,7 @@ public class PromotionController {
                 .result(promotionService.getPromotionByCategoryIds(categoryIds))
                 .build();
     }
+
+    @PostMapping("/voucher")
+    ApiResponse<PromotionResponse> checkValidVoucher()
 }
