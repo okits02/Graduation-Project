@@ -39,7 +39,7 @@ public class CategoryController {
                 .build();
     }
 
-    @GetMapping("/get-by-parentid/{categoryId}")
+    @GetMapping("/category/{categoryId}")
     public ApiResponse<CategoryDetailsVM> getByPrentId(@PathVariable String categoryId){
         return ApiResponse.<CategoryDetailsVM>builder()
                 .code(200)
