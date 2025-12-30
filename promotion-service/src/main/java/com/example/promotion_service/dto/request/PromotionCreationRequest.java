@@ -4,6 +4,7 @@ import com.example.promotion_service.enums.ApplyTo;
 import com.example.promotion_service.enums.DiscountType;
 import com.example.promotion_service.enums.PromotionKind;
 import com.example.promotion_service.enums.UsageType;
+import com.example.promotion_service.validator.ValidPromotion;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -15,6 +16,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ValidPromotion
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class PromotionCreationRequest {
     @NotNull
@@ -32,7 +34,9 @@ public class PromotionCreationRequest {
     double discountPercent;
     double fixedAmount;
     int usageLimited;
+    int usageLimitPerUser;
     Double minimumOrderPurchaseAmount;
+    Double maxDiscountAmount;
     Date startDate;
     Date endDate;
     Boolean active;

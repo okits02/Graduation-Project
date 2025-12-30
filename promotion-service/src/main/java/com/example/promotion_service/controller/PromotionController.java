@@ -3,6 +3,7 @@ package com.example.promotion_service.controller;
 import com.example.promotion_service.dto.request.PromotionCreationRequest;
 import com.example.promotion_service.dto.request.PromotionUpdateRequest;
 import com.example.promotion_service.kafka.UpdatePromotionEvent;
+import com.example.promotion_service.model.Promotion;
 import com.okits02.common_lib.dto.ApiResponse;
 import com.okits02.common_lib.dto.PageResponse;
 import com.example.promotion_service.dto.response.PromotionResponse;
@@ -13,6 +14,7 @@ import com.example.promotion_service.kafka.StatusEvent;
 import com.example.promotion_service.services.PromotionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.shaded.com.google.protobuf.Api;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -72,15 +74,27 @@ public class PromotionController {
     }
 
     @GetMapping("/getAll")
-    ResponseEntity<ApiResponse<PageResponse<PromotionResponse>>> getAllPromotion(
-            @RequestParam(defaultValue = "0") int page,
+    ResponseEntity<ApiResponse<PageResponse<PromotionResponse>>> getAllPromotionAuto(
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ){
         return ResponseEntity.ok(ApiResponse.<PageResponse<PromotionResponse>>builder()
                         .code(200)
                         .message("Get all promotion successfully!")
-                        .result(promotionService.getAllPromotion(page, size))
+                        .result(promotionService.getAllPromotionAuto(page - 1, size))
                 .build());
+    }
+
+    @GetMapping("/voucher/getAll")
+    ApiResponse<PageResponse<PromotionResponse>> getAllPromotionVoucher(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size
+    ){
+        return ApiResponse.<PageResponse<PromotionResponse>>builder()
+                .code(200)
+                .message("Get all voucher successfully")
+                .result(promotionService.getPromotionVoucher(page - 1, size))
+                .build();
     }
 
     @DeleteMapping("/delete/{promotionId}")

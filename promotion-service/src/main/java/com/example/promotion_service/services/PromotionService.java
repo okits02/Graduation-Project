@@ -13,8 +13,9 @@ public interface PromotionService {
     public PromotionResponse createPromotion(PromotionCreationRequest request);
     public PromotionResponse updatePromotion(PromotionUpdateRequest request);
     public PromotionResponse getPromotion(String promotionId);
+    public PageResponse<PromotionResponse> getPromotionVoucher(int page, int size);
     public List<PromotionResponse> getPromotionByCategoryIds(List<String> categoryIds);
-    public PageResponse<PromotionResponse> getAllPromotion(int page, int size);
+    public PageResponse<PromotionResponse> getAllPromotionAuto(int page, int size);
     public void UpdatePromotionStatus(String id);
     public void deletePromotion(String promotionId);
 }

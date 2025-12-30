@@ -27,6 +27,9 @@ public class OrderItem {
     @Column(name = "product_id")
     private String productId;
 
+    @Column(name = "sku")
+    private String sku;
+
     @Column(name = "name_product")
     private String productName;
 

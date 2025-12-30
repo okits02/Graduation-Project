@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class OrderItemResponse {
     String productId;
+    String sku;
     String productName;
     Integer quantity;
     BigDecimal listPrice;

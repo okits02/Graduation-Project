@@ -13,8 +13,10 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 @Data
 @Builder
@@ -32,12 +34,13 @@ public class PromotionResponse {
     Double fixedAmount;
     Date startDate;
     Date endDate;
-    Double minimumOrderPurchaseAmount;
     int usageLimited;
-    int usageCount;
+    int usageLimitPerUser;
+    Double minimumOrderPurchaseAmount;
+    Double maxDiscountAmount;
     Boolean active;
     List<String> productId;
     List<String> categoryId;
-    Date createAt;
-    Date updateAt;
+    LocalDate createAt;
+    LocalDate updateAt;
 }

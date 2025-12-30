@@ -3,6 +3,7 @@ package com.example.promotion_service.kafka;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -23,6 +24,6 @@ public class UpdatePromotionEvent {
     Set<String> productIdList;
     Set<String> categoryIdList;
     List<String> deleteApplyTo;
-    Date createAt;
-    Date updateAt;
+    LocalDate createAt;
+    LocalDate updateAt;
 }

@@ -44,7 +44,7 @@ public class CategoryController {
         return ApiResponse.<CategoryDetailsVM>builder()
                 .code(200)
                 .message("get category by id")
-                .result(categoryService.getCategoryByParentId(categoryId))
+                .result(categoryService.getCategoryTreeById(categoryId))
                 .build();
     }
 

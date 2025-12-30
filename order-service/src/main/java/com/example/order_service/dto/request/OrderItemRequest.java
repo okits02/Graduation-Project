@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 public class OrderItemRequest {
     String productId;
     String productName;
+    String sku;
     String thumbnailUrl;
     Integer quantity;
     BigDecimal listPrice;

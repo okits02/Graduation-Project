@@ -43,6 +43,8 @@ public class Orders extends AbstractMappedEntity{
     private BigDecimal orderFee;
     @Column(name = "order_status")
     private Status orderStatus;
+    @Column(name = "voucher")
+    private String voucherCode;
     @Column(name = "user_id")
     private String userId;
     @Column(name = "payment_id")

@@ -4,7 +4,6 @@ import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch.core.GetResponse;
-import co.elastic.clients.elasticsearch.core.SearchResponse;
 import com.example.search_service.exceptions.SearchErrorCode;
 import com.example.search_service.model.Category;
 import com.example.search_service.viewmodel.CategoryDetailsVM;
@@ -22,7 +21,6 @@ import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -222,43 +220,83 @@ public class CategoryService {
                 .build();
     }
 
-    public CategoryDetailsVM getCategoryByParentId(String categoryId){
-        NativeQuery nativeQuery = NativeQuery.builder()
+    public CategoryDetailsVM getCategoryTreeById(String categoryId) {
+
+        Category root = findById(categoryId);
+        return buildTreeByChildrenId(root, new HashSet<>());
+    }
+
+    private Category findById(String id) {
+
+        NativeQuery query = NativeQuery.builder()
                 .withQuery(q -> q
                         .term(t -> t
                                 .field("_id")
-                                .value(categoryId)
+                                .value(id)
                         )
                 )
                 .build();
-        SearchHits<Category> hits = elasticsearchOperations.search(nativeQuery, Category.class);
-        Category parent = hits.getSearchHit(0).getContent();
 
-        NativeQuery childrentQuery = NativeQuery.builder()
-                .withQuery(q -> q
-                        .term(t -> t
-                                .field("parent_id")
-                                .value(categoryId)))
-                .withSort(s -> s
-                        .field(f -> f
-                                .field("name.keyword")
-                                .order(SortOrder.Asc)
-                        )
-                )
-                .withMaxResults(100)
-                .build();
-        SearchHits<Category> childrentHits = elasticsearchOperations.search(nativeQuery, Category.class);
-        List<CategoryGetVM> childrentVM = childrentHits.stream()
-                .map(i ->
-                        CategoryGetVM.fromEntity(i.getContent()))
-                .toList();
+        SearchHits<Category> hits =
+                elasticsearchOperations.search(query, Category.class);
+
+        if (hits.isEmpty()) {
+            throw new RuntimeException("Category not found: " + id);
+        }
+
+        return hits.getSearchHit(0).getContent();
+    }
+    private CategoryDetailsVM buildTreeByChildrenId(
+            Category category,
+            Set<String> visited
+    ) {
+
+        if (!visited.add(category.getId())) {
+            return null;
+        }
+
+        List<CategoryDetailsVM> childrenVM = new ArrayList<>();
+
+        if (category.getChildrenId() != null && !category.getChildrenId().isEmpty()) {
+            NativeQuery childrenQuery = NativeQuery.builder()
+                    .withQuery(q -> q
+                            .terms(t -> t
+                                    .field("id")
+                                    .terms(v -> v.value(
+                                            category.getChildrenId()
+                                                    .stream()
+                                                    .map(FieldValue::of)
+                                                    .toList()
+                                    ))
+                            )
+                    )
+                    .withSort(s -> s
+                            .field(f -> f
+                                    .field("name.keyword")
+                                    .order(SortOrder.Asc)
+                            )
+                    )
+                    .withMaxResults(100)
+                    .build();
+
+            SearchHits<Category> childrenHits =
+                    elasticsearchOperations.search(childrenQuery, Category.class);
+
+            for (SearchHit<Category> hit : childrenHits) {
+                CategoryDetailsVM child =
+                        buildTreeByChildrenId(hit.getContent(), visited);
+                if (child != null) {
+                    childrenVM.add(child);
+                }
+            }
+        }
+
         return CategoryDetailsVM.builder()
-                .id(parent.getId())
-                .name(parent.getName())
-                .description(parent.getDescription())
-                .imageUrl(parent.getImageUrl())
-                .parentId(parent.getParentId())
-                .childrenId(childrentVM)
+                .id(category.getId())
+                .name(category.getName())
+                .description(category.getDescription())
+                .imageUrl(category.getImageUrl())
+                .childrenId(childrenVM)
                 .build();
     }
 

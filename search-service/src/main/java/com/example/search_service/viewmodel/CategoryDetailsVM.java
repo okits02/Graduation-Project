@@ -15,6 +15,5 @@ public class CategoryDetailsVM {
     String name;
     String description;
     String imageUrl;
-    String parentId;
-    List<CategoryGetVM> childrenId;
+    List<CategoryDetailsVM> childrenId;
 }

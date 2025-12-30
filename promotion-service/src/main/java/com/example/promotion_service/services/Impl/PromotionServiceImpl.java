@@ -90,7 +90,11 @@ public class PromotionServiceImpl implements PromotionService {
             promotion.setCreateAt(LocalDate.now());
             sendKafKaEvent(promotion, "CREATED", new ArrayList<>());
         }else if(request.getPromotionKind().equals(PromotionKind.VOUCHER)){
-
+            String voucherCode = VoucherCodeUtils.generateVoucherCode();
+            while (promotionRepository.existsByVoucherCode(voucherCode)){
+                voucherCode = VoucherCodeUtils.generateVoucherCode();
+            }
+            promotion.setVoucherCode(voucherCode);
             List<PromotionApplyTo> promotionApplyTo = new ArrayList<>();
             switch (request.getApplyTo()) {
                 case Product -> {
@@ -221,6 +225,18 @@ public class PromotionServiceImpl implements PromotionService {
     }
 
     @Override
+    public PageResponse<PromotionResponse> getPromotionVoucher(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        var pageData = promotionRepository.findAllByPromotionKind(PromotionKind.VOUCHER, pageable);
+        return PageResponse.<PromotionResponse>builder()
+                .currentPage(page)
+                .pageSize(pageData.getTotalPages())
+                .totalElements(pageData.getTotalElements())
+                .data(pageData.getContent().stream().map(promotionMapper::toPromotionResponse).toList())
+                .build();
+    }
+
+    @Override
     public List<PromotionResponse> getPromotionByCategoryIds(List<String> categoryIds) {
 
         if (categoryIds == null || categoryIds.isEmpty()) {
@@ -249,9 +265,9 @@ public class PromotionServiceImpl implements PromotionService {
     }
 
     @Override
-    public PageResponse<PromotionResponse> getAllPromotion(int page, int size) {
+    public PageResponse<PromotionResponse> getAllPromotionAuto(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        var pageData = promotionRepository.findAll(pageable);
+        var pageData = promotionRepository.findAllByPromotionKind(PromotionKind.AUTO, pageable);
         return PageResponse.<PromotionResponse>builder()
                 .currentPage(page)
                 .pageSize(pageData.getSize())
@@ -349,7 +365,7 @@ public class PromotionServiceImpl implements PromotionService {
                         .categoryIdList(categoryIds)
                         .deleteApplyTo(DeleteApplyTo)
                         .createAt(promotion.getCreateAt())
-                        .updateAt(new Date())
+                        .updateAt(LocalDate.now())
                         .build();
                 kafkaTemplate.send("promotion-update-event", updatePromotionEvent).whenComplete(
                         (result, ex) -> {
