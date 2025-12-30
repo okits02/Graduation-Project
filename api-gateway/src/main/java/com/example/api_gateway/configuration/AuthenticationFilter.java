@@ -52,6 +52,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             "/product-service/category/getAll",
             "/search-service/search/catalog-search",
             "/search-service/search/search_suggest",
+            "/search-service/search/category",
             "/payment-service/bank/vnpay-ipn",
             "/product-service/brand/get-all",
             "/swagger-ui.html",

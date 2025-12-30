@@ -1,5 +1,6 @@
 package com.example.promotion_service.services;
 
+import com.example.promotion_service.dto.request.CheckValidVoucher;
 import com.example.promotion_service.dto.request.PromotionCreationRequest;
 import com.example.promotion_service.dto.request.PromotionUpdateRequest;
 import com.okits02.common_lib.dto.PageResponse;
@@ -16,6 +17,8 @@ public interface PromotionService {
     public PageResponse<PromotionResponse> getPromotionVoucher(int page, int size);
     public List<PromotionResponse> getPromotionByCategoryIds(List<String> categoryIds);
     public PageResponse<PromotionResponse> getAllPromotionAuto(int page, int size);
+    public List<PromotionResponse> getPromotionForOrder(CheckValidVoucher request);
+    public PromotionResponse checkValidVoucher(CheckValidVoucher request);
     public void UpdatePromotionStatus(String id);
     public void deletePromotion(String promotionId);
 }

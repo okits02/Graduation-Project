@@ -8,6 +8,7 @@ import com.example.search_service.viewmodel.dto.ApiResponse;
 import com.example.search_service.viewmodel.dto.request.CategoryGetByListIdRequest;
 import com.example.search_service.viewmodel.dto.request.SearchCateRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -39,7 +40,7 @@ public class CategoryController {
                 .build();
     }
 
-    @GetMapping("/category/{categoryId}")
+    @GetMapping("/{categoryId}")
     public ApiResponse<CategoryDetailsVM> getByPrentId(@PathVariable String categoryId){
         return ApiResponse.<CategoryDetailsVM>builder()
                 .code(200)

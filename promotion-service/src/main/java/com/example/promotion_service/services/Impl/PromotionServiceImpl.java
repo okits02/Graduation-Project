@@ -1,6 +1,7 @@
 package com.example.promotion_service.services.Impl;
 
 import com.example.promotion_service.dto.request.CategoryLevelValidateRequest;
+import com.example.promotion_service.dto.request.CheckValidVoucher;
 import com.example.promotion_service.dto.request.PromotionCreationRequest;
 import com.example.promotion_service.dto.request.PromotionUpdateRequest;
 import com.example.promotion_service.enums.ApplyTo;
@@ -274,6 +275,17 @@ public class PromotionServiceImpl implements PromotionService {
                 .totalElements(pageData.getTotalElements())
                 .data(pageData.getContent().stream().map(promotionMapper::toPromotionResponse).toList())
                 .build();
+    }
+
+    @Override
+    public List<PromotionResponse> getPromotionForOrder(CheckValidVoucher request) {
+
+        return null;
+    }
+
+    @Override
+    public PromotionResponse checkValidVoucher(CheckValidVoucher request) {
+        return null;
     }
 
     @Override
