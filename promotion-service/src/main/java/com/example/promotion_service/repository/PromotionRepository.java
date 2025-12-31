@@ -60,10 +60,10 @@ public interface PromotionRepository extends JpaRepository<Promotion, String> {
             @Param("userId") String userId
     );
 
-    @Query("""
+    @Query(value = """
             SELECT p.*
             FROM promotion p
             WHERE p.voucher_code = :voucherCode
-            """)
+            """, nativeQuery = true)
     Promotion findByVoucherCode(@Param("voucherCode") String voucherCode);
 }

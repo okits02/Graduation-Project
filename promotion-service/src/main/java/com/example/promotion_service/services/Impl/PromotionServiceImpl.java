@@ -130,6 +130,8 @@ public class PromotionServiceImpl implements PromotionService {
                     }
                 }
             }
+            promotion.setPromotionApplyTo(promotionApplyTo);
+            promotion.setCreateAt(LocalDate.now());
         }
         promotionRepository.save(promotion);
         return promotionMapper.toPromotionResponse(promotion);

@@ -9,6 +9,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -21,6 +22,9 @@ public interface PromotionMapper {
     void updatePromotion(@MappingTarget Promotion promotion, PromotionUpdateRequest request);
 
     default List<String> mapProductIds(Promotion promotion){
+        if(promotion.getPromotionApplyTo() == null || promotion.getPromotionApplyTo().isEmpty()){
+            return new ArrayList<>();
+        }
         return promotion.getPromotionApplyTo().stream()
                 .map(PromotionApplyTo::getProductId)
                 .filter(Objects::nonNull)
@@ -28,6 +32,9 @@ public interface PromotionMapper {
     }
 
     default List<String> mapCategoryIds(Promotion promotion){
+        if(promotion.getPromotionApplyTo() == null || promotion.getPromotionApplyTo().isEmpty()){
+            return new ArrayList<>();
+        }
         return promotion.getPromotionApplyTo().stream()
                 .map(PromotionApplyTo::getCategoryId)
                 .filter(Objects::nonNull)

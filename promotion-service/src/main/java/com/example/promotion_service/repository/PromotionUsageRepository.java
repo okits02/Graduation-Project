@@ -27,6 +27,6 @@ public interface PromotionUsageRepository extends JpaRepository<PromotionUsage, 
             FROM promotion_usage
             WHERE order_id = :orderId
             AND promotion_id = :promotionId
-            """)
+            """, nativeQuery = true)
     long countByPromotionIdAndOrderId(String id, String orderId);
 }
