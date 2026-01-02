@@ -5,11 +5,14 @@ import com.example.search_service.service.SearchService;
 import com.example.search_service.viewmodel.CategoryDetailsVM;
 import com.example.search_service.viewmodel.CategoryGetListVM;
 import com.example.search_service.viewmodel.dto.ApiResponse;
+import com.example.search_service.viewmodel.dto.AutoCompletedResponse;
 import com.example.search_service.viewmodel.dto.request.CategoryGetByListIdRequest;
 import com.example.search_service.viewmodel.dto.request.SearchCateRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/search/category")
@@ -19,13 +22,13 @@ public class CategoryController {
     private final CategoryService categoryService;
     
     @PostMapping("/admin")
-    public ApiResponse<CategoryGetListVM> searchCategoryByName(
+    public ApiResponse<List<AutoCompletedResponse>> searchCategoryByName(
             @RequestBody SearchCateRequest request
     ){
-        return ApiResponse.<CategoryGetListVM>builder()
+        return ApiResponse.<List<AutoCompletedResponse>>builder()
                 .code(200)
                 .message("search category successfully")
-                .result(searchService.autocompleteCategory(request.getName(), request.getSize(), request.getPage()))
+                .result(searchService.autocompleteCategory(request.getName(), request.getLimit()))
                 .build();
     }
 

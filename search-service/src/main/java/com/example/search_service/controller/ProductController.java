@@ -2,6 +2,7 @@ package com.example.search_service.controller;
 
 import com.example.search_service.service.ProductService;
 import com.example.search_service.viewmodel.*;
+import com.example.search_service.viewmodel.dto.AutoCompletedResponse;
 import com.example.search_service.viewmodel.dto.request.AdminSearchRequest;
 import com.example.search_service.viewmodel.dto.request.ProductGetByListIdRequest;
 import com.okits02.common_lib.dto.ApiResponse;
@@ -35,6 +36,22 @@ public class ProductController {
                 .searchProductAdvance(request.getKeyword(), page - 1, size, request.getBrandName(),
                         request.getCategory(), request.getAttributes(), request.getMinPrice(), request.getMaxPrice(),
                         request.getSortType()));
+    }
+
+    @GetMapping("/autocomplete/quick")
+    public List<AutoCompletedResponse> autocompleteQuick(
+            @RequestParam("q") String keyword,
+            @RequestParam(value = "limit", defaultValue = "5") int limit
+    ) {
+        return searchService.autoCompletedProductQuick(keyword, limit);
+    }
+
+
+    @GetMapping("/autocomplete/full")
+    public List<AutoCompletedResponse> autocompleteFull(
+            @RequestParam("q") String keyword
+    ) {
+        return searchService.autocompleteFull(keyword);
     }
 
     @GetMapping("/internal/get-product/{productId}")

@@ -30,7 +30,7 @@ public class Products {
     @Field(type = FieldType.Double)
     double avgRating;
     @Field(type = FieldType.Keyword)
-    List<String> categoriesId;
+    List<String> categories;
     @Field(type = FieldType.Nested)
     List<Specification> specifications;
     @Field(type = FieldType.Nested)

@@ -72,7 +72,7 @@ public class ProductService {
                 .orElseThrow(() ->
                         new AppException(SearchErrorCode.PRODUCT_NOT_EXISTS)
                 );
-        if (isCategoryChanged(request.getCategoriesId(), product.getCategoriesId())) {
+        if (isCategoryChanged(request.getCategoriesId(), product.getCategories())) {
 
             if (request.getCategoriesId() != null && !request.getCategoriesId().isEmpty()) {
                 var response =
@@ -612,7 +612,7 @@ public class ProductService {
             throw new AppException(SearchErrorCode.PRODUCT_NOT_EXISTS);
         }
         Products products = hits.getSearchHit(0).getContent();
-        Set<String> categoryIds = new HashSet<>(products.getCategoriesId());
+        Set<String> categoryIds = new HashSet<>(products.getCategories());
         Map<String, CategoryGetVM> categoryMap =
                 categoryService.getCategoryByIds(categoryIds);
         ProductGetVM productGetVM = ProductGetVM.fromEntity(products, categoryMap);
@@ -639,7 +639,7 @@ public class ProductService {
                 productsSearchHits, nativeQuery.getPageable());
         List<Products> products = productsSearchHits.stream().map(SearchHit::getContent).toList();
         Set<String> categoryIds = products.stream()
-                .flatMap(p -> p.getCategoriesId().stream())
+                .flatMap(p -> p.getCategories().stream())
                 .collect(Collectors.toSet());
         Map<String, CategoryGetVM> categoryMap =
                 categoryService.getCategoryByIds(categoryIds);

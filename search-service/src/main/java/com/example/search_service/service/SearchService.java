@@ -4,6 +4,8 @@
     import co.elastic.clients.elasticsearch._types.SortMode;
     import co.elastic.clients.elasticsearch._types.SortOrder;
     import co.elastic.clients.elasticsearch._types.aggregations.*;
+    import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
+    import com.example.search_service.viewmodel.dto.AutoCompletedResponse;
     import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregation;
 
     import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
@@ -401,34 +403,75 @@
 
 
 
-        public CategoryGetListVM autocompleteCategory(String prefix, int size, int page) {
-            Pageable pageable = PageRequest.of(page, size);
+        public List<AutoCompletedResponse> autocompleteCategory(String prefix, int limit) {;
+            if(prefix == null || prefix.trim().length() < 2){
+                return List.of();
+            }
+
+            NativeQuery nativeQuery = NativeQuery.builder()
+                    .withQuery(q -> q
+                            .multiMatch(m -> m
+                                    .query(prefix)
+                                    .type(TextQueryType.BoolPrefix)
+                                    .fields("name.autocomplete",
+                                            "name.autocomplete._2gram",
+                                            "name.autocomplete._3gram")
+                            )
+                    )
+                    .withMaxResults(limit)
+                    .build();
+
+            SearchHits<Category> hits = elasticsearchOperations.search(nativeQuery, Category.class);
+            return hits.getSearchHits().stream()
+                    .map(hit -> new AutoCompletedResponse(
+                            "CATEGORY",
+                            hit.getContent().getId(),
+                            hit.getContent().getName()
+                    ))
+                    .toList();
+        }
+
+        public List<AutoCompletedResponse> autoCompletedProductQuick(String prefix, int limit){
+            if (prefix == null || prefix.trim().length() < 2) {
+                return List.of();
+            }
 
             NativeQuery query = NativeQuery.builder()
                     .withQuery(q -> q
-                            .matchPhrasePrefix(m -> m
-                                    .field("name")
+                            .multiMatch(m -> m
                                     .query(prefix)
+                                    .type(TextQueryType.BoolPrefix)
+                                    .fields(
+                                            "name.autocomplete",
+                                            "name.autocomplete._2gram",
+                                            "name.autocomplete._3gram"
+                                    )
                             )
                     )
-                    .withPageable(pageable)
+                    .withMaxResults(limit)
                     .build();
-
-            SearchHits<Category> hits =
-                    elasticsearchOperations.search(query, Category.class);
-
-            SearchPage<Category> searchPage =
-                    SearchHitSupport.searchPageFor(hits, pageable);
-
-            List<CategoryGetVM> categoryGetVMS = hits.stream()
-                    .map(hit -> CategoryGetVM.fromEntity(hit.getContent()))
+            SearchHits<Products> hits = elasticsearchOperations.search(query, Products.class);
+            return hits.getSearchHits().stream()
+                    .map(hit -> new AutoCompletedResponse(
+                            "PRODUCT",
+                            hit.getContent().getId(),
+                            hit.getContent().getName()
+                    ))
                     .toList();
-
-            return CategoryGetListVM.builder()
-                    .CategoryGetVM(categoryGetVMS)
-                    .totalElements(searchPage.getTotalElements())
-                    .totalPage(searchPage.getTotalPages())
-                    .build();
         }
 
+        public List<AutoCompletedResponse> autocompleteFull(
+                String keyword
+        ) {
+            if (keyword == null || keyword.trim().length() < 2) {
+                return List.of();
+            }
+
+            List<AutoCompletedResponse> result = new ArrayList<>();
+
+            result.addAll(autoCompletedProductQuick(keyword, 5));
+            result.addAll(autocompleteCategory(keyword, 5));
+
+            return result;
+        }
     }

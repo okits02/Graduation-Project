@@ -8,6 +8,5 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SearchCateRequest {
     String name;
-    int size;
-    int page;
+    int limit;
 }
