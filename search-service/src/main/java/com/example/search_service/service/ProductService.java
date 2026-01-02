@@ -2,10 +2,9 @@ package com.example.search_service.service;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.FieldValue;
-import co.elastic.clients.elasticsearch.core.BulkResponse;
-import co.elastic.clients.elasticsearch.core.UpdateByQueryRequest;
+import co.elastic.clients.elasticsearch._types.Refresh;
+import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch._types.Script;
-import co.elastic.clients.elasticsearch.core.UpdateByQueryResponse;
 import co.elastic.clients.json.JsonData;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.example.search_service.repository.ProductsRepository;
@@ -26,7 +25,6 @@ import com.example.search_service.viewmodel.dto.StatusPromotionDTO;
 import com.example.search_service.viewmodel.dto.request.ApplyThumbnailRequest;
 import lombok.RequiredArgsConstructor;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
-import co.elastic.clients.elasticsearch.core.BulkRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.LuhnCheck;
 import org.springframework.data.domain.PageRequest;
@@ -57,6 +55,7 @@ public class ProductService {
 
     public void createProduct(ProductEventDTO request) throws IOException {
         Products products = productsMapper.toProducts(request);
+        log.error("🔥🔥🔥 ES INDEX productId={}", products.getId());
         var response = promotionClient.getByCategoryIds(request.getCategoriesId());
         products.setPromotions(new HashSet<>(response.getResult()));
         calculatorListPrice(products);
@@ -93,10 +92,21 @@ public class ProductService {
         productsRepository.save(product);
     }
 
-    public void deleteProduct(String productId) throws IOException {
-        elasticsearchClient.delete(d -> d.index("product").id(productId));
-    }
+    public void deleteProduct(String productId) {
+        try {
+            DeleteResponse response = elasticsearchClient.delete(d -> d
+                    .index("product")
+                    .id(productId)
+                    .refresh(Refresh.True)
+            );
 
+            log.warn("🔥 ES DELETE productId={}, result={}",
+                    productId, response.result());
+
+        } catch (Exception e) {
+            log.error("❌ ES DELETE FAILED productId={}", productId, e);
+        }
+    }
     public void createPromotion(ApplyPromotionEventDTO request) throws IOException {
         Promotion promotion = Promotion.builder()
                 .id(request.getId())

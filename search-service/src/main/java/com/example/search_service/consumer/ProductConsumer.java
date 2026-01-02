@@ -46,7 +46,6 @@ public class ProductConsumer {
                 productService.deleteProduct(productEventDTO.getId());
             }
         }
-        productService.createProduct(productEventDTO);
     }
 
 
