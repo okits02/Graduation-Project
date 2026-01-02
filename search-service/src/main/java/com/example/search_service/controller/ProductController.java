@@ -39,19 +39,27 @@ public class ProductController {
     }
 
     @GetMapping("/autocomplete/quick")
-    public List<AutoCompletedResponse> autocompleteQuick(
+    public ApiResponse<List<AutoCompletedResponse>> autocompleteQuick(
             @RequestParam("q") String keyword,
             @RequestParam(value = "limit", defaultValue = "5") int limit
     ) {
-        return searchService.autoCompletedProductQuick(keyword, limit);
+        return ApiResponse.<List<AutoCompletedResponse>>builder()
+                .code(200)
+                .message("get autocompleted quick")
+                .result(searchService.autoCompletedProductQuick(keyword, limit))
+                .build();
     }
 
 
     @GetMapping("/autocomplete/full")
-    public List<AutoCompletedResponse> autocompleteFull(
+    public ApiResponse<List<AutoCompletedResponse>> autocompleteFull(
             @RequestParam("q") String keyword
     ) {
-        return searchService.autocompleteFull(keyword);
+        return ApiResponse.<List<AutoCompletedResponse>>builder()
+                .code(200)
+                .message("get autocompleted full successfully!")
+                .result(searchService.autocompleteFull(keyword))
+                .build();
     }
 
     @GetMapping("/internal/get-product/{productId}")

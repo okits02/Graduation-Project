@@ -413,9 +413,9 @@
                             .multiMatch(m -> m
                                     .query(prefix)
                                     .type(TextQueryType.BoolPrefix)
-                                    .fields("name.autocomplete",
-                                            "name.autocomplete._2gram",
-                                            "name.autocomplete._3gram")
+                                    .fields("name",
+                                            "name._2gram",
+                                            "name._3gram")
                             )
                     )
                     .withMaxResults(limit)
@@ -442,9 +442,9 @@
                                     .query(prefix)
                                     .type(TextQueryType.BoolPrefix)
                                     .fields(
-                                            "name.autocomplete",
-                                            "name.autocomplete._2gram",
-                                            "name.autocomplete._3gram"
+                                            "name",
+                                            "name._2gram",
+                                            "name._3gram"
                                     )
                             )
                     )
