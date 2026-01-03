@@ -59,6 +59,7 @@ public class ProductMappingHelper {
                 .id(products.getId())
                 .name(products.getName())
                 .brandName(products.getBrandName())
+                .description(products.getDescription())
                 .listCategory(listCategory)
                 .videoUrl(products.getVideoUrl())
                 .mediaList(listMedia)

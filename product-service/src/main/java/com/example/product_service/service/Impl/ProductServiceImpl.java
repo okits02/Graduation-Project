@@ -102,7 +102,6 @@ public class ProductServiceImpl implements ProductService {
         Products product = productRepository.findById(request.getId()).orElseThrow(()->
                 new AppException(ProductErrorCode.PRODUCT_NOT_EXISTS));
         productMapper.updateProduct(product, request);
-        product.setCategoryId(request.getCategoryId());
         List<String> productVariants = productVariantsService.update(request.getProductVariants(),
                 product.getId());
         product.setSpecifications(
@@ -115,8 +114,8 @@ public class ProductServiceImpl implements ProductService {
                                 .build()
                         ).toList());
         product.setVariants(productVariants);
-        sendKafkaEvent(product, "UPDATED");
         productRepository.save(product);
+        sendKafkaEvent(product, "UPDATED");
         return product;
     }
 
@@ -185,8 +184,11 @@ public class ProductServiceImpl implements ProductService {
     private ProductEvent createEventProduct(Products product, String eventType)
     {
         List<String> categoryList = new ArrayList<>();
-        if(!product.getCategoryId().isEmpty()) {
-            Set<String> currentCateId = product.getCategoryId();
+        Set<String> currentCateId =
+                Optional.ofNullable(product.getCategoryId())
+                        .orElse(Set.of());
+
+        if (!currentCateId.isEmpty()) {
             categoryList = categoryService.getCategoryHierarchy(currentCateId);
         }
         ProductEvent productEvent = ProductEvent.builder()

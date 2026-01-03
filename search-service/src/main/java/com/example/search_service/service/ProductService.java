@@ -523,37 +523,37 @@ public class ProductService {
 
     public long removeCateInProduct(List<String> categoryId){
         String scriptSource = """
-            if (ctx._source.categories != null) {
-                ctx._source.categories.removeIf(c -> params.ids.contains(c.id));
-            }
-        """;
+        if (ctx._source.categoriesId != null) {
+            ctx._source.categoriesId.removeIf(c -> params.ids.contains(c));
+        }
+    """;
         Map<String, JsonData> params = new HashMap<>();
         params.put("ids", JsonData.of(categoryId));
-        var script = new Script.Builder()
+
+        Script script = new Script.Builder()
                 .source(scriptSource)
                 .lang("painless")
                 .params(params)
                 .build();
+
         UpdateByQueryRequest request = UpdateByQueryRequest.of(u -> u
                 .index("product")
                 .query(q -> q
-                        .nested(n -> n
-                                .path("categories")
-                                .query(inner -> inner
-                                        .terms(t -> t
-                                                .field("categories.id")
-                                                .terms(terms -> terms
-                                                        .value(categoryId.stream().map(FieldValue::of).toList())
-                                                )
-                                        )
-                                )
+                        .terms(t -> t
+                                .field("categoriesId")
+                                .terms(v -> v.value(
+                                        categoryId.stream()
+                                                .map(FieldValue::of)
+                                                .toList()
+                                ))
                         )
                 )
                 .script(script)
         );
-        try{
+
+        try {
             UpdateByQueryResponse response = elasticsearchClient.updateByQuery(request);
-            log.info("Da update {} documents khi xoa categories: {}", response.updated(), categoryId);
+            log.info("Updated {} documents, removed categories: {}", response.updated(), categoryId);
             return response.updated();
         } catch (Exception e) {
             throw new RuntimeException(e);
