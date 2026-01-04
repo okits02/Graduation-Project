@@ -10,7 +10,7 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class IsInStockRequest {
+public class    IsInStockRequest {
     String productId;
     String sku;
     Integer quantity;

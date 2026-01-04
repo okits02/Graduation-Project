@@ -18,6 +18,7 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductEventDTO {
+    String eventType;
     String id;
     String name;
     List<ProductVariantsEventDTO> productVariants;

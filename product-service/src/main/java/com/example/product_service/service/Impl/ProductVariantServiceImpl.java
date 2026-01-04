@@ -142,4 +142,13 @@ public class ProductVariantServiceImpl implements ProductVariantsService {
         }
         variant.setInStock(inStock);
     }
+
+    @Override
+    public ProductVariantsResponse getVariantBySku(String sku) {
+        ProductVariants variant = productVariantsRepository.findBySku(sku);
+        if(variant == null){
+            throw new AppException(ProductErrorCode.PRODUCT_VARIANTS_NOT_FOUND);
+        }
+        return productVariantsMapper.toProductVariantsResponse(variant);
+    }
 }

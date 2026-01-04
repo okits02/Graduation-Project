@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ChangeStatusStockEvent {
-    String productId;
     String sku;
     Boolean inStock;
 }

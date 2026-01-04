@@ -1,5 +1,7 @@
 package com.example.product_service.controller;
 
+import com.example.product_service.dto.response.ProductVariantsResponse;
+import com.example.product_service.service.ProductVariantsService;
 import com.okits02.common_lib.dto.PageResponse;
 import com.example.product_service.dto.request.ProductRequest;
 import com.example.product_service.dto.request.ProductUpdateRequest;
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProductController {
     ProductService productService;
+    ProductVariantsService productVariantsService;
     ProductMappingHelper productMappingHelper;
 
     @Operation(summary = "admin create product", security = @SecurityRequirement(name = "bearerAuth"))
@@ -128,5 +131,13 @@ public class ProductController {
         }
     }
 
+    @GetMapping("/internal/variant")
+    public ApiResponse<ProductVariantsResponse> getVariantBySku(@RequestParam(value = "sku") String sku){
+        return ApiResponse.<ProductVariantsResponse>builder()
+                .code(200)
+                .message("Get variant successfully")
+                .result(productVariantsService.getVariantBySku(sku))
+                .build();
+    }
 
 }

@@ -10,7 +10,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class InventoryRequest {
-    String productId;
+    String sku;
     @QuantityConstraint(message = "Quantity must not null and greater than 0")
     Integer quantity;
 }

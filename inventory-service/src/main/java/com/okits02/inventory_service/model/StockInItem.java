@@ -22,11 +22,6 @@ public class StockInItem {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
-
-    @Column(name = "product_id")
-    String productId;
-    @Column(name = "product_name")
-    String productName;
     @Column(name = "sku")
     String sku;
     @Column(name = "quantity")

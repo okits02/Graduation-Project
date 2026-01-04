@@ -2,12 +2,14 @@ package com.okits02.inventory_service.service.Impl;
 
 import com.okits02.common_lib.dto.PageResponse;
 import com.okits02.inventory_service.dto.ProductEventDTO;
+import com.okits02.inventory_service.dto.ProductVariantsEventDTO;
 import com.okits02.inventory_service.dto.request.InventoryRequest;
 import com.okits02.inventory_service.dto.request.IsInStockRequest;
 import com.okits02.inventory_service.dto.request.StockInItemRequest;
 import com.okits02.inventory_service.dto.response.InventoryResponse;
 import com.okits02.common_lib.exception.AppException;
 import com.okits02.inventory_service.dto.response.InventoryTransactionResponse;
+import com.okits02.inventory_service.dto.response.ProductVariantResponse;
 import com.okits02.inventory_service.enums.ReferenceType;
 import com.okits02.inventory_service.enums.TransactionType;
 import com.okits02.inventory_service.exceptions.InventoryErrorCode;
@@ -18,6 +20,7 @@ import com.okits02.inventory_service.model.Inventory;
 import com.okits02.inventory_service.model.InventoryTransaction;
 import com.okits02.inventory_service.repository.InventoryRepository;
 import com.okits02.inventory_service.repository.InventoryTransactionRepository;
+import com.okits02.inventory_service.repository.httpClient.ProductClient;
 import com.okits02.inventory_service.service.InventoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,9 +32,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.apache.commons.lang.StringUtils.isBlank;
 
@@ -44,41 +45,40 @@ public class InventoryServiceImpl implements InventoryService {
     private final InventoryMapper inventoryMapper;
     private final InventoryTransactionMapper transactionMapper;
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final ProductClient productClient;
 
     @Override
     public void save(List<StockInItemRequest> request, String stockInId) {
         List<String> touchedProductIds = new ArrayList<>();
         for (StockInItemRequest item : request) {
-            Inventory inventory = inventoryRepository.findByProductIdAndSku(item.getProductId(),
-                    item.getSku()).orElseThrow(() ->
+            Inventory inventory = inventoryRepository.findBySku(item.getSku()).orElseThrow(() ->
                     new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS));
-            boolean wasInStock = isProductInStock(item.getProductId());
+            boolean wasInStock = isProductInStock(item.getSku());
             if(inventory.getQuantity() == 0){
-                productStockEvent(item.getProductId(), item.getSku(),true);
+                productStockEvent(item.getSku(),true);
             }
             int newQuantity = inventory.getQuantity() + item.getQuantity();
             inventory.setQuantity(newQuantity);
 
             InventoryTransaction tx = buildTransaction(
                     inventory,
-                    item.getProductId(),
                     item.getSku(),
                     TransactionType.IN,
                     item.getQuantity(),
                     stockInId,
                     ReferenceType.STOCK_IN,
-                    "Stock in product " + item.getProductId() + " sku " + item.getSku()
+                    "Stock in product " + item.getSku()
             );
             applyTransaction(inventory, tx);
 
             inventoryRepository.save(inventory);
 
-            if (!touchedProductIds.contains(item.getProductId())) {
-                touchedProductIds.add(item.getProductId());
+            if (!touchedProductIds.contains(item.getSku())) {
+                touchedProductIds.add(item.getSku());
             }
             boolean nowInStock = isProductInStock(item.getSku());
             if (wasInStock != nowInStock) {
-                productStockEvent(item.getProductId(), item.getSku(), nowInStock);
+                productStockEvent( item.getSku(), nowInStock);
             }
         }
     }
@@ -90,22 +90,17 @@ public class InventoryServiceImpl implements InventoryService {
         }
 
         String productId = request.getId();
-        String productName = request.getName();
         for(var variant : request.getProductVariants()){
             if (variant == null || isBlank(variant.getSku())) continue;
             String sku = variant.getSku();
-            String fullName = buildFullName(productName, variant.getVariantName());
 
-            inventoryRepository.findByProductIdAndSku(productId, sku).ifPresentOrElse(
+            inventoryRepository.findBySku(sku).ifPresentOrElse(
                     existing -> {
-                        existing.setProductName(fullName);
                         existing.setUpdatedAt(LocalDateTime.now());
                         inventoryRepository.save(existing);
                     }, () -> {
                         Inventory inv = Inventory.builder()
-                                .productId(productId)
                                 .sku(sku)
-                                .productName(fullName)
                                 .quantity(0)
                                 .transactions(new ArrayList<>())
                                 .build();
@@ -124,44 +119,44 @@ public class InventoryServiceImpl implements InventoryService {
         if (request == null || isBlank(request.getProductId()) || isBlank(request.getSku()) || request.getQuantity() == null) {
             return false;
         }
-        Inventory inventory = inventoryRepository.findByProductIdAndSku(request.getProductId(), request.getSku())
+        Inventory inventory = inventoryRepository.findBySku(request.getSku())
                 .orElseThrow(() -> new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS));
 
         return request.getQuantity() <= inventory.getQuantity();
     }
 
     @Override
-    public void delete(String productId) {
+    public void delete(List<ProductVariantsEventDTO> productVariantsEventDTOS) {
+        if(productVariantsEventDTOS == null || productVariantsEventDTOS.isEmpty()) return;
+        for (ProductVariantsEventDTO variantsEventDTO : productVariantsEventDTOS) {
+            boolean wasInStock = isProductInStock(variantsEventDTO.getSku());
 
-        boolean wasInStock = isProductInStock(productId);
+            Inventory inventory = inventoryRepository.findBySku(variantsEventDTO.getSku()).orElseThrow(()
+                    -> new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS));
 
-        List<Inventory> inventories = inventoryRepository.findAllByProductId(productId);
-        if (inventories == null || inventories.isEmpty()) {
-            throw new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS);
-        }
-
-        inventoryRepository.deleteAll(inventories);
-        if (wasInStock) {
-            productStockEvent(productId, "",false);
+            inventoryRepository.delete(inventory);
+            if (wasInStock) {
+                productStockEvent(variantsEventDTO.getSku(), false);
+            }
         }
     }
 
     @Override
-    public InventoryResponse getByProductIdAndSku(String productId, String sku) {
-        Optional<Inventory> inventory = inventoryRepository.findByProductIdAndSku(productId, sku);
+    public InventoryResponse getByProductIdAndSku(String sku) {
+        Optional<Inventory> inventory = inventoryRepository.findBySku(sku);
         log.info(inventory.toString());
         if(inventory == null){
             throw new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS);
         }
         InventoryResponse inventoryResponse = inventoryMapper.toInventoryResponse(inventory.get());
-        log.info(inventoryResponse.toString());
-        return inventoryMapper.toInventoryResponse(inventory.get());
+        enrichVariantInfo(inventoryResponse, sku);
+        return inventoryResponse;
     }
 
     @Override
-    public Inventory increaseStock(String productId, String sku, int quantity, String orderId) {
+    public Inventory increaseStock(String sku, int quantity, String orderId) {
 
-        Inventory inventory = inventoryRepository.findByProductIdAndSku(productId, sku).orElseThrow(() ->
+        Inventory inventory = inventoryRepository.findBySku(sku).orElseThrow(() ->
             new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS)
         );
         boolean wasInStock = isProductInStock(sku);
@@ -169,7 +164,6 @@ public class InventoryServiceImpl implements InventoryService {
 
         InventoryTransaction tx = buildTransaction(
                 inventory,
-                productId,
                 sku,
                 TransactionType.OUT,
                 quantity,
@@ -181,17 +175,17 @@ public class InventoryServiceImpl implements InventoryService {
 
         boolean nowInStock = isProductInStock(sku);
         if (wasInStock != nowInStock) {
-            productStockEvent(productId, sku, nowInStock);
+            productStockEvent(sku, nowInStock);
         }
         return saved;
     }
 
     @Override
-    public Inventory decreaseStock(String productId, String sku, int quantity, String orderId) {
+    public Inventory decreaseStock(String sku, int quantity, String orderId) {
 
-        Inventory inventory = inventoryRepository.findByProductIdAndSku(productId, sku).orElseThrow(() ->
+        Inventory inventory = inventoryRepository.findBySku(sku).orElseThrow(() ->
                 new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS));
-        boolean wasInStock = isProductInStock(productId);
+        boolean wasInStock = isProductInStock(sku);
 
         if(quantity > inventory.getQuantity()){
             throw new AppException(InventoryErrorCode.PRODUCT_NOT_ENOUGH);
@@ -199,7 +193,6 @@ public class InventoryServiceImpl implements InventoryService {
 
         InventoryTransaction tx = buildTransaction(
                 inventory,
-                productId,
                 sku,
                 TransactionType.OUT,
                 quantity,
@@ -211,7 +204,7 @@ public class InventoryServiceImpl implements InventoryService {
 
         boolean nowInStock = isProductInStock(sku);
         if (wasInStock != nowInStock) {
-            productStockEvent(productId, sku,nowInStock);
+            productStockEvent(sku,nowInStock);
         }
         return saved;
     }
@@ -220,33 +213,64 @@ public class InventoryServiceImpl implements InventoryService {
     public PageResponse<InventoryResponse> getAll(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         var pageData = inventoryRepository.findAll(pageable);
+        List<String> skus = pageData.getContent().stream().map(Inventory::getSku).toList();
+        var variantMap = fetchVariantsBySku(skus);
+        List<InventoryResponse> responses = pageData.getContent().stream()
+                .map(inv -> {
+                    InventoryResponse res = inventoryMapper.toInventoryResponse(inv);
+                    ProductVariantResponse variant = variantMap.get(inv.getSku());
+                    if (variant != null) {
+                        res.setVariantName(variant.getVariantName());
+                        res.setThumbnail(variant.getThumbnail());
+                    }
+                    return res;
+                }).toList();
         return PageResponse.<InventoryResponse>builder()
                 .currentPage(page)
                 .pageSize(pageData.getSize())
                 .totalElements(pageData.getTotalElements())
-                .data(pageData.getContent().stream().map(inventoryMapper::toInventoryResponse).toList())
+                .data(responses)
                 .build();
     }
 
     @Override
-    public PageResponse<InventoryTransactionResponse> getTransactionHistory(String productId, int page, int size) {
-        Inventory inventory = inventoryRepository.findByProductId(productId);
-        if (inventory == null) {
-            throw new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS);
-        }
+    public PageResponse<InventoryTransactionResponse> getTransactionHistory(String sku, int page, int size) {
+        Inventory inventory = inventoryRepository.findBySku(sku).orElseThrow(() ->
+                new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS));
 
         Pageable pageable = PageRequest.of(page, size);
 
         Page<InventoryTransaction> pageData =
-                inventoryTransactionRepository.findByProductIdOrderByCreatedAtDesc(productId, pageable);
+                inventoryTransactionRepository.findBySkuOrderByCreatedAtDesc(sku, pageable);
+        List<InventoryTransaction> transactions = pageData.getContent();
+        List<String> skus = transactions.stream()
+                .map(InventoryTransaction::getSku)
+                .distinct()
+                .toList();
+        Map<String, ProductVariantResponse> variantMap =
+                fetchVariantsBySku(skus);
 
+        List<InventoryTransactionResponse> responses =
+                transactions.stream()
+                        .map(tx -> {
+                            InventoryTransactionResponse res =
+                                    transactionMapper.toResponse(tx);
+
+                            ProductVariantResponse variant =
+                                    variantMap.get(tx.getSku());
+
+                            if (variant != null) {
+                                res.setVariantName(variant.getVariantName());
+                                res.setThumbnail(variant.getThumbnail());
+                            }
+                            return res;
+                        })
+                        .toList();
         return PageResponse.<InventoryTransactionResponse>builder()
                 .currentPage(pageData.getNumber())
                 .pageSize(pageData.getSize())
                 .totalElements(pageData.getTotalElements())
-                .data(pageData.getContent().stream()
-                        .map(transactionMapper::toResponse)
-                        .toList())
+                .data(responses)
                 .build();
     }
 
@@ -264,7 +288,6 @@ public class InventoryServiceImpl implements InventoryService {
 
     private InventoryTransaction buildTransaction(
             Inventory inventory,
-            String productId,
             String sku,
             TransactionType type,
             int quantity,
@@ -274,7 +297,6 @@ public class InventoryServiceImpl implements InventoryService {
     ) {
         return InventoryTransaction.builder()
                 .inventory(inventory)
-                .productId(productId)
                 .sku(sku)
                 .transactionType(type)
                 .quantity(Math.abs(quantity))
@@ -287,9 +309,8 @@ public class InventoryServiceImpl implements InventoryService {
     private boolean isProductInStock(String sku) {
         return inventoryRepository.existsBySkuAndQuantityGreaterThan(sku, 0);
     }
-    private void productStockEvent(String productId, String sku, Boolean isInStock){
+    private void productStockEvent(String sku, Boolean isInStock){
         ChangeStatusStockEvent event = ChangeStatusStockEvent.builder()
-                .productId(productId)
                 .sku(sku)
                 .inStock(isInStock)
                 .build();
@@ -304,8 +325,31 @@ public class InventoryServiceImpl implements InventoryService {
                 });
     }
 
-    private String buildFullName(String productName, String variantName) {
-        if (isBlank(variantName)) return productName;
-        return productName + " - " + variantName;
+    private void enrichVariantInfo(InventoryResponse response, String sku){
+        try{
+            var responseVariant = productClient.getVariantBySku(sku);
+            if(responseVariant != null && responseVariant.getResult() != null){
+                response.setVariantName(responseVariant.getResult().getVariantName());
+                response.setThumbnail(responseVariant.getResult().getThumbnail());
+            }
+        }catch (Exception e)
+        {
+            log.warn("Cannot fetch product variant for sku={}", sku);
+        }
+    }
+
+    private Map<String, ProductVariantResponse> fetchVariantsBySku(List<String> skus){
+        var map = new HashMap<String, ProductVariantResponse>();
+        for (String sku : skus) {
+            try {
+                var res = productClient.getVariantBySku(sku);
+                if (res != null && res.getResult() != null) {
+                    map.put(sku, res.getResult());
+                }
+            } catch (Exception e) {
+                log.warn("Cannot fetch variant for sku={}", sku);
+            }
+        }
+        return map;
     }
 }

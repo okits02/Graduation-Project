@@ -7,8 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.domain.Pageable;
 
 public interface InventoryTransactionRepository extends JpaRepository<InventoryTransaction, String> {
-    Page<InventoryTransaction> findByProductIdOrderByCreatedAtDesc(
-            String productId,
+    Page<InventoryTransaction> findBySkuOrderByCreatedAtDesc(
+            String sku,
             Pageable pageable
     );
 }

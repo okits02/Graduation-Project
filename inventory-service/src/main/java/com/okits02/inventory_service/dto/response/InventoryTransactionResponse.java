@@ -14,8 +14,9 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class InventoryTransactionResponse {
     String id;
-    String productId;
     String sku;
+    String variantName;
+    String thumbnail;
     TransactionType transactionType;
     Integer quantity;
     String referenceId;

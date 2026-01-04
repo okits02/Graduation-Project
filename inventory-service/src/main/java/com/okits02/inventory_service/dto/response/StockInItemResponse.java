@@ -11,9 +11,9 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class StockInItemResponse {
-    String productId;
+    String variantName;
+    String thumbnail;
     String sku;
-    String productName;
     Integer quantity;
     BigDecimal unitCost;
     BigDecimal totalCost;

@@ -100,10 +100,11 @@ public class CategoryServiceImpl implements CategoryService {
         if (categoryList!=null && !categoryList.isEmpty())
         {
             for(String id : categoryList) {
-                Optional<Category> categoryOptional = categoryRepository.findById(id);
-                categoryHierarchy.add(categoryOptional.get().getId());
-                if(categoryOptional.get().getParentId() != null){
-                    String parentId = categoryOptional.get().getParentId();
+                Category category = categoryRepository.findById(id).orElseThrow(() ->
+                        new AppException(ProductErrorCode.PRODUCT_NOT_EXISTS));
+                categoryHierarchy.add(category.getId());
+                if(category.getParentId() != null){
+                    String parentId = category.getParentId();
                     while (parentId != null && !parentId.isEmpty()){
                         Optional<Category> categoryParent = categoryRepository.findById(parentId);
                         if(categoryParent.isPresent()){

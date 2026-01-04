@@ -5,7 +5,9 @@
     import co.elastic.clients.elasticsearch._types.SortOrder;
     import co.elastic.clients.elasticsearch._types.aggregations.*;
     import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
+    import com.example.search_service.exceptions.SearchErrorCode;
     import com.example.search_service.viewmodel.dto.AutoCompletedResponse;
+    import com.okits02.common_lib.exception.AppException;
     import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregation;
 
     import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
@@ -112,6 +114,25 @@
                     .totalElements(productsSearchPage.getTotalElements())
                     .aggregations(techAggregations)
                     .build();
+        }
+
+        public ProductGetVM getProductById(String id){
+            NativeQueryBuilder query = NativeQuery.builder()
+                    .withQuery(q -> q
+                            .term(t -> t
+                                    .field("_id")
+                                    .value(id)
+                            )
+                    );
+            SearchHits<Products> hits = elasticsearchOperations.search(query.build(), Products.class);
+            if (hits.isEmpty()) {
+                throw new AppException(SearchErrorCode.PRODUCT_NOT_EXISTS);
+            }
+
+            Products product = hits.getSearchHit(0).getContent();
+            Map<String, CategoryGetVM> categoryMap =
+                    categoryService.getCategoryByIds(new HashSet<>(product.getCategoriesId()));
+            return ProductGetVM.fromEntity(product, categoryMap);
         }
 
         public ProductGetListVM searchProductAdmin(int page, int size, AdminSearchRequest request){

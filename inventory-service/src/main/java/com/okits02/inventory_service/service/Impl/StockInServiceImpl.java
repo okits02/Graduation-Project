@@ -4,6 +4,8 @@ import com.okits02.common_lib.dto.PageResponse;
 import com.okits02.common_lib.exception.AppException;
 import com.okits02.inventory_service.dto.request.StockInCreationRequest;
 import com.okits02.inventory_service.dto.request.StockInItemRequest;
+import com.okits02.inventory_service.dto.response.InventoryResponse;
+import com.okits02.inventory_service.dto.response.ProductVariantResponse;
 import com.okits02.inventory_service.dto.response.StockInItemResponse;
 import com.okits02.inventory_service.dto.response.StockInResponse;
 import com.okits02.inventory_service.exceptions.StockInErrorCode;
@@ -12,26 +14,28 @@ import com.okits02.inventory_service.mapper.StockInMapper;
 import com.okits02.inventory_service.model.StockIn;
 import com.okits02.inventory_service.model.StockInItem;
 import com.okits02.inventory_service.repository.StockInRepository;
+import com.okits02.inventory_service.repository.httpClient.ProductClient;
 import com.okits02.inventory_service.service.InventoryService;
 import com.okits02.inventory_service.service.StockInService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class StockInServiceImpl implements StockInService {
     private final StockInRepository stockInRepository;
     private final InventoryService inventoryService;
     private final StockInMapper stockInMapper;
     private final StockInItemMapper stockInItemMapper;
+    private final ProductClient productClient;
 
 
     @Override
@@ -45,15 +49,34 @@ public class StockInServiceImpl implements StockInService {
         newStockIn.setItems(items);
         newStockIn = stockInRepository.save(newStockIn);
         inventoryService.save(request.getItems(), newStockIn.getId());
+        List<String> skus = items.stream()
+                .map(StockInItem::getSku)
+                .distinct()
+                .toList();
+        Map<String, ProductVariantResponse> variantMap =
+                fetchVariantsBySku(skus);
+        List<StockInItemResponse> itemResponses =
+                items.stream()
+                        .map(item -> {
+                            StockInItemResponse res =
+                                    stockInItemMapper.toResponse(item);
+
+                            ProductVariantResponse variant =
+                                    variantMap.get(item.getSku());
+
+                            if (variant != null) {
+                                res.setVariantName(variant.getVariantName());
+                                res.setThumbnail(variant.getThumbnail());
+                            }
+                            return res;
+                        })
+                        .toList();
         return StockInResponse.builder()
                 .referenceCode(newStockIn.getReferenceCode())
                 .supplierName(newStockIn.getSupplierName())
                 .totalAmount(newStockIn.getTotalAmount())
                 .createAt(newStockIn.getCreatedAt())
-                .items(newStockIn.getItems()
-                        .stream()
-                        .map(stockInItemMapper::toResponse)
-                        .toList())
+                .items(itemResponses)
                 .note(newStockIn.getNote())
                 .build();
     }
@@ -64,16 +87,35 @@ public class StockInServiceImpl implements StockInService {
         if(stockIn.get() == null){
             throw new AppException(StockInErrorCode.STOCK_IN_NOT_EXISTS);
         }
-        List<StockInItemResponse> itemsResponse = new ArrayList<>();
-        for(StockInItem item : stockIn.get().getItems()){
-            itemsResponse.add(stockInItemMapper.toResponse(item));
-        }
+        List<StockInItem> items = stockIn.get().getItems();
+        List<String> skus = items.stream()
+                .map(StockInItem::getSku)
+                .distinct()
+                .toList();
+        Map<String, ProductVariantResponse> variantMap =
+                fetchVariantsBySku(skus);
+        List<StockInItemResponse> itemResponses =
+                items.stream()
+                        .map(item -> {
+                            StockInItemResponse res =
+                                    stockInItemMapper.toResponse(item);
+
+                            ProductVariantResponse variant =
+                                    variantMap.get(item.getSku());
+
+                            if (variant != null) {
+                                res.setVariantName(variant.getVariantName());
+                                res.setThumbnail(variant.getThumbnail());
+                            }
+                            return res;
+                        })
+                        .toList();
         return StockInResponse.builder()
                 .referenceCode(stockIn.get().getReferenceCode())
                 .supplierName(stockIn.get().getSupplierName())
                 .totalAmount(stockIn.get().getTotalAmount())
                 .createAt(stockIn.get().getCreatedAt())
-                .items(itemsResponse)
+                .items(itemResponses)
                 .note(stockIn.get().getNote())
                 .build();
     }
@@ -82,22 +124,46 @@ public class StockInServiceImpl implements StockInService {
     public PageResponse<StockInResponse> getAllHistory(int page, int size, LocalDateTime start, LocalDateTime end) {
         Pageable pageable = PageRequest.of(page, size);
         var pageData = stockInRepository.getAllHistory(start, end, pageable);
-        List<StockInResponse> stockInResponses = pageData.getContent()
-                .stream()
-                .map(stockIn -> StockInResponse.builder()
-                        .supplierName(stockIn.getSupplierName())
-                        .referenceCode(stockIn.getReferenceCode())
-                        .note(stockIn.getNote())
-                        .totalAmount(stockIn.getTotalAmount())
-                        .items(stockIn.getItems().stream().map(item -> StockInItemResponse.builder()
-                                .productId(item.getProductId())
-                                .sku(item.getSku())
-                                .quantity(item.getQuantity())
-                                .unitCost(item.getUnitCost())
-                                .totalCost(item.getTotalCost())
-                                .build()).toList())
-                        .createAt(stockIn.getCreatedAt())
-                        .build()).toList();
+        List<StockIn> stockIns = pageData.getContent();
+        List<String> skus = stockIns.stream()
+                .flatMap(stockIn -> stockIn.getItems().stream())
+                .map(StockInItem::getSku)
+                .distinct()
+                .toList();
+        Map<String, ProductVariantResponse> variantMap =
+                fetchVariantsBySku(skus);
+        List<StockInResponse> stockInResponses =
+                stockIns.stream()
+                        .map(stockIn -> {
+
+                            List<StockInItemResponse> itemResponses =
+                                    stockIn.getItems().stream()
+                                            .map(item -> {
+                                                StockInItemResponse res =
+                                                        stockInItemMapper.toResponse(item);
+
+                                                ProductVariantResponse variant =
+                                                        variantMap.get(item.getSku());
+
+                                                if (variant != null) {
+                                                    res.setVariantName(variant.getVariantName());
+                                                    res.setThumbnail(variant.getThumbnail());
+                                                }
+                                                return res;
+                                            })
+                                            .toList();
+
+                            return StockInResponse.builder()
+                                    .supplierName(stockIn.getSupplierName())
+                                    .referenceCode(stockIn.getReferenceCode())
+                                    .note(stockIn.getNote())
+                                    .totalAmount(stockIn.getTotalAmount())
+                                    .createAt(stockIn.getCreatedAt())
+                                    .items(itemResponses)
+                                    .build();
+                        })
+                        .toList();
+
         return PageResponse.<StockInResponse>builder()
                 .currentPage(page)
                 .pageSize(pageData.getSize())
@@ -121,15 +187,35 @@ public class StockInServiceImpl implements StockInService {
         if(stockIn.get() ==  null){
             throw new AppException(StockInErrorCode.STOCK_IN_NOT_EXISTS);
         }
+        List<StockInItem> items = stockIn.get().getItems();
+        List<String> skus = items.stream()
+                .map(StockInItem::getSku)
+                .distinct()
+                .toList();
+        Map<String, ProductVariantResponse> variantMap =
+                fetchVariantsBySku(skus);
+        List<StockInItemResponse> itemResponses =
+                items.stream()
+                        .map(item -> {
+                            StockInItemResponse res =
+                                    stockInItemMapper.toResponse(item);
+
+                            ProductVariantResponse variant =
+                                    variantMap.get(item.getSku());
+
+                            if (variant != null) {
+                                res.setVariantName(variant.getVariantName());
+                                res.setThumbnail(variant.getThumbnail());
+                            }
+                            return res;
+                        })
+                        .toList();
         return StockInResponse.builder()
                 .referenceCode(stockIn.get().getReferenceCode())
                 .supplierName(stockIn.get().getSupplierName())
                 .totalAmount(stockIn.get().getTotalAmount())
                 .createAt(stockIn.get().getCreatedAt())
-                .items(stockIn.get().getItems()
-                        .stream()
-                        .map(stockInItemMapper::toResponse)
-                        .toList())
+                .items(itemResponses)
                 .note(stockIn.get().getNote())
                 .build();
     }
@@ -138,9 +224,7 @@ public class StockInServiceImpl implements StockInService {
         List<StockInItem> items = new ArrayList<>();
         for(StockInItemRequest item : request){
             StockInItem stockInItem = StockInItem.builder()
-                    .productId(item.getProductId())
                     .sku(item.getSku())
-                    .productName(item.getProductName())
                     .quantity(item.getQuantity())
                     .unitCost(item.getUnitCost())
                     .stockIn(stockIn)
@@ -148,5 +232,33 @@ public class StockInServiceImpl implements StockInService {
             items.add(stockInItem);
         }
         return items;
+    }
+
+    private void enrichVariantInfo(InventoryResponse response, String sku){
+        try{
+            var responseVariant = productClient.getVariantBySku(sku);
+            if(responseVariant != null && responseVariant.getResult() != null){
+                response.setVariantName(responseVariant.getResult().getVariantName());
+                response.setThumbnail(responseVariant.getResult().getThumbnail());
+            }
+        }catch (Exception e)
+        {
+            log.warn("Cannot fetch product variant for sku={}", sku);
+        }
+    }
+
+    private Map<String, ProductVariantResponse> fetchVariantsBySku(List<String> skus){
+        var map = new HashMap<String, ProductVariantResponse>();
+        for (String sku : skus) {
+            try {
+                var res = productClient.getVariantBySku(sku);
+                if (res != null && res.getResult() != null) {
+                    map.put(sku, res.getResult());
+                }
+            } catch (Exception e) {
+                log.warn("Cannot fetch variant for sku={}", sku);
+            }
+        }
+        return map;
     }
 }

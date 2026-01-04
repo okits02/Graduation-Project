@@ -29,10 +29,6 @@ public class InventoryTransaction {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "inventory_id")
     Inventory inventory;
-
-    @Column(nullable = false)
-    String productId;
-
     @Column(nullable = false)
     String sku;
 

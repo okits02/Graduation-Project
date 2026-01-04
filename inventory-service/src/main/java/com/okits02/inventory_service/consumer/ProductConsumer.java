@@ -15,8 +15,8 @@ import org.springframework.stereotype.Service;
 public class ProductConsumer {
     private final InventoryService inventoryService;
 
-    @KafkaListener(topics = "product-create-event",
-            containerFactory = "createInventoryKafkaListenerContainerFactory")
+    @KafkaListener(topics = "product-event",
+            containerFactory = "InventoryKafkaListenerContainerFactory")
     public void consumerCreateProduct(String productEvent){
         ObjectMapper objectMapper = new ObjectMapper();
         ProductEventDTO productEventDTO;
@@ -27,19 +27,15 @@ public class ProductConsumer {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-        inventoryService.createProduct(productEventDTO);
+        switch (productEventDTO.getEventType()){
+            case "CREATED" -> {
+                inventoryService.createProduct(productEventDTO);
+            }
+            case "DELETED" -> {
+                inventoryService.delete(productEventDTO.getProductVariants());
+            }
+        }
     }
 
-    @KafkaListener(topics = "product-delete-event",
-            containerFactory = "deleteInventoryKafkaListenerContainerFactory")
-    public void consumerDeleteProduct(String productEvent) throws JsonProcessingException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        ProductDeleteEventDTO productDeleteEventDTO;
-        try {
-            productDeleteEventDTO = objectMapper.readValue(productEvent, ProductDeleteEventDTO.class);
-        } catch (JsonMappingException e) {
-            throw new RuntimeException(e);
-        }
-        inventoryService.delete(productDeleteEventDTO.getProductId());
-    }
+
 }

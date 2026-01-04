@@ -105,4 +105,15 @@ public class ProductController {
                 .build()
         );
     }
+
+    @GetMapping("/product")
+    public ApiResponse<ProductGetVM> getById(
+            @RequestParam("productId") String productId
+    ){
+        return ApiResponse.<ProductGetVM>builder()
+                .code(200)
+                .message("Get product by id successfully!")
+                .result(searchService.getProductById(productId))
+                .build();
+    }
 }

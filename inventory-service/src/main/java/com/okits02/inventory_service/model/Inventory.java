@@ -20,15 +20,10 @@ public class Inventory {
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
 
-    @Column(name = "product_id")
-    String productId;
     @Column(name = "sku")
     String sku;
-    @Column(name = "product_name")
-    String productName;
     @Column(name = "quantity")
     Integer quantity;
-
     LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "inventory", cascade = CascadeType.ALL, orphanRemoval = true)

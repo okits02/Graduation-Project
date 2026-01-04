@@ -10,8 +10,8 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class InventoryResponse {
     String id;
-    String productId;
     String sku;
-    String productName;
+    String variantName;
+    String thumbnail;
     Integer quantity;
 }
