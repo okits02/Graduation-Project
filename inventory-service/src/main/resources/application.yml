@@ -39,7 +39,7 @@ springdoc:
 open:
   api:
     version: v1.0.0
-    serverUrl: http://localhost:8074
+    serverUrl: http://localhost:8888/api/v1/inventory-service
     serverName: inventory-service
 
 eureka:

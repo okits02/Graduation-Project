@@ -47,7 +47,7 @@ springdoc:
 open:
   api:
     version: v1.0.0
-    serverUrl: http://localhost:8062
+    serverUrl: http://localhost:8888/api/v1/product-service
     serverName: Product Service
 
 eureka:

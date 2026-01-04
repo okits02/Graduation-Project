@@ -107,7 +107,7 @@ public class ProfileController {
             description = "Api used to get all user's info",
             security = @SecurityRequirement(name = "bearerAuth"))
     @GetMapping("/admin/getAll")
-    @PreAuthorize("hasRole('ADMIN)")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<PageResponse<ProfileResponse>>> getAllProfile(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size
