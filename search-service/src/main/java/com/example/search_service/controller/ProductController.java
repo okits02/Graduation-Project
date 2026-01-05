@@ -116,4 +116,15 @@ public class ProductController {
                 .result(searchService.getProductById(productId))
                 .build();
     }
+
+    @GetMapping("/internal/product/sku")
+    public ApiResponse<ProductSkuVM> getBySku(
+            @RequestParam("sku") String sku
+    ){
+         return ApiResponse.<ProductSkuVM>builder()
+                 .code(200)
+                 .message("Get product variant by sku!")
+                 .result(searchService.getProductBySku(sku))
+                 .build();
+    }
 }

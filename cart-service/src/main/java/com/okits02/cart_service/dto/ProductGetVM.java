@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 
 @Data
@@ -15,13 +16,10 @@ import java.time.LocalDate;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductGetVM {
     String id;
-    String name;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
-    BigDecimal listPrice;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    String sku;
+    String variantName;
+    String thumbnailUrl;
+    List<String> promotionName;
     BigDecimal sellPrice;
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    LocalDate createAt;
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    LocalDate updateAt;
+    BigDecimal listPrice;
 }

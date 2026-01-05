@@ -128,61 +128,6 @@ public class ProductService {
         log.info("create promotion successfully");
     }
 
-    /*
-    public void updatePromotion(ApplyPromotionEventDTO request) throws IOException {
-        List<BulkOperation> operations = new ArrayList<>();
-        NativeQuery nativeQuery = NativeQuery.builder()
-                .withQuery(q -> q
-                        .bool(b -> b
-                                .must(m -> m
-                                        .nested(nes -> nes
-                                                .path("promotions")
-                                                .query(query -> query.term(t -> t
-                                                        .field("promotions.id")
-                                                        .value(request.getId())
-                                                        )
-                                                )
-                                        )
-                                )
-                        )
-                )
-                .build();
-        SearchHits<Products> searchHits = elasticsearchOperations.search(nativeQuery, Products.class);
-        for(SearchHit<Products> hit : searchHits) {
-            Products product = hit.getContent();
-            if(product.getPromotions() != null) {
-                for (Promotion pro : product.getPromotions()) {
-                    if(pro.getId().equals(request.getId())) {
-                        promotionMapper.updatePromotion(pro, request);
-                    }
-                }
-                product.calculatorSellPrice();
-                BulkOperation bulkOperation = BulkOperation.of(b -> b
-                        .update(u -> u
-                                .index("product")
-                                .id(product.getId())
-                                .action(a -> a.doc(product)
-                                )
-                        )
-                );
-                operations.add(bulkOperation);
-            }
-        }
-        if (!operations.isEmpty()) {
-            BulkRequest bulkRequest = BulkRequest.of(b -> b.operations(operations));
-
-            BulkResponse bulkResponse = elasticsearchClient.bulk(bulkRequest);
-            if (bulkResponse.errors()) {
-                throw new IOException("Bulk update promotions failed: " + bulkResponse.toString());
-            } else {
-                System.out.println("Updated promotions for " + operations.size() + " products.");
-            }
-        } else {
-            System.out.println("No products found for given product IDs.");
-        }
-    }
-     */
-
     public void updatePromotion(UpdatePromotionDTO request) throws IOException {
         if(request.getApplyTo() != null
                 && request.getDeleteApplyTo() != null

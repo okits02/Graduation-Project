@@ -66,7 +66,7 @@ public class StockInServiceImpl implements StockInService {
 
                             if (variant != null) {
                                 res.setVariantName(variant.getVariantName());
-                                res.setThumbnail(variant.getThumbnail());
+                                res.setThumbnail(variant.getThumbnailUrl());
                             }
                             return res;
                         })
@@ -105,7 +105,7 @@ public class StockInServiceImpl implements StockInService {
 
                             if (variant != null) {
                                 res.setVariantName(variant.getVariantName());
-                                res.setThumbnail(variant.getThumbnail());
+                                res.setThumbnail(variant.getThumbnailUrl());
                             }
                             return res;
                         })
@@ -147,7 +147,7 @@ public class StockInServiceImpl implements StockInService {
 
                                                 if (variant != null) {
                                                     res.setVariantName(variant.getVariantName());
-                                                    res.setThumbnail(variant.getThumbnail());
+                                                    res.setThumbnail(variant.getThumbnailUrl());
                                                 }
                                                 return res;
                                             })
@@ -205,7 +205,7 @@ public class StockInServiceImpl implements StockInService {
 
                             if (variant != null) {
                                 res.setVariantName(variant.getVariantName());
-                                res.setThumbnail(variant.getThumbnail());
+                                res.setThumbnail(variant.getThumbnailUrl());
                             }
                             return res;
                         })
@@ -239,7 +239,7 @@ public class StockInServiceImpl implements StockInService {
             var responseVariant = productClient.getVariantBySku(sku);
             if(responseVariant != null && responseVariant.getResult() != null){
                 response.setVariantName(responseVariant.getResult().getVariantName());
-                response.setThumbnail(responseVariant.getResult().getThumbnail());
+                response.setThumbnail(responseVariant.getResult().getThumbnailUrl());
             }
         }catch (Exception e)
         {

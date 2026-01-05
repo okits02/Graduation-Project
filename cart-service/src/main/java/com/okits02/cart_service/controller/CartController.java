@@ -25,7 +25,6 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CartController {
     CartService cartService;
-    CartItemMapper cartItemMapper;
 
     @PostMapping("/create-cart")
     public ApiResponse<CartResponse> save(@RequestBody CartItemRequest request){

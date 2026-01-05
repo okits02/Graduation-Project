@@ -131,13 +131,4 @@ public class ProductController {
         }
     }
 
-    @GetMapping("/internal/variant")
-    public ApiResponse<ProductVariantsResponse> getVariantBySku(@RequestParam(value = "sku") String sku){
-        return ApiResponse.<ProductVariantsResponse>builder()
-                .code(200)
-                .message("Get variant successfully")
-                .result(productVariantsService.getVariantBySku(sku))
-                .build();
-    }
-
 }

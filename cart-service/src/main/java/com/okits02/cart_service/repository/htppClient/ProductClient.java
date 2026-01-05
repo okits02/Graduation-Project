@@ -9,13 +9,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @FeignClient("search-service")
 public interface ProductClient {
-    @GetMapping(value = "/search-service/search/internal/get-product/{productId}",
+    @GetMapping(value = "/search-service/search/internal/product/sku",
             produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<ApiResponse<ProductGetVM>> getProductDetails(
-            @RequestHeader String token,
-            @PathVariable String productId
+    ApiResponse<ProductGetVM> getProductDetails(
+            @RequestParam("sku") String sku
     );
 }

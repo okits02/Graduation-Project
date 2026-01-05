@@ -11,11 +11,12 @@ import java.time.LocalDateTime;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CartItemResponse {
-    private String cartItemId;
-    private String productId;
-    private String productName;
-    private Integer quantity;
-    private BigDecimal listPrice;
-    private BigDecimal sellPrice;
-    private LocalDateTime addedAt;
+    String cartItemId;
+    String sku;
+    String variantName;
+    String thumbnail;
+    Integer quantity;
+    BigDecimal listPrice;
+    BigDecimal sellPrice;
+    LocalDateTime addedAt;
 }

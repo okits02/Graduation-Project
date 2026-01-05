@@ -11,13 +11,10 @@ import javax.swing.text.html.Option;
 import java.util.Optional;
 
 public interface CartItemRepository extends JpaRepository<CartItem, String> {
-    boolean existsByProductId(String productId);
 
-    CartItem findByProductId(String productId);
-
-    @Query("SELECT ci FROM CartItem ci WHERE ci.cart = :cart AND ci.productId = :productId")
-    Optional<CartItem> findByCartAndProductId(@Param("cart") Cart cart,
-                                              @Param("productId") String productId);
+    @Query("SELECT ci FROM CartItem ci WHERE ci.cart = :cart AND ci.sku = :sku")
+    Optional<CartItem> findByCartAndSku(@Param("cart") Cart cart,
+                                              @Param("sku") String sku);
 
     @Query("SELECT ci FROM CartItem ci WHERE ci.cart = :cart AND ci.cartItemId = :cartItemId")
     Optional<CartItem> findByIdAndCart(@Param("cart") Cart cart,

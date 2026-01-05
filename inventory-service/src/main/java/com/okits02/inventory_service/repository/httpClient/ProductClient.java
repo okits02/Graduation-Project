@@ -7,8 +7,8 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@FeignClient(name = "product-service")
+@FeignClient(name = "search-service")
 public interface ProductClient {
-    @GetMapping(value = "/product-service/product/internal/variant", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/search-service/search/internal/product/sku", produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse<ProductVariantResponse> getVariantBySku(@RequestParam(value = "sku") String sku);
 }

@@ -14,5 +14,4 @@ public interface ProductVariantsService {
     public void deleteBySku(String sku);
     public void deleteByProductId(String productId);
     public void changeStock(String sku, Boolean inStock);
-    public ProductVariantsResponse getVariantBySku(String sku);
 }

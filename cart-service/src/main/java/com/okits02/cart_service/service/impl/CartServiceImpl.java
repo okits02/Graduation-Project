@@ -25,6 +25,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,47 +40,74 @@ public class CartServiceImpl implements CartService {
     private final CartItemMapper cartItemMapper;
 
     @Override
-        public CartResponse save(CartItemRequest request) {
-            ServletRequestAttributes servletRequestAttributes =
-                    (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-            var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
+    public CartResponse save(CartItemRequest request) {
+        ServletRequestAttributes servletRequestAttributes =
+                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
 
-            var userResponse = userClient.getUserId(authHeader);
-            if (userResponse == null || userResponse.getCode() != 200) {
-                throw new RuntimeException("User does not exist");
-            }
+        var userResponse = userClient.getUserId(authHeader);
+        if (userResponse == null || userResponse.getCode() != 200) {
+            throw new RuntimeException("User does not exist");
+        }
 
-            String userId = userResponse.getResult().getUserId();
+        String userId = userResponse.getResult().getUserId();
 
-            Cart cart = cartRepository.findByUserId(userId);
-            if (cart == null) {
-                cart = Cart.builder()
-                        .userId(userId)
-                        .build();
-                cart = cartRepository.save(cart);
-            }
-
-            if (cart.getItems() == null) {
-                cart.setItems(new ArrayList<>());
-            }
-            CartItem cartItem = createItems(authHeader, cart, request.getProductId(), request.getQuantity());
-            cart = cartRepository.save(cart);
-            List<CartItemResponse> cartItemResponses = cart.getItems().stream()
-                    .map(item -> CartItemResponse.builder()
-                            .cartItemId(item.getCartItemId())
-                            .productId(item.getProductId())
-                            .productName(item.getProductName())
-                            .quantity(item.getQuantity())
-                            .listPrice(item.getListPrice())
-                            .sellPrice(item.getSellPrice())
-                            .addedAt(item.getAddedAt())
-                            .build()
-                    )
-                    .collect(Collectors.toList());
-            return CartResponse.builder()
-                    .cartId(cart.getCartId())
-                    .items(cartItemResponses)
+        Cart cart = cartRepository.findByUserId(userId);
+        if (cart == null) {
+            cart = Cart.builder()
+                    .userId(userId)
                     .build();
+            cart = cartRepository.save(cart);
+        }
+
+        if (cart.getItems() == null) {
+            cart.setItems(new ArrayList<>());
+        }
+        var productResponse = productClient.getProductDetails(request.getSku());
+        if (productResponse == null || productResponse.getCode() != 200) {
+            throw new RuntimeException("Product not exists");
+        }
+
+        ProductGetVM productGetVM = productResponse.getResult();
+        Optional<CartItem> existingItemOpt =
+                cartItemRepository.findByCartAndSku(cart, request.getSku());
+
+        CartItem cartItem;
+
+        if (existingItemOpt.isPresent()) {
+            cartItem = existingItemOpt.get();
+            cartItem.setQuantity(cartItem.getQuantity() + request.getQuantity());
+        } else {
+            cartItem = CartItem.builder()
+                    .sku(productGetVM.getSku())
+                    .listPrice(productGetVM.getListPrice())
+                    .sellPrice(productGetVM.getSellPrice())
+                    .quantity(request.getQuantity())
+                    .addedAt(LocalDateTime.now())
+                    .cart(cart)
+                    .build();
+
+            cart.getItems().add(cartItem);
+        }
+
+        cartRepository.save(cart);
+        List<CartItemResponse> items = cart.getItems().stream()
+                .map(item -> CartItemResponse.builder()
+                        .cartItemId(item.getCartItemId())
+                        .sku(item.getSku())
+                        .thumbnail(productGetVM.getThumbnailUrl())
+                        .quantity(item.getQuantity())
+                        .listPrice(item.getListPrice())
+                        .sellPrice(item.getSellPrice())
+                        .addedAt(item.getAddedAt())
+                        .build()
+                )
+                .toList();
+
+        return CartResponse.builder()
+                .cartId(cart.getCartId())
+                .items(items)
+                .build();
         }
 
     @Override
@@ -91,16 +119,23 @@ public class CartServiceImpl implements CartService {
             throw new AppException(CartErrorCode.USER_DOES_NOT_HAVE_CART);
         }
         CartItem cartItem = cart.getItems().stream()
-                .filter(item -> item.getCartItemId().equals(request.getCartItemId()))
+                .filter(item -> item.getCartItemId().equals(request.getSku()))
                 .findFirst()
                 .orElseThrow(() -> new AppException(CartErrorCode.CART_ITEM_NOT_EXISTS));
         cartItem.setQuantity(request.getQuantity());
         cart = cartRepository.save(cart);
+        var productResponse = productClient.getProductDetails(request.getSku());
+        if (productResponse == null || productResponse.getCode() != 200) {
+            throw new RuntimeException("Product not exists");
+        }
+
+        ProductGetVM productGetVM = productResponse.getResult();
         List<CartItemResponse> cartItemResponses = cart.getItems().stream()
                 .map(item -> CartItemResponse.builder()
                         .cartItemId(item.getCartItemId())
-                        .productId(item.getProductId())
-                        .productName(item.getProductName())
+                        .sku(request.getSku())
+                        .variantName(productGetVM.getVariantName())
+                        .thumbnail(productGetVM.getThumbnailUrl())
                         .quantity(item.getQuantity())
                         .listPrice(item.getListPrice())
                         .sellPrice(item.getSellPrice())
@@ -126,8 +161,6 @@ public class CartServiceImpl implements CartService {
         List<CartItemResponse> cartItemResponses = cart.getItems().stream()
                 .map(item -> CartItemResponse.builder()
                         .cartItemId(item.getCartItemId())
-                        .productId(item.getProductId())
-                        .productName(item.getProductName())
                         .quantity(item.getQuantity())
                         .listPrice(item.getListPrice())
                         .sellPrice(item.getSellPrice())
@@ -145,18 +178,34 @@ public class CartServiceImpl implements CartService {
     public CartResponse getCart() {
         String userId = getUserId();
         Cart cart = cartRepository.findByUserId(userId);
+        if (cart == null || cart.getItems() == null || cart.getItems().isEmpty()) {
+            return CartResponse.builder()
+                    .cartId(cart != null ? cart.getCartId() : null)
+                    .items(List.of())
+                    .build();
+        }
         List<CartItemResponse> cartItemResponses = cart.getItems().stream()
-                .map(item -> CartItemResponse.builder()
-                        .cartItemId(item.getCartItemId())
-                        .productId(item.getProductId())
-                        .productName(item.getProductName())
-                        .quantity(item.getQuantity())
-                        .listPrice(item.getListPrice())
-                        .sellPrice(item.getSellPrice())
-                        .addedAt(item.getAddedAt())
-                        .build()
-                )
-                .collect(Collectors.toList());
+                .map(item -> {
+
+                    ProductGetVM product = null;
+
+                    var productResponse = productClient.getProductDetails(item.getSku());
+                    if (productResponse != null && productResponse.getCode() == 200) {
+                        product = productResponse.getResult();
+                    }
+
+                    return CartItemResponse.builder()
+                            .cartItemId(item.getCartItemId())
+                            .sku(item.getSku())
+                            .thumbnail(product != null ? product.getThumbnailUrl() : null)
+                            .quantity(item.getQuantity())
+                            .listPrice(item.getListPrice())
+                            .sellPrice(item.getSellPrice())
+                            .addedAt(item.getAddedAt())
+                            .build();
+                })
+                .toList();
+
         return CartResponse.builder()
                 .cartId(cart.getCartId())
                 .items(cartItemResponses)
@@ -167,21 +216,31 @@ public class CartServiceImpl implements CartService {
     public CartItemResponse getCartItem(String cartItemId) {
         String userId = getUserId();
         Cart cart = cartRepository.findByUserId(userId);
-        if(cart == null){
+        if (cart == null) {
             throw new AppException(CartErrorCode.USER_DOES_NOT_HAVE_CART);
         }
-        Optional<CartItem> cartItem = cartItemRepository.findByIdAndCart(cart, cartItemId);
-        if(cartItem.get() == null){
+
+        Optional<CartItem> cartItemOpt =
+                cartItemRepository.findByIdAndCart(cart, cartItemId);
+
+        if (cartItemOpt.isEmpty()) {
             throw new AppException(CartErrorCode.CART_ITEM_NOT_EXISTS);
         }
+        CartItem cartItem = cartItemOpt.get();
+        ProductGetVM product = null;
+        var productResponse = productClient.getProductDetails(cartItem.getSku());
+        if (productResponse != null && productResponse.getCode() == 200) {
+            product = productResponse.getResult();
+        }
+
         return CartItemResponse.builder()
-                .cartItemId(cartItem.get().getCartItemId())
-                .productId(cartItem.get().getProductId())
-                .productName(cartItem.get().getProductName())
-                .quantity(cartItem.get().getQuantity())
-                .listPrice(cartItem.get().getListPrice())
-                .sellPrice(cartItem.get().getSellPrice())
-                .addedAt(cartItem.get().getAddedAt())
+                .cartItemId(cartItem.getCartItemId())
+                .sku(cartItem.getSku())
+                .thumbnail(product != null ? product.getThumbnailUrl() : null)
+                .quantity(cartItem.getQuantity())
+                .listPrice(cartItem.getListPrice())
+                .sellPrice(cartItem.getSellPrice())
+                .addedAt(cartItem.getAddedAt())
                 .build();
     }
 
@@ -197,30 +256,4 @@ public class CartServiceImpl implements CartService {
         return userResponse.getResult().getUserId();
     }
 
-    private CartItem createItems(String token, Cart cart, String productId, Integer quantity){
-        Optional<CartItem> existingItem = cartItemRepository.findByCartAndProductId(cart, productId);
-        if (existingItem.isPresent()) {
-            CartItem cartItem = existingItem.get();
-            cartItem.setQuantity(cartItem.getQuantity() + quantity);
-            cart.getItems().add(cartItem);
-            return cartItem;
-        }
-        var response = productClient.getProductDetails(token, productId);
-        if(response == null || response.getBody().getCode() != 200){
-            throw new RuntimeException("Product not exists");
-        }
-        ProductGetVM productGetVM = response.getBody().getResult();
-
-        CartItem cartItem = CartItem.builder()
-                .productId(productGetVM.getId())
-                .productName(productGetVM.getName())
-                .listPrice(productGetVM.getListPrice())
-                .sellPrice(productGetVM.getSellPrice())
-                .quantity(quantity)
-                .addedAt(LocalDateTime.now())
-                .cart(cart)
-                .build();
-        cart.getItems().add(cartItem);
-        return cartItem;
-    }
 }

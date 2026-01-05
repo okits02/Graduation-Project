@@ -6,17 +6,16 @@ import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductVariantResponse {
-    String variantName;
+    String id;
     String sku;
-    String color;
-    BigDecimal price;
-    Integer sold;
-    String thumbnail;
-    Boolean inStock;
-    LocalDate createAt;
-    LocalDate updateAt;
+    String variantName;
+    String thumbnailUrl;
+    List<String> promotionName;
+    BigDecimal sellPrice;
+    BigDecimal listPrice;
 }
