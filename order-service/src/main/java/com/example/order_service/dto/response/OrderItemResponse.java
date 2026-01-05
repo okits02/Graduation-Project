@@ -12,9 +12,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class OrderItemResponse {
-    String productId;
     String sku;
     String productName;
+    String thumbnailUrl;
     Integer quantity;
     BigDecimal listPrice;
     BigDecimal sellPrice;

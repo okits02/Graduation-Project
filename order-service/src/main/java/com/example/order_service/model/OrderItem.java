@@ -23,18 +23,8 @@ public class OrderItem {
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "order_id")
     private Orders orders;
-
-    @Column(name = "product_id")
-    private String productId;
-
     @Column(name = "sku")
     private String sku;
-
-    @Column(name = "name_product")
-    private String productName;
-
-    @Column(name = "thumbnail_url")
-    private String thumbnailUrl;
     @Column(name = "quantity")
     private Integer quantity;
 

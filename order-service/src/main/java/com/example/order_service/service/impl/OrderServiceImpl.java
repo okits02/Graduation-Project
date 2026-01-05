@@ -7,6 +7,7 @@ import com.example.order_service.dto.response.*;
 import com.example.order_service.enums.Status;
 import com.example.order_service.mapper.OrderItemMapper;
 import com.example.order_service.repository.OrderItemRepository;
+import com.example.order_service.repository.httpClient.ProductClient;
 import com.example.order_service.repository.httpClient.PromotionClient;
 import com.okits02.common_lib.dto.PageResponse;
 import com.okits02.common_lib.exception.AppException;
@@ -44,8 +45,9 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
     private final OrderItemMapper orderItemMapper;
-    private final UserClient userClient;
     private final PromotionClient promotionClient;
+    private final UserClient userClient;
+    private final ProductClient productClient;
 
 
     @Override
@@ -61,13 +63,7 @@ public class OrderServiceImpl implements OrderService {
                 .orderDesc(request.getOrderDesc())
                 .orderDate(LocalDateTime.now())
                 .build();
-        List<OrderItem> items = request.getItems().stream()
-                .map(itemReq -> {
-                    OrderItem item = orderItemMapper.toOrderItem(itemReq);
-                    item.setOrders(orders);
-                    return item;
-                }).toList();
-        orders.setItems(items);
+        List<OrderItemResponse> items = createItem(request.getItems(), orders);
         orders.calculateTotalPrice();
         BigDecimal totalPrice = orders.getTotalPrice();
         BigDecimal discountAmount = BigDecimal.ZERO;
@@ -287,5 +283,42 @@ public class OrderServiceImpl implements OrderService {
         var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
         var apiResponse = userClient.getUserId(authHeader);
         return apiResponse.getResult().getUserId();
+    }
+
+    private List<OrderItemResponse> createItem(List<OrderItemRequest> itemRequests, Orders orders){
+        if(itemRequests == null || itemRequests.isEmpty() || orders == null){
+            return List.of();
+        }
+        List<OrderItemResponse> responses = new ArrayList<>();
+        List<OrderItem> items = new ArrayList<>();
+        for(OrderItemRequest item : itemRequests){
+            var productResponse = productClient.getProductDetails(item.getSku());
+            if (productResponse == null || productResponse.getCode() != 200) {
+                throw new RuntimeException("Product not exists");
+            }
+            if(!item.getListPrice().equals(productResponse.getResult().getListPrice()) ||
+                    !item.getSellPrice().equals(productResponse.getResult().getSellPrice())){
+                throw new RuntimeException("Price for sku" + item.getSku() + "not valid");
+            }
+            items.add(OrderItem.builder()
+                            .sku(item.getSku())
+                            .quantity(item.getQuantity())
+                            .sellPrice(item.getSellPrice())
+                            .listPrice(item.getListPrice())
+                            .addAt(LocalDateTime.now())
+                            .orders(orders)
+                    .build());
+            responses.add(OrderItemResponse.builder()
+                    .sku(item.getSku())
+                    .productName(productResponse.getResult().getVariantName())
+                    .thumbnailUrl(productResponse.getResult().getThumbnailUrl())
+                    .quantity(item.getQuantity())
+                    .sellPrice(item.getSellPrice())
+                    .listPrice(item.getListPrice())
+                    .addAt(LocalDateTime.now())
+                    .build());
+        }
+        orders.setItems(items);
+        return responses;
     }
 }

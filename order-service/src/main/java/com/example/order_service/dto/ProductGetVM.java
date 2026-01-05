@@ -15,13 +15,10 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProductGetVM {
     String id;
-    String name;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
-    BigDecimal listPrice;
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    String sku;
+    String variantName;
+    String thumbnailUrl;
+    List<String> promotionName;
     BigDecimal sellPrice;
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    LocalDate createAt;
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    LocalDate updateAt;
+    BigDecimal listPrice;
 }
