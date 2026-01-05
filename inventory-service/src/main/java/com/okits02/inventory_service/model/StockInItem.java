@@ -13,9 +13,9 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Table(
-        name = "inventory",
+        name = "stock_in_item",
         uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"product_id", "sku"})
+                @UniqueConstraint(columnNames = {"sku"})
         }
 )
 public class StockInItem {

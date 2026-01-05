@@ -9,6 +9,4 @@ import lombok.experimental.FieldDefaults;
 public class SpecificationFilterDTO {
     String key;
     String value;
-    String group;
-    String type;
 }

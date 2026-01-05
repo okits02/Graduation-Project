@@ -45,9 +45,9 @@ public class StockIn {
     @PrePersist
     @PreUpdate
     public void calculateTotal() {
-        totalAmount = items.stream()
-                .map(StockInItem::getTotalCost)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        this.totalAmount = items == null ? BigDecimal.ZERO : items.stream().map(
+                item -> item.getUnitCost().multiply(BigDecimal.valueOf(item.getQuantity()))
+        ).reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }
 

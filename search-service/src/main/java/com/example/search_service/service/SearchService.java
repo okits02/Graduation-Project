@@ -20,12 +20,10 @@
     import lombok.RequiredArgsConstructor;
     import lombok.extern.slf4j.Slf4j;
     import org.springframework.data.domain.PageRequest;
-    import org.springframework.data.domain.Pageable;
     import org.springframework.data.domain.Sort;
     import org.springframework.data.elasticsearch.client.elc.NativeQuery;
     import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
     import org.springframework.data.elasticsearch.core.*;
-    import org.springframework.data.elasticsearch.core.query.FetchSourceFilter;
     import org.springframework.stereotype.Service;
 
     import java.util.*;
@@ -95,7 +93,7 @@
                     break;
                 }
             }
-            buildSpecAggregations(nativeQueryBuilder);
+            buildAggregations(nativeQueryBuilder);
             log.error("ES QUERY = {}", nativeQueryBuilder.getQuery());
             nativeQueryBuilder.withPageable(PageRequest.of(page, size));
             SearchHits<Products> productsSearchHits = elasticsearchOperations.search(nativeQueryBuilder.build(), Products.class);
@@ -105,14 +103,15 @@
             List<ProductSummariseVM> productGetVMList = productsSearchHits.stream().map(i -> ProductSummariseVM
                     .fromEntity(i.getContent())).toList();
             Map<String, Map<String, Long>> techAggregations = getAggregationTech(productsSearchHits);
-            //Map<String, Map<String, Long>> variantSpecAggregations = getAggregationsVariants(productsSearchHits);
+            Map<String, Long> categoriesAggregations = getAggregationsCategories(productsSearchHits);
             return ProductGetListVM.<ProductSummariseVM>builder()
                     .productGetVMList(productGetVMList)
                     .currentPages(productsSearchPage.getNumber())
                     .totalPage(productsSearchPage.getTotalPages())
                     .pageSize(productsSearchPage.getSize())
                     .totalElements(productsSearchPage.getTotalElements())
-                    .aggregations(techAggregations)
+                    .specificationAggregations(techAggregations)
+                    .categoriesAggregations(categoriesAggregations)
                     .build();
         }
 
@@ -174,9 +173,8 @@
             if (attributes == null || attributes.isEmpty()) return;
 
             for (SpecificationFilterDTO attr : attributes) {
-                if ("TECH".equals(attr.getType())) {
                     b.must(m -> m.nested(n -> n
-                            .path("specifications")
+                            .path(productField)
                             .query(q -> q.bool(bl -> bl
                                     .must(ms -> ms.term(t -> t
                                             .field("specifications.key")
@@ -186,13 +184,8 @@
                                             .field("specifications.value")
                                             .value(attr.getValue())
                                     ))
-                                    .must(ms -> ms.term(t -> t
-                                            .field("specifications.type")
-                                            .value("tech")
-                                    ))
                             ))
                     ));
-                }
             }
         }
 
@@ -215,28 +208,51 @@
             Aggregate aggregate = techAggWrapper.aggregation().getAggregate();
             NestedAggregate nested = aggregate.nested();
 
-            FilterAggregate onlyTech =
-                    nested.aggregations().get("only_tech").filter();
+            StringTermsAggregate byGroup =
+                    nested.aggregations().get("only_tech").sterms();
 
-            StringTermsAggregate byKey =
-                    onlyTech.aggregations().get("by_key").sterms();
-
-            for (StringTermsBucket keyBucket : byKey.buckets().array()) {
-
-                String key = keyBucket.key().stringValue();
-                StringTermsAggregate byValue =
-                        keyBucket.aggregations().get("by_value").sterms();
-
+            for(StringTermsBucket groupBucket : byGroup.buckets().array()) {
+                String group = groupBucket.key().stringValue();
                 Map<String, Long> valueMap = new HashMap<>();
-                for (StringTermsBucket valueBucket : byValue.buckets().array()) {
-                    valueMap.put(
-                            valueBucket.key().stringValue(),
-                            valueBucket.docCount()
-                    );
+                StringTermsAggregate byKey =
+                        groupBucket.aggregations().get("by_key").sterms();
+
+                for (StringTermsBucket keyBucket : byKey.buckets().array()) {
+
+                    StringTermsAggregate byValue =
+                            keyBucket.aggregations().get("by_value").sterms();
+
+                    for (StringTermsBucket valueBucket : byValue.buckets().array()) {
+                        valueMap.merge(
+                                valueBucket.key().stringValue(),
+                                valueBucket.docCount(),
+                                Long::sum
+                        );
+                    }
                 }
-                result.put(key, valueMap);
+                result.put(group, valueMap);
             }
 
+            return result;
+        }
+
+        public Map<String, Long> getAggregationsCategories(SearchHits<Products> hits){
+            Map<String, Long> result = new HashMap<>();
+            AggregationsContainer<?> container = hits.getAggregations();
+            if(container == null) return result;
+            List<ElasticsearchAggregation> aggs = (List<ElasticsearchAggregation>) container.aggregations();
+            ElasticsearchAggregation cateAggWrapper = aggs.stream()
+                    .filter(a -> "categories".equals(a.aggregation().getName()))
+                    .findFirst()
+                    .orElse(null);
+            if (cateAggWrapper == null) return result;
+            StringTermsAggregate byCate = cateAggWrapper.aggregation().getAggregate().sterms();
+            for(StringTermsBucket valueBuket : byCate.buckets().array()){
+                result.put(
+                        valueBuket.key().stringValue(),
+                        valueBuket.docCount()
+                );
+            }
             return result;
         }
 
@@ -365,15 +381,13 @@
                 return bb;
             }));
         }
-        private void buildSpecAggregations(NativeQueryBuilder builder) {
+        private void buildAggregations(NativeQueryBuilder builder) {
             Aggregation techAgg = Aggregation.of(a -> a
                     .nested(n -> n.path("specifications"))
                     .aggregations("only_tech", Aggregation.of(a2 -> a2
-                            .filter(f -> f
-                                    .term(t -> t
-                                            .field("specifications.type")
-                                            .value("TECH")
-                                    )
+                            .terms(t -> t
+                                    .field("specifications.group")
+                                    .size(20)
                             )
                             .aggregations("by_key", Aggregation.of(a3 -> a3
                                     .terms(t -> t
@@ -391,35 +405,13 @@
             );
             builder.withAggregation("tech_specs", techAgg);
 
-            Aggregation variantAgg = Aggregation.of(a -> a
-                    .nested(n -> n.path("productVariants"))
-                    .aggregations("best_specs", Aggregation.of(a2 -> a2
-                            .nested(n2 -> n2
-                                    .path("productVariants.bestSpecifications")
-                            )
-                            .aggregations("only_variant", Aggregation.of(a3 -> a3
-                                    .filter(f -> f
-                                            .term(t -> t
-                                                    .field("productVariants.bestSpecifications.type")
-                                                    .value("VARIANT")
-                                            )
-                                    )
-                                    .aggregations("by_key", Aggregation.of(a4 -> a4
-                                            .terms(t2 -> t2
-                                                    .field("productVariants.bestSpecifications.key")
-                                                    .size(50)
-                                            )
-                                            .aggregations("by_value", Aggregation.of(a5 -> a5
-                                                    .terms(t3 -> t3
-                                                            .field("productVariants.bestSpecifications.value")
-                                                            .size(50)
-                                                    )
-                                            ))
-                                    ))
-                            ))
-                    ))
+            Aggregation cateAgg = Aggregation.of(a -> a
+                    .terms(t -> t
+                            .field("categoriesId")
+                            .size(20)
+                    )
             );
-            builder.withAggregation("variant_specs", variantAgg);
+            builder.withAggregation("categories", cateAgg);
         }
 
 

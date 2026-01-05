@@ -17,5 +17,6 @@ public class ProductGetListVM<T> {
     int totalPage;
     int pageSize;
     Long totalElements;
-    Map<String, Map<String, Long>> aggregations;
+    Map<String, Map<String, Long>> specificationAggregations;
+    Map<String, Long> categoriesAggregations;
 }

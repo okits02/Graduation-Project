@@ -6,6 +6,6 @@ import lombok.experimental.FieldDefaults;
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CartItemRequest {
-    String productId;
+    String sku;
     Integer quantity;
 }

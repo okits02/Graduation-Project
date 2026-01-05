@@ -78,10 +78,10 @@ public class InventoryController {
 
     @GetMapping("/transactions")
     public PageResponse<InventoryTransactionResponse> getTransactionHistory(
-            @RequestParam String productId,
+            @RequestParam String sku,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        return inventoryService.getTransactionHistory(productId, page-1, size);
+        return inventoryService.getTransactionHistory(sku, page-1, size);
     }
 }

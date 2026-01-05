@@ -21,10 +21,8 @@ public class CartItem {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String cartItemId;
 
-    @Column(name = "product_id")
-    private String productId;
-    @Column(name = "product_name")
-    private String productName;
+    @Column(name = "sku")
+    private String sku;
     @Column(name = "quantity")
     private Integer quantity;
     @Column(name = "list_price")

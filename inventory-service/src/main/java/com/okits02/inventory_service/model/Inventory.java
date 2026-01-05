@@ -20,7 +20,7 @@ public class Inventory {
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
 
-    @Column(name = "sku")
+    @Column(name = "sku", nullable = false, unique = true)
     String sku;
     @Column(name = "quantity")
     Integer quantity;

@@ -17,8 +17,7 @@ import java.time.LocalDateTime;
 @Table(
         name = "inventory_transaction",
         indexes = {
-                @Index(name = "idx_inventory_sku", columnList = "sku"),
-                @Index(name = "idx_inventory_product", columnList = "productId")
+                @Index(name = "idx_inventory_sku", columnList = "sku")
         }
 )
 public class InventoryTransaction {
