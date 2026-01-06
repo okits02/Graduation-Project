@@ -26,5 +26,4 @@ public class OrderCreationRequest implements Serializable {
     String addressId;
     String voucher;
     List<OrderItemRequest> items;
-    List<String> categoryId;
 }

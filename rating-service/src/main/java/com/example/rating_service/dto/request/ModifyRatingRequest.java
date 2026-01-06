@@ -11,7 +11,7 @@ import lombok.experimental.FieldDefaults;
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ModifyRatingRequest {
+    String id;
     String content;
-    String ratingScore;
-    String userName;
+    Double ratingScore;
 }

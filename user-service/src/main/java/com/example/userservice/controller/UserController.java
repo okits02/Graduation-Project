@@ -301,4 +301,14 @@ public class UserController {
                         , size))
                 .build());
     }
+
+    @PutMapping("/admin/reset-password")
+    @PreAuthorize("hasRole('ADMIN')")
+    ResponseEntity<ApiResponse<?>> updatePasswordForAdmin(@RequestBody ResetPasswordRequest request) {
+            userService.updatePassword(request.getOldPassword(), request.getNewPassword());
+            return ResponseEntity.ok(ApiResponse.builder()
+                    .code(200)
+                    .message("Password updated successfully")
+                    .build());
+    }
 }

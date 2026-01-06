@@ -1,11 +1,9 @@
 package com.example.order_service.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -13,7 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ProductGetVM {
+public class ProductSkuVM {
     String id;
     String sku;
     String variantName;

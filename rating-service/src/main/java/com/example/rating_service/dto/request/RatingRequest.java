@@ -12,6 +12,4 @@ public class RatingRequest {
     String content;
     Double ratingScore;
     String productId;
-    String productName;
-    String createBy;
 }

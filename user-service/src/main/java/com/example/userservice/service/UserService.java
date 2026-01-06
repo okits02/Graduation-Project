@@ -13,6 +13,7 @@ public interface UserService {
     public void forgotPassword(Users user, String newPassword);
     public void forgotPasswordVerify(ForgotPasswordRequest request);
     public void updatePassword(String oldPassword, String newPassword);
+    public void updatePasswordForAdmin(String oldPassword, String newPassword);
     public void toggleUserStatus(String userId, boolean isActive);
     public void deleteUser(String userId);
     public UserIdResponse getUserId();

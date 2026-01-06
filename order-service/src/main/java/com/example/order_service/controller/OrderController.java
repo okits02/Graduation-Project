@@ -1,6 +1,7 @@
 package com.example.order_service.controller;
 
 import com.example.order_service.dto.request.OrderCreationRequest;
+import com.example.order_service.dto.response.CheckVerifiedPurchase;
 import com.example.order_service.dto.response.GetAmountResponse;
 import com.example.order_service.dto.response.OrderResponse;
 import com.example.order_service.dto.response.OrderSummaryResponse;
@@ -30,11 +31,37 @@ public class OrderController {
                 .build();
     }
 
+
+    @PostMapping("/status")
+    public ApiResponse<OrderResponse> changeStatusOrder(
+            @RequestParam("orderId") String orderId,
+            @RequestParam("status") Status status
+    ){
+        return ApiResponse.<OrderResponse>builder()
+                .code(200)
+                .result(orderService.changeStatusOrder(orderId, status))
+                .build();
+    }
+
+
+    @GetMapping("/get/status")
+    public ApiResponse<PageResponse<OrderSummaryResponse>> getAllByStatus(
+            @RequestParam("status") Status status,
+            @RequestParam(value = "page", defaultValue = "1") Integer page,
+            @RequestParam(value = "size", defaultValue = "0") Integer size
+    ){
+        return ApiResponse.<PageResponse<OrderSummaryResponse>>builder()
+                .code(200)
+                .message("get all order by status successfully!")
+                .result(orderService.getAllByStatus(page - 1, size, status))
+                .build();
+    }
+
     @GetMapping("/get-by-userId")
     public ApiResponse<PageResponse<OrderSummaryResponse>> getByUserId(
             @RequestParam("userId") String userId,
-            @RequestParam("page") Integer page,
-            @RequestParam("size") Integer size
+            @RequestParam(value = "page", defaultValue = "1") Integer page,
+            @RequestParam(value = "size", defaultValue = "0") Integer size
     ){
         return ApiResponse.<PageResponse<OrderSummaryResponse>>builder()
                 .code(200)
@@ -47,8 +74,8 @@ public class OrderController {
     public ApiResponse<PageResponse<OrderSummaryResponse>> getByUserIdAndStatus(
             @RequestParam("userId") String userId,
             @RequestParam("status") Status status,
-            @RequestParam("page") Integer page,
-            @RequestParam("size") Integer size
+            @RequestParam(value = "page", defaultValue = "1") Integer page,
+            @RequestParam(value = "size", defaultValue = "0") Integer size
     ){
         return ApiResponse.<PageResponse<OrderSummaryResponse>>builder()
                 .code(200)
@@ -65,6 +92,16 @@ public class OrderController {
                 .code(200)
                 .message("Get amount successfully!")
                 .result(orderService.getAmount(orderId))
+                .build();
+    }
+
+    @GetMapping("/internal/rating/check")
+    public ApiResponse<CheckVerifiedPurchase> checkVerifiedPurchase(
+            @RequestParam("userId") String userId,
+            @RequestParam("productId") String productId
+    ){
+        return ApiResponse.<CheckVerifiedPurchase>builder()
+                .result(orderService.checkVerifiedPurchase(userId, productId))
                 .build();
     }
 

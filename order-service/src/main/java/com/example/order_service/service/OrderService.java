@@ -2,6 +2,7 @@ package com.example.order_service.service;
 
 import com.example.order_service.dto.request.OrderCreationRequest;
 import com.example.order_service.dto.request.OrderUpdateRequest;
+import com.example.order_service.dto.response.CheckVerifiedPurchase;
 import com.example.order_service.dto.response.GetAmountResponse;
 import com.example.order_service.dto.response.OrderResponse;
 import com.example.order_service.dto.response.OrderSummaryResponse;
@@ -19,4 +20,5 @@ public interface OrderService {
     public GetAmountResponse getAmount(String orderId);
     public PageResponse<OrderSummaryResponse> getAllByStatus(int page, int size, Status status);
     public OrderResponse getById(String orderId);
+    public CheckVerifiedPurchase checkVerifiedPurchase(String userId, String productId);
 }

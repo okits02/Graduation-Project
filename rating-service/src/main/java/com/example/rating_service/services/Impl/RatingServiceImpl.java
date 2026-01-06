@@ -4,6 +4,10 @@ import com.example.rating_service.dto.CustomerVM;
 import com.example.rating_service.dto.request.ModifyRatingRequest;
 import com.example.rating_service.dto.request.RatingRequest;
 import com.example.rating_service.dto.response.RatingResponse;
+import com.example.rating_service.enums.RatingFilterType;
+import com.example.rating_service.repository.httpClient.OrderClient;
+import com.example.rating_service.repository.httpClient.UserClient;
+import com.okits02.common_lib.dto.PageResponse;
 import com.okits02.common_lib.exception.AppException;
 import com.example.rating_service.exception.RatingErrorCode;
 import com.example.rating_service.mapper.RatingMapper;
@@ -13,9 +17,14 @@ import com.example.rating_service.repository.httpClient.ProfileClient;
 import com.example.rating_service.services.RatingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+
 
 @Service
 @RequiredArgsConstructor
@@ -24,11 +33,14 @@ public class RatingServiceImpl implements RatingService {
     private final RatingRepository ratingRepository;
     private final RatingMapper ratingMapper;
     private final ProfileClient profileClient;
+    private final UserClient userClient;
+    private final OrderClient orderClient;
 
 
     @Override
     public RatingResponse createRating(RatingRequest request) {
-        if(ratingRepository.existsByCreatedByAndProductId(request.getCreateBy(), request.getProductId())){
+        String userId = getUserId();
+        if(ratingRepository.existsByCreatedByAndProductId(userId, request.getProductId())){
             throw new AppException(RatingErrorCode.RATING_EXISTS);
         };
         ServletRequestAttributes servletRequestAttributes =
@@ -39,18 +51,79 @@ public class RatingServiceImpl implements RatingService {
             throw new RuntimeException("Failed to delete profile from Profile-service");
         }
         Rating rating = ratingMapper.toRating(request);
-        CustomerVM customerVM = response.getResult();
-        rating.setFirstName(customerVM.getFirstName());
-        rating.setLastName(customerVM.getLastName());
+        rating.setUserId(userId);
+        var responseOrder = orderClient.checkVerifiedPurchase(userId, request.getProductId());
+        rating.setVerifiedPurchase(responseOrder.getResult().getIsVerifiedPurchase());
+        return ratingMapper.toRatingResponse(ratingRepository.save(rating));
     }
 
     @Override
     public RatingResponse modifyRating(ModifyRatingRequest request) {
-        return null;
+        Rating rating = ratingRepository.findById(request.getId()).orElseThrow(() ->
+                new AppException(RatingErrorCode.RATING_EXISTS));
+        ratingMapper.updateRating(rating, request);
+        return ratingMapper.toRatingResponse(ratingRepository.save(rating));
     }
 
     @Override
-    public void deleteRating(String id, String userName, String productId) {
+    public PageResponse<RatingResponse> getAllByFilter(int page, int size, RatingFilterType type, String productId) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<Rating> ratingPage = null;
 
+        switch (type) {
+            case HAVE_PURCHASE -> ratingPage =
+                    ratingRepository.findAllByProductIdAndIsVerifiedPurchaseTrue(
+                            productId, pageable
+                    );
+
+            case STAR_FIVE -> ratingPage =
+                    ratingRepository.findAllByProductIdAndRatingScore(
+                            productId, 5.0, pageable
+                    );
+
+            case STAR_FOUR -> ratingPage =
+                    ratingRepository.findAllByProductIdAndRatingScore(
+                            productId, 4.0, pageable
+                    );
+
+            case STAR_THREE -> ratingPage =
+                    ratingRepository.findAllByProductIdAndRatingScore(
+                            productId, 3.0, pageable
+                    );
+
+            case STAR_TWO -> ratingPage =
+                    ratingRepository.findAllByProductIdAndRatingScore(
+                            productId, 2.0, pageable
+                    );
+
+            case STAR_ONE -> ratingPage =
+                    ratingRepository.findAllByProductIdAndRatingScore(
+                            productId, 1.0, pageable
+                    );
+
+            case ALL -> ratingPage =
+                    ratingRepository.findAllByProductId(
+                            productId, pageable
+                    );
+        }
+
+        return PageResponse.<RatingResponse>builder()
+                .data(ratingPage.getContent())
+                .build();
     }
+
+    @Override
+    public void deleteRating(String id) {
+        Rating rating = ratingRepository.findById(id).orElseThrow(() ->
+                new AppException(RatingErrorCode.RATING_EXISTS));
+        ratingRepository.delete(rating);
+    }
+    private String getUserId(){
+        ServletRequestAttributes servletRequestAttributes =
+                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
+        var apiResponse = userClient.getUserId(authHeader);
+        return apiResponse.getResult().getUserId();
+    }
+
 }

@@ -133,6 +133,21 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public void updatePasswordForAdmin(String oldPassword, String newPassword) {
+        var context = SecurityContextHolder.getContext();
+        String currentUsername = context.getAuthentication().getName();
+        Users users = userRepository.findByUsername(currentUsername).orElseThrow(
+                () -> new AppException(UserErrorCode.USER_NOT_EXISTS));
+
+        if(!passwordEncoder.matches(oldPassword,users.getPassword()))
+        {
+            throw new AppException(UserErrorCode.PASSWORD_NOT_MATCH);
+        }
+        users.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(users);
+    }
+
+    @Override
     public UserResponse getUserById(String userId) {
         Optional<Users> user = userRepository.findById(userId);
         if(user.isEmpty())

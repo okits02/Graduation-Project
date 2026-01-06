@@ -1,13 +1,12 @@
 package com.example.order_service.service.impl;
 
-import com.example.order_service.dto.ProductGetVM;
+import com.example.order_service.dto.ProductSkuVM;
 import com.example.order_service.dto.request.CheckValidVoucherRequest;
 import com.example.order_service.dto.request.OrderCreationRequest;
 import com.example.order_service.dto.request.OrderItemRequest;
 import com.example.order_service.dto.response.*;
 import com.example.order_service.enums.Status;
 import com.example.order_service.mapper.OrderItemMapper;
-import com.example.order_service.repository.OrderItemRepository;
 import com.example.order_service.repository.httpClient.ProductClient;
 import com.example.order_service.repository.httpClient.PromotionClient;
 import com.okits02.common_lib.dto.PageResponse;
@@ -22,8 +21,6 @@ import com.example.order_service.service.OrderService;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.query.Order;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -74,15 +71,15 @@ public class OrderServiceImpl implements OrderService {
             throw new RuntimeException("Cannot fetch product info");
         }
 
-        Map<String, ProductGetVM> productMap = productResponse.getResult().stream()
-                .collect(Collectors.toMap(ProductGetVM::getSku, Function.identity()));
+        Map<String, ProductSkuVM> productMap = productResponse.getResult().stream()
+                .collect(Collectors.toMap(ProductSkuVM::getSku, Function.identity()));
         List<OrderItemResponse> itemResponses = buildOrderItemAndResponse(request.getItems(), orders, productMap);
 
         orders.calculateTotalPrice();
         BigDecimal totalPrice = orders.getTotalPrice();
         BigDecimal discountAmount = BigDecimal.ZERO;
         List<String> productIds = productMap.values().stream()
-                .map(ProductGetVM::getId)
+                .map(ProductSkuVM::getId)
                 .filter(Objects::nonNull)
                 .distinct()
                 .toList();
@@ -184,9 +181,9 @@ public class OrderServiceImpl implements OrderService {
             throw new RuntimeException("Cannot fetch product info");
         }
 
-        Map<String, ProductGetVM> productMap = productResponse.getResult().stream()
+        Map<String, ProductSkuVM> productMap = productResponse.getResult().stream()
                 .collect(Collectors.toMap(
-                        ProductGetVM::getSku,
+                        ProductSkuVM::getSku,
                         Function.identity()
                 ));
 
@@ -197,7 +194,7 @@ public class OrderServiceImpl implements OrderService {
                         order.getTotalPrice(),
                         order.getItems().stream()
                                 .map(i -> {
-                                    ProductGetVM product = productMap.get(i.getSku());
+                                    ProductSkuVM product = productMap.get(i.getSku());
                                     return new ItemSummaryResponse(
                                             product != null ? product.getVariantName() : null,
                                             product != null ? product.getThumbnailUrl() : null,
@@ -243,9 +240,9 @@ public class OrderServiceImpl implements OrderService {
             throw new RuntimeException("Cannot fetch product info");
         }
 
-        Map<String, ProductGetVM> productMap = productResponse.getResult().stream()
+        Map<String, ProductSkuVM> productMap = productResponse.getResult().stream()
                 .collect(Collectors.toMap(
-                        ProductGetVM::getSku,
+                        ProductSkuVM::getSku,
                         Function.identity()
                 ));
 
@@ -256,7 +253,7 @@ public class OrderServiceImpl implements OrderService {
                         order.getTotalPrice(),
                         order.getItems().stream()
                                 .map(i -> {
-                                    ProductGetVM product = productMap.get(i.getSku());
+                                    ProductSkuVM product = productMap.get(i.getSku());
                                     return new ItemSummaryResponse(
                                             product != null ? product.getVariantName() : null,
                                             product != null ? product.getThumbnailUrl() : null,
@@ -304,15 +301,15 @@ public class OrderServiceImpl implements OrderService {
             throw new RuntimeException("Cannot fetch product info");
         }
 
-        Map<String, ProductGetVM> productMap = productResponse.getResult().stream()
+        Map<String, ProductSkuVM> productMap = productResponse.getResult().stream()
                 .collect(Collectors.toMap(
-                        ProductGetVM::getSku,
+                        ProductSkuVM::getSku,
                         Function.identity()
                 ));
 
         List<OrderItemResponse> itemResponses = orders.getItems().stream()
                 .map(item -> {
-                    ProductGetVM product = productMap.get(item.getSku());
+                    ProductSkuVM product = productMap.get(item.getSku());
 
                     return OrderItemResponse.builder()
                             .sku(item.getSku())
@@ -400,9 +397,9 @@ public class OrderServiceImpl implements OrderService {
             throw new RuntimeException("Cannot fetch product info");
         }
 
-        Map<String, ProductGetVM> productMap = productResponse.getResult().stream()
+        Map<String, ProductSkuVM> productMap = productResponse.getResult().stream()
                 .collect(Collectors.toMap(
-                        ProductGetVM::getSku,
+                        ProductSkuVM::getSku,
                         Function.identity()
                 ));
 
@@ -413,7 +410,7 @@ public class OrderServiceImpl implements OrderService {
                         order.getTotalPrice(),
                         order.getItems().stream()
                                 .map(i -> {
-                                    ProductGetVM product = productMap.get(i.getSku());
+                                    ProductSkuVM product = productMap.get(i.getSku());
                                     return new ItemSummaryResponse(
                                             product != null ? product.getVariantName() : null,
                                             product != null ? product.getThumbnailUrl() : null,
@@ -446,15 +443,15 @@ public class OrderServiceImpl implements OrderService {
             throw new RuntimeException("Cannot fetch product info");
         }
 
-        Map<String, ProductGetVM> productMap = productResponse.getResult().stream()
+        Map<String, ProductSkuVM> productMap = productResponse.getResult().stream()
                 .collect(Collectors.toMap(
-                        ProductGetVM::getSku,
+                        ProductSkuVM::getSku,
                         Function.identity()
                 ));
 
         List<OrderItemResponse> itemResponses = orders.getItems().stream()
                 .map(item -> {
-                    ProductGetVM product = productMap.get(item.getSku());
+                    ProductSkuVM product = productMap.get(item.getSku());
 
                     return OrderItemResponse.builder()
                             .sku(item.getSku())
@@ -480,6 +477,30 @@ public class OrderServiceImpl implements OrderService {
                 .build();
     }
 
+    @Override
+    public CheckVerifiedPurchase checkVerifiedPurchase(String userId, String productId) {
+        List<Orders> orders = orderRepository.findAllByUserIdAndStatus(userId, Status.COMPLETED);
+        if (orders.isEmpty()) {
+            return CheckVerifiedPurchase.builder()
+                    .isVerifiedPurchase(false)
+                    .build();
+        }
+        var response = productClient.getListSkuByProductById(productId);
+        if (response == null || response.getCode() != 200) {
+            throw new RuntimeException("Cannot fetch product info");
+        }
+        Set<String> purchasedSkus = orders.stream()
+                .flatMap(order -> order.getItems().stream())
+                .map(OrderItem::getSku)
+                .collect(Collectors.toSet());
+        List<String> productSkus = response.getResult().getSkus();
+        boolean verified = productSkus.stream()
+                .anyMatch(purchasedSkus::contains);
+        return CheckVerifiedPurchase.builder()
+                .isVerifiedPurchase(verified)
+                .build();
+    }
+
     private String getUserId(){
         ServletRequestAttributes servletRequestAttributes =
                 (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
@@ -491,7 +512,7 @@ public class OrderServiceImpl implements OrderService {
     private List<OrderItemResponse>  buildOrderItemAndResponse(
             List<OrderItemRequest> requests,
             Orders orders,
-            Map<String, ProductGetVM> productMap
+            Map<String, ProductSkuVM> productMap
     ){
         if(requests == null || requests.isEmpty() || orders == null){
             orders.setItems(List.of());
@@ -502,7 +523,7 @@ public class OrderServiceImpl implements OrderService {
         List<OrderItemResponse> responses = new ArrayList<>();
 
         for(OrderItemRequest item : requests){
-            ProductGetVM product = productMap.get(item.getSku());
+            ProductSkuVM product = productMap.get(item.getSku());
             if(product == null){
                 throw new RuntimeException("Product not exists: " + item.getSku());
             }

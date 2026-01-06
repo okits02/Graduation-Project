@@ -44,6 +44,16 @@ public interface OrderRepository extends JpaRepository<Orders, String> {
     public Page<Orders> findAllByUserIdAndStatus(@Param("userId") String userId,
                                                  @Param("status") Status status,
                                                  Pageable pageable);
+    @Query(value = """
+            SELECT DISTINCT o
+            FROM Orders o
+            JOIN FETCH o.items i
+            WHERE o.userId =: userId
+            AND(:status IS NULL OR o.orderStatus = :status)
+            ORDER BY o.orderDate DESC
+            """)
+    public List<Orders> findAllByUserIdAndStatus(@Param("userId") String userId,
+                                                 @Param("status") Status status);
     @Query(
             value = """
         SELECT DISTINCT o

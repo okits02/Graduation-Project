@@ -13,8 +13,6 @@ public class RatingResponse {
     String content;
     Double ratingScore;
     String productId;
-    String productName;
-    String lastName;
-    String firstName;
-    String createBy;
+    String userId;
+    boolean isVerifiedPurchase;
 }

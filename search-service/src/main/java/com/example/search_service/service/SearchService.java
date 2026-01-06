@@ -470,4 +470,16 @@
 
             return result;
         }
+
+        public GetListSkuVM getListSkuByProductId(String productId){
+            NativeQueryBuilder query = NativeQuery.builder()
+                    .withQuery(q -> q
+                            .term(t -> t
+                                    .field("_id")
+                                    .value(productId)
+                            )
+                    );
+            SearchHits<Products> searchHits = elasticsearchOperations.search(query.build(), Products.class);
+            return GetListSkuVM.fromEntity(searchHits.getSearchHit(0).getContent());
+        }
     }

@@ -127,4 +127,14 @@ public class ProductController {
                  .result(searchService.getProductBySku(skus))
                  .build();
     }
+    @GetMapping("/internal/product/list-sku")
+    public ApiResponse<GetListSkuVM> getSkuByProductId(
+            @RequestParam("productId") String productId
+    ){
+        return ApiResponse.<GetListSkuVM>builder()
+                .code(200)
+                .message("Get list sku successfully!")
+                .result(searchService.getListSkuByProductId(productId))
+                .build();
+    }
 }
