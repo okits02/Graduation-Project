@@ -20,6 +20,7 @@ public class ProductSkuVM {
     String variantName;
     String thumbnailUrl;
     List<String> promotionName;
+    List<String> categoriesId;
     BigDecimal sellPrice;
     BigDecimal listPrice;
     public static ProductSkuVM fromEntity(Products products, String sku){
@@ -44,6 +45,7 @@ public class ProductSkuVM {
                 .listPrice(variant.getPrice())
                 .sellPrice(variant.getSellPrice())
                 .promotionName(promotionNames)
+                .categoriesId(products.getCategoriesId())
                 .build();
     }
 }

@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -234,31 +235,30 @@ public class StockInServiceImpl implements StockInService {
         return items;
     }
 
-    private void enrichVariantInfo(InventoryResponse response, String sku){
-        try{
-            var responseVariant = productClient.getVariantBySku(sku);
-            if(responseVariant != null && responseVariant.getResult() != null){
-                response.setVariantName(responseVariant.getResult().getVariantName());
-                response.setThumbnail(responseVariant.getResult().getThumbnailUrl());
+
+    private Map<String, ProductVariantResponse> fetchVariantsBySku(List<String> skus) {
+
+        if (skus == null || skus.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        try {
+            var response = productClient.getVariantBySku(skus);
+
+            if (response == null || response.getResult() == null) {
+                return Collections.emptyMap();
             }
-        }catch (Exception e)
-        {
-            log.warn("Cannot fetch product variant for sku={}", sku);
+
+            return response.getResult().stream()
+                    .collect(Collectors.toMap(
+                            ProductVariantResponse::getSku,
+                            v -> v
+                    ));
+
+        } catch (Exception e) {
+            log.warn("Cannot fetch variants by skus {}", skus, e);
+            return Collections.emptyMap();
         }
     }
 
-    private Map<String, ProductVariantResponse> fetchVariantsBySku(List<String> skus){
-        var map = new HashMap<String, ProductVariantResponse>();
-        for (String sku : skus) {
-            try {
-                var res = productClient.getVariantBySku(sku);
-                if (res != null && res.getResult() != null) {
-                    map.put(sku, res.getResult());
-                }
-            } catch (Exception e) {
-                log.warn("Cannot fetch variant for sku={}", sku);
-            }
-        }
-        return map;
-    }
 }

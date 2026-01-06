@@ -33,6 +33,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.apache.commons.lang.StringUtils.isBlank;
 
@@ -143,14 +144,23 @@ public class InventoryServiceImpl implements InventoryService {
 
     @Override
     public InventoryResponse getByProductIdAndSku(String sku) {
-        Optional<Inventory> inventory = inventoryRepository.findBySku(sku);
-        log.info(inventory.toString());
-        if(inventory == null){
-            throw new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS);
+
+        Inventory inventory = inventoryRepository.findBySku(sku)
+                .orElseThrow(() -> new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS));
+
+        InventoryResponse response =
+                inventoryMapper.toInventoryResponse(inventory);
+
+        Map<String, ProductVariantResponse> variantMap =
+                fetchVariantsBySku(List.of(sku));
+
+        ProductVariantResponse variant = variantMap.get(sku);
+        if (variant != null) {
+            response.setVariantName(variant.getVariantName());
+            response.setThumbnail(variant.getThumbnailUrl());
         }
-        InventoryResponse inventoryResponse = inventoryMapper.toInventoryResponse(inventory.get());
-        enrichVariantInfo(inventoryResponse, sku);
-        return inventoryResponse;
+
+        return response;
     }
 
     @Override
@@ -325,31 +335,28 @@ public class InventoryServiceImpl implements InventoryService {
                 });
     }
 
-    private void enrichVariantInfo(InventoryResponse response, String sku){
-        try{
-            var responseVariant = productClient.getVariantBySku(sku);
-            if(responseVariant != null && responseVariant.getResult() != null){
-                response.setVariantName(responseVariant.getResult().getVariantName());
-                response.setThumbnail(responseVariant.getResult().getThumbnailUrl());
-            }
-        }catch (Exception e)
-        {
-            log.warn("Cannot fetch product variant for sku={}", sku);
-        }
-    }
+    private Map<String, ProductVariantResponse> fetchVariantsBySku(List<String> skus) {
 
-    private Map<String, ProductVariantResponse> fetchVariantsBySku(List<String> skus){
-        var map = new HashMap<String, ProductVariantResponse>();
-        for (String sku : skus) {
-            try {
-                var res = productClient.getVariantBySku(sku);
-                if (res != null && res.getResult() != null) {
-                    map.put(sku, res.getResult());
-                }
-            } catch (Exception e) {
-                log.warn("Cannot fetch variant for sku={}", sku);
-            }
+        if (skus == null || skus.isEmpty()) {
+            return Collections.emptyMap();
         }
-        return map;
+
+        try {
+            var response = productClient.getVariantBySku(skus);
+
+            if (response == null || response.getResult() == null) {
+                return Collections.emptyMap();
+            }
+
+            return response.getResult().stream()
+                    .collect(Collectors.toMap(
+                            ProductVariantResponse::getSku,
+                            v -> v
+                    ));
+
+        } catch (Exception e) {
+            log.warn("Cannot fetch variants by skus {}", skus, e);
+            return Collections.emptyMap();
+        }
     }
 }

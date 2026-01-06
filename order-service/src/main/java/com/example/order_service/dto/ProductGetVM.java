@@ -19,6 +19,7 @@ public class ProductGetVM {
     String variantName;
     String thumbnailUrl;
     List<String> promotionName;
+    List<String> categoriesId;
     BigDecimal sellPrice;
     BigDecimal listPrice;
 }

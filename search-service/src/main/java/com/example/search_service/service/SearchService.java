@@ -6,6 +6,7 @@
     import co.elastic.clients.elasticsearch._types.aggregations.*;
     import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
     import com.example.search_service.exceptions.SearchErrorCode;
+    import com.example.search_service.model.ProductVariants;
     import com.example.search_service.viewmodel.dto.AutoCompletedResponse;
     import com.okits02.common_lib.exception.AppException;
     import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregation;
@@ -410,19 +411,27 @@
             return result;
         }
 
-        public ProductSkuVM getProductBySku(String sku){
+        public List<ProductSkuVM> getProductBySku(List<String> skus){
+            if (skus == null || skus.isEmpty()) {
+                return List.of();
+            }
+
             NativeQuery query = NativeQuery.builder()
                     .withQuery(q -> q
                             .nested(n -> n
                                     .path("productVariants")
                                     .query(nq -> nq
-                                            .term(t -> t
+                                            .terms(t -> t
                                                     .field("productVariants.sku")
-                                                    .value(sku)
+                                                    .terms(v -> v.value(
+                                                            skus.stream()
+                                                                    .map(FieldValue::of)
+                                                                    .toList()
+                                                    ))
                                             )
                                     )
                                     .innerHits(ih -> ih
-                                            .size(1)
+                                            .size(skus.size())
                                     )
                             )
                     )
@@ -430,10 +439,35 @@
 
             SearchHits<Products> hits =
                     elasticsearchOperations.search(query, Products.class);
+
             if (hits.isEmpty()) {
-                return null;
+                return List.of();
             }
-            Products product = hits.getSearchHit(0).getContent();
-            return ProductSkuVM.fromEntity(product, sku);
+
+            List<ProductSkuVM> result = new ArrayList<>();
+
+            for (SearchHit<Products> hit : hits) {
+                Products product = hit.getContent();
+
+                SearchHits<?> variantHits =
+                        hit.getInnerHits().get("productVariants");
+
+                if (variantHits == null) {
+                    continue;
+                }
+
+                for (SearchHit<?> variantHit : variantHits) {
+                    ProductVariants variant =
+                            (ProductVariants) variantHit.getContent();
+
+                    if (!skus.contains(variant.getSku())) {
+                        continue;
+                    }
+
+                    result.add(ProductSkuVM.fromEntity(product, variant.getSku()));
+                }
+            }
+
+            return result;
         }
     }

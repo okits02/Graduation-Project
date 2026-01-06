@@ -63,12 +63,16 @@ public class CartServiceImpl implements CartService {
         if (cart.getItems() == null) {
             cart.setItems(new ArrayList<>());
         }
-        var productResponse = productClient.getProductDetails(request.getSku());
-        if (productResponse == null || productResponse.getCode() != 200) {
+        var productResponse =
+                productClient.getProductDetails(List.of(request.getSku()));
+
+        if (productResponse == null
+                || productResponse.getCode() != 200
+                || productResponse.getResult().isEmpty()) {
             throw new RuntimeException("Product not exists");
         }
 
-        ProductGetVM productGetVM = productResponse.getResult();
+        ProductGetVM productGetVM = productResponse.getResult().get(0);
         Optional<CartItem> existingItemOpt =
                 cartItemRepository.findByCartAndSku(cart, request.getSku());
 
@@ -124,12 +128,16 @@ public class CartServiceImpl implements CartService {
                 .orElseThrow(() -> new AppException(CartErrorCode.CART_ITEM_NOT_EXISTS));
         cartItem.setQuantity(request.getQuantity());
         cart = cartRepository.save(cart);
-        var productResponse = productClient.getProductDetails(request.getSku());
-        if (productResponse == null || productResponse.getCode() != 200) {
+        var productResponse =
+                productClient.getProductDetails(List.of(request.getSku()));
+
+        if (productResponse == null
+                || productResponse.getCode() != 200
+                || productResponse.getResult().isEmpty()) {
             throw new RuntimeException("Product not exists");
         }
 
-        ProductGetVM productGetVM = productResponse.getResult();
+        ProductGetVM productGetVM = productResponse.getResult().get(0);
         List<CartItemResponse> cartItemResponses = cart.getItems().stream()
                 .map(item -> CartItemResponse.builder()
                         .cartItemId(item.getCartItemId())
@@ -189,10 +197,16 @@ public class CartServiceImpl implements CartService {
 
                     ProductGetVM product = null;
 
-                    var productResponse = productClient.getProductDetails(item.getSku());
-                    if (productResponse != null && productResponse.getCode() == 200) {
-                        product = productResponse.getResult();
+                    var productResponse =
+                            productClient.getProductDetails(List.of(item.getSku()));
+
+                    if (productResponse == null
+                            || productResponse.getCode() != 200
+                            || productResponse.getResult().isEmpty()) {
+                        throw new RuntimeException("Product not exists");
                     }
+
+                    ProductGetVM productGetVM = productResponse.getResult().get(0);
 
                     return CartItemResponse.builder()
                             .cartItemId(item.getCartItemId())
@@ -228,9 +242,13 @@ public class CartServiceImpl implements CartService {
         }
         CartItem cartItem = cartItemOpt.get();
         ProductGetVM product = null;
-        var productResponse = productClient.getProductDetails(cartItem.getSku());
-        if (productResponse != null && productResponse.getCode() == 200) {
-            product = productResponse.getResult();
+        var productResponse =
+                productClient.getProductDetails(List.of(cartItem.getSku()));
+
+        if (productResponse != null
+                && productResponse.getCode() == 200
+                && !productResponse.getResult().isEmpty()) {
+            product = productResponse.getResult().get(0);
         }
 
         return CartItemResponse.builder()
@@ -254,6 +272,31 @@ public class CartServiceImpl implements CartService {
             throw new RuntimeException("User does not exist");
         }
         return userResponse.getResult().getUserId();
+    }
+
+    private Map<String, ProductGetVM> fetchProductsBySku(List<String> skus) {
+
+        if (skus == null || skus.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        try {
+            var response = productClient.getProductDetails(skus);
+
+            if (response == null || response.getResult() == null) {
+                return Collections.emptyMap();
+            }
+
+            return response.getResult().stream()
+                    .collect(Collectors.toMap(
+                            ProductGetVM::getSku,
+                            Function.identity()
+                    ));
+
+        } catch (Exception e) {
+            log.warn("Cannot fetch products by skus {}", skus, e);
+            return Collections.emptyMap();
+        }
     }
 
 }

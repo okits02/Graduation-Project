@@ -26,7 +26,7 @@ public class InventoryController {
         return ApiResponse.<InventoryResponse>builder()
                 .code(200)
                 .message("Get product information at inventory success!")
-                .result(inventoryService.getByProductIdAndSku( sku))
+                .result(inventoryService.getByProductIdAndSku(sku))
                 .build();
     }
 

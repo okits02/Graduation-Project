@@ -10,11 +10,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.List;
+
 @FeignClient(value = "search-service")
 public interface ProductClient {
     @GetMapping(value = "/search-service/search/internal/product/sku",
             produces = MediaType.APPLICATION_JSON_VALUE)
-    ApiResponse<ProductGetVM> getProductDetails(
-            @RequestParam("sku") String sku
+    ApiResponse<List<ProductGetVM>> getProductDetails(
+            @RequestParam("skus") List<String> skus
     );
 }

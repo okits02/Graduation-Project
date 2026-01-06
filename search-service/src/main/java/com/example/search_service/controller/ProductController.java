@@ -118,13 +118,13 @@ public class ProductController {
     }
 
     @GetMapping("/internal/product/sku")
-    public ApiResponse<ProductSkuVM> getBySku(
-            @RequestParam("sku") String sku
+    public ApiResponse<List<ProductSkuVM>> getBySku(
+            @RequestParam("skus") List<String> skus
     ){
-         return ApiResponse.<ProductSkuVM>builder()
+         return ApiResponse.<List<ProductSkuVM>>builder()
                  .code(200)
                  .message("Get product variant by sku!")
-                 .result(searchService.getProductBySku(sku))
+                 .result(searchService.getProductBySku(skus))
                  .build();
     }
 }

@@ -1,5 +1,6 @@
 package com.example.order_service.service.impl;
 
+import com.example.order_service.dto.ProductGetVM;
 import com.example.order_service.dto.request.CheckValidVoucherRequest;
 import com.example.order_service.dto.request.OrderCreationRequest;
 import com.example.order_service.dto.request.OrderItemRequest;
@@ -33,10 +34,10 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -63,22 +64,43 @@ public class OrderServiceImpl implements OrderService {
                 .orderDesc(request.getOrderDesc())
                 .orderDate(LocalDateTime.now())
                 .build();
-        List<OrderItemResponse> items = createItem(request.getItems(), orders);
+        List<String> skus = request.getItems().stream()
+                .map(OrderItemRequest::getSku)
+                .distinct()
+                .toList();
+
+        var productResponse = productClient.getProductDetails(skus);
+        if (productResponse == null || productResponse.getCode() != 200 || productResponse.getResult() == null) {
+            throw new RuntimeException("Cannot fetch product info");
+        }
+
+        Map<String, ProductGetVM> productMap = productResponse.getResult().stream()
+                .collect(Collectors.toMap(ProductGetVM::getSku, Function.identity()));
+        List<OrderItemResponse> itemResponses = buildOrderItemAndResponse(request.getItems(), orders, productMap);
+
         orders.calculateTotalPrice();
         BigDecimal totalPrice = orders.getTotalPrice();
         BigDecimal discountAmount = BigDecimal.ZERO;
+        List<String> productIds = productMap.values().stream()
+                .map(ProductGetVM::getId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+        List<String> categoryIds = productMap.values().stream()
+                .flatMap(p -> p.getCategoriesId() == null ? Stream.empty() : p.getCategoriesId().stream())
+                .distinct()
+                .toList();
         if (request.getVoucher() != null && !request.getVoucher().isBlank()){
             CheckValidVoucherRequest checkValidVoucherRequest = CheckValidVoucherRequest.builder()
                     .today(Date.from(Instant.now()))
                     .totalAmount(orders.getTotalPrice().doubleValue())
                     .voucherCode(request.getVoucher())
-                    .productId(request.getItems().stream().map(OrderItemRequest::getProductId).toList())
-                    .categoryId(request.getCategoryId())
+                    .productId(productIds)
+                    .categoryId(categoryIds)
                     .build();
             var promotionResponse = promotionClient.checkValidPromotion(checkValidVoucherRequest, authHeader);
             if (promotionResponse != null
                     && promotionResponse.getResult() != null) {
-
                 var promo = promotionResponse.getResult();
 
                 discountAmount = calculateDiscount(totalPrice, promo);
@@ -91,7 +113,9 @@ public class OrderServiceImpl implements OrderService {
         orders.setTotalPrice(finalTotal);
         Orders savedOrder = orderRepository.save(orders);
         applyVoucherToOrder(request.getVoucher(), savedOrder.getOrderId(), authHeader);
-        return orderMapper.toOrderResponse(savedOrder);
+        var response = orderMapper.toOrderResponse(savedOrder);
+        response.setItems(itemResponses);
+        return response;
     }
 
     private void applyVoucherToOrder(String voucherCode, String orderId, String authHeader){
@@ -138,20 +162,53 @@ public class OrderServiceImpl implements OrderService {
         String userId = getUserId();
         Pageable pageable = PageRequest.of(page, size);
         var pageData = orderRepository.findAllByUserId(userId, pageable);
-        List<OrderSummaryResponse> orderSummaries = pageData.map(order -> new OrderSummaryResponse(
-                order.getOrderId(),
-                order.getOrderDate(),
-                order.getTotalPrice(),
-                order.getItems().stream()
-                        .map(i -> new ItemSummaryResponse(
-                                i.getProductName(),
-                                i.getThumbnailUrl(),
-                                i.getSellPrice(),
-                                i.getListPrice(),
-                                i.getQuantity()
-                        ))
-                        .toList()
-        )).getContent();
+        List<Orders> orders = pageData.getContent();
+
+        if(orders == null){
+            return PageResponse.<OrderSummaryResponse>builder()
+                    .currentPage(page)
+                    .totalElements(0L)
+                    .pageSize(size)
+                    .data(List.of())
+                    .build();
+        }
+
+        List<String> skus = orders.stream()
+                .flatMap(o -> o.getItems().stream())
+                .map(OrderItem::getSku)
+                .distinct()
+                .toList();
+
+        var productResponse = productClient.getProductDetails(skus);
+        if (productResponse == null || productResponse.getCode() != 200) {
+            throw new RuntimeException("Cannot fetch product info");
+        }
+
+        Map<String, ProductGetVM> productMap = productResponse.getResult().stream()
+                .collect(Collectors.toMap(
+                        ProductGetVM::getSku,
+                        Function.identity()
+                ));
+
+        List<OrderSummaryResponse> orderSummaries = orders.stream()
+                .map(order -> new OrderSummaryResponse(
+                        order.getOrderId(),
+                        order.getOrderDate(),
+                        order.getTotalPrice(),
+                        order.getItems().stream()
+                                .map(i -> {
+                                    ProductGetVM product = productMap.get(i.getSku());
+                                    return new ItemSummaryResponse(
+                                            product != null ? product.getVariantName() : null,
+                                            product != null ? product.getThumbnailUrl() : null,
+                                            i.getSellPrice(),
+                                            i.getListPrice(),
+                                            i.getQuantity()
+                                    );
+                                })
+                                .toList()
+                )).toList();
+
         return PageResponse.<OrderSummaryResponse>builder()
                 .currentPage(page)
                 .totalElements(pageData.getTotalElements())
@@ -165,20 +222,53 @@ public class OrderServiceImpl implements OrderService {
         String userId = getUserId();
         Pageable pageable = PageRequest.of(page, size);
         var pageData = orderRepository.findAllByUserIdAndStatus(userId, status, pageable);
-        List<OrderSummaryResponse> orderSummaries = pageData.map(order -> new OrderSummaryResponse(
-                order.getOrderId(),
-                order.getOrderDate(),
-                order.getTotalPrice(),
-                order.getItems().stream()
-                        .map(i -> new ItemSummaryResponse(
-                                i.getProductName(),
-                                i.getThumbnailUrl(),
-                                i.getSellPrice(),
-                                i.getListPrice(),
-                                i.getQuantity()
-                        ))
-                        .toList()
-        )).getContent();
+        List<Orders> orders = pageData.getContent();
+
+        if(orders == null){
+            return PageResponse.<OrderSummaryResponse>builder()
+                    .currentPage(page)
+                    .totalElements(0L)
+                    .pageSize(size)
+                    .data(List.of())
+                    .build();
+        }
+
+        List<String> skus = orders.stream()
+                .flatMap(o -> o.getItems().stream())
+                .map(OrderItem::getSku)
+                .toList();
+
+        var productResponse = productClient.getProductDetails(skus);
+        if (productResponse == null || productResponse.getCode() != 200) {
+            throw new RuntimeException("Cannot fetch product info");
+        }
+
+        Map<String, ProductGetVM> productMap = productResponse.getResult().stream()
+                .collect(Collectors.toMap(
+                        ProductGetVM::getSku,
+                        Function.identity()
+                ));
+
+        List<OrderSummaryResponse> orderSummaries = orders.stream()
+                .map(order -> new OrderSummaryResponse(
+                        order.getOrderId(),
+                        order.getOrderDate(),
+                        order.getTotalPrice(),
+                        order.getItems().stream()
+                                .map(i -> {
+                                    ProductGetVM product = productMap.get(i.getSku());
+                                    return new ItemSummaryResponse(
+                                            product != null ? product.getVariantName() : null,
+                                            product != null ? product.getThumbnailUrl() : null,
+                                            i.getSellPrice(),
+                                            i.getListPrice(),
+                                            i.getQuantity()
+                                    );
+                                })
+                                .toList()
+                ))
+                .toList();
+
         return PageResponse.<OrderSummaryResponse>builder()
                 .currentPage(page)
                 .totalElements(pageData.getTotalElements())
@@ -204,7 +294,48 @@ public class OrderServiceImpl implements OrderService {
         if (status.equals(Status.CANCELLED) || status.equals(Status.FAILED)) {
             rollbackVoucher(orderId);
         }
-        return orderMapper.toOrderResponse(orderRepository.save(orders));
+        orderRepository.save(orders);
+        List<String> skus = orders.getItems()
+                .stream()
+                .map(OrderItem::getSku)
+                .toList();
+        var productResponse = productClient.getProductDetails(skus);
+        if (productResponse == null || productResponse.getCode() != 200) {
+            throw new RuntimeException("Cannot fetch product info");
+        }
+
+        Map<String, ProductGetVM> productMap = productResponse.getResult().stream()
+                .collect(Collectors.toMap(
+                        ProductGetVM::getSku,
+                        Function.identity()
+                ));
+
+        List<OrderItemResponse> itemResponses = orders.getItems().stream()
+                .map(item -> {
+                    ProductGetVM product = productMap.get(item.getSku());
+
+                    return OrderItemResponse.builder()
+                            .sku(item.getSku())
+                            .productName(product != null ? product.getVariantName() : null)
+                            .thumbnailUrl(product != null ? product.getThumbnailUrl() : null)
+                            .quantity(item.getQuantity())
+                            .sellPrice(item.getSellPrice())
+                            .listPrice(item.getListPrice())
+                            .addAt(item.getAddAt())
+                            .build();
+                })
+                .toList();
+
+        return OrderResponse.builder()
+                .orderId(orders.getOrderId())
+                .userId(orders.getUserId())
+                .orderStatus(orders.getOrderStatus())
+                .orderDate(orders.getOrderDate())
+                .totalPrice(orders.getTotalPrice())
+                .orderFee(orders.getOrderFee())
+                .orderDesc(orders.getOrderDesc())
+                .items(itemResponses)
+                .build();
     }
 
     private void rollbackVoucher(String orderId) {
@@ -248,20 +379,52 @@ public class OrderServiceImpl implements OrderService {
     public PageResponse<OrderSummaryResponse> getAllByStatus(int page, int size, Status status) {
         Pageable pageable = PageRequest.of(page, size);
         var pageData = orderRepository.findAllByStatus(status, pageable);
-        List<OrderSummaryResponse> orderSummaries = pageData.map(order -> new OrderSummaryResponse(
-                order.getOrderId(),
-                order.getOrderDate(),
-                order.getTotalPrice(),
-                order.getItems().stream()
-                        .map(i -> new ItemSummaryResponse(
-                                i.getProductName(),
-                                i.getThumbnailUrl(),
-                                i.getSellPrice(),
-                                i.getListPrice(),
-                                i.getQuantity()
-                        ))
-                        .toList()
-        )).getContent();
+        List<Orders> orders = pageData.getContent();
+
+        if(orders == null){
+            return PageResponse.<OrderSummaryResponse>builder()
+                    .currentPage(page)
+                    .totalElements(0L)
+                    .pageSize(size)
+                    .data(List.of())
+                    .build();
+        }
+
+        List<String> skus = orders.stream()
+                .flatMap(o -> o.getItems().stream())
+                .map(OrderItem::getSku)
+                .toList();
+
+        var productResponse = productClient.getProductDetails(skus);
+        if (productResponse == null || productResponse.getCode() != 200) {
+            throw new RuntimeException("Cannot fetch product info");
+        }
+
+        Map<String, ProductGetVM> productMap = productResponse.getResult().stream()
+                .collect(Collectors.toMap(
+                        ProductGetVM::getSku,
+                        Function.identity()
+                ));
+
+        List<OrderSummaryResponse> orderSummaries = orders.stream()
+                .map(order -> new OrderSummaryResponse(
+                        order.getOrderId(),
+                        order.getOrderDate(),
+                        order.getTotalPrice(),
+                        order.getItems().stream()
+                                .map(i -> {
+                                    ProductGetVM product = productMap.get(i.getSku());
+                                    return new ItemSummaryResponse(
+                                            product != null ? product.getVariantName() : null,
+                                            product != null ? product.getThumbnailUrl() : null,
+                                            i.getSellPrice(),
+                                            i.getListPrice(),
+                                            i.getQuantity()
+                                    );
+                                })
+                                .toList()
+                ))
+                .toList();
         return PageResponse.<OrderSummaryResponse>builder()
                 .currentPage(page)
                 .totalElements(pageData.getTotalElements())
@@ -274,7 +437,47 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponse getById(String orderId) {
         Orders orders = orderRepository.findById(orderId).orElseThrow(()
                 -> new AppException(OrderErrorCode.ORDER_NOT_EXISTS));
-        return orderMapper.toOrderResponse(orders);
+        List<String> skus = orders.getItems()
+                .stream()
+                .map(OrderItem::getSku)
+                .toList();
+        var productResponse = productClient.getProductDetails(skus);
+        if (productResponse == null || productResponse.getCode() != 200) {
+            throw new RuntimeException("Cannot fetch product info");
+        }
+
+        Map<String, ProductGetVM> productMap = productResponse.getResult().stream()
+                .collect(Collectors.toMap(
+                        ProductGetVM::getSku,
+                        Function.identity()
+                ));
+
+        List<OrderItemResponse> itemResponses = orders.getItems().stream()
+                .map(item -> {
+                    ProductGetVM product = productMap.get(item.getSku());
+
+                    return OrderItemResponse.builder()
+                            .sku(item.getSku())
+                            .productName(product != null ? product.getVariantName() : null)
+                            .thumbnailUrl(product != null ? product.getThumbnailUrl() : null)
+                            .quantity(item.getQuantity())
+                            .sellPrice(item.getSellPrice())
+                            .listPrice(item.getListPrice())
+                            .addAt(item.getAddAt())
+                            .build();
+                })
+                .toList();
+
+        return OrderResponse.builder()
+                .orderId(orders.getOrderId())
+                .userId(orders.getUserId())
+                .orderStatus(orders.getOrderStatus())
+                .orderDate(orders.getOrderDate())
+                .totalPrice(orders.getTotalPrice())
+                .orderFee(orders.getOrderFee())
+                .orderDesc(orders.getOrderDesc())
+                .items(itemResponses)
+                .build();
     }
 
     private String getUserId(){
@@ -285,36 +488,48 @@ public class OrderServiceImpl implements OrderService {
         return apiResponse.getResult().getUserId();
     }
 
-    private List<OrderItemResponse> createItem(List<OrderItemRequest> itemRequests, Orders orders){
-        if(itemRequests == null || itemRequests.isEmpty() || orders == null){
+    private List<OrderItemResponse>  buildOrderItemAndResponse(
+            List<OrderItemRequest> requests,
+            Orders orders,
+            Map<String, ProductGetVM> productMap
+    ){
+        if(requests == null || requests.isEmpty() || orders == null){
+            orders.setItems(List.of());
             return List.of();
         }
-        List<OrderItemResponse> responses = new ArrayList<>();
+
         List<OrderItem> items = new ArrayList<>();
-        for(OrderItemRequest item : itemRequests){
-            var productResponse = productClient.getProductDetails(item.getSku());
-            if (productResponse == null || productResponse.getCode() != 200) {
-                throw new RuntimeException("Product not exists");
+        List<OrderItemResponse> responses = new ArrayList<>();
+
+        for(OrderItemRequest item : requests){
+            ProductGetVM product = productMap.get(item.getSku());
+            if(product == null){
+                throw new RuntimeException("Product not exists: " + item.getSku());
             }
-            if(!item.getListPrice().equals(productResponse.getResult().getListPrice()) ||
-                    !item.getSellPrice().equals(productResponse.getResult().getSellPrice())){
-                throw new RuntimeException("Price for sku" + item.getSku() + "not valid");
+
+            if(item.getListPrice() == null || item.getSellPrice() == null
+                    || product.getListPrice() == null || product.getSellPrice() == null
+                    || item.getListPrice().compareTo(product.getListPrice()) != 0
+                    || item.getSellPrice().compareTo(product.getSellPrice()) != 0){
+                throw new RuntimeException("Price for sku " + item.getSku() + " not valid");
             }
+
             items.add(OrderItem.builder()
-                            .sku(item.getSku())
-                            .quantity(item.getQuantity())
-                            .sellPrice(item.getSellPrice())
-                            .listPrice(item.getListPrice())
-                            .addAt(LocalDateTime.now())
-                            .orders(orders)
+                    .sku(item.getSku())
+                    .quantity(item.getQuantity())
+                    .sellPrice(product.getSellPrice())
+                    .listPrice(product.getListPrice())
+                    .addAt(LocalDateTime.now())
+                    .orders(orders)
                     .build());
+
             responses.add(OrderItemResponse.builder()
                     .sku(item.getSku())
-                    .productName(productResponse.getResult().getVariantName())
-                    .thumbnailUrl(productResponse.getResult().getThumbnailUrl())
+                    .productName(product.getVariantName())
+                    .thumbnailUrl(product.getThumbnailUrl())
                     .quantity(item.getQuantity())
-                    .sellPrice(item.getSellPrice())
-                    .listPrice(item.getListPrice())
+                    .sellPrice(product.getSellPrice())
+                    .listPrice(product.getListPrice())
                     .addAt(LocalDateTime.now())
                     .build());
         }
