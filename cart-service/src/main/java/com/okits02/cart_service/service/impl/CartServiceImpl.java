@@ -99,10 +99,12 @@ public class CartServiceImpl implements CartService {
                 .map(item -> CartItemResponse.builder()
                         .cartItemId(item.getCartItemId())
                         .sku(item.getSku())
+                        .variantName(productGetVM.getVariantName())
                         .thumbnail(productGetVM.getThumbnailUrl())
                         .quantity(item.getQuantity())
                         .listPrice(item.getListPrice())
                         .sellPrice(item.getSellPrice())
+                        .promotionName(productGetVM.getPromotionName())
                         .addedAt(item.getAddedAt())
                         .build()
                 )
@@ -141,12 +143,13 @@ public class CartServiceImpl implements CartService {
         List<CartItemResponse> cartItemResponses = cart.getItems().stream()
                 .map(item -> CartItemResponse.builder()
                         .cartItemId(item.getCartItemId())
-                        .sku(request.getSku())
+                        .sku(item.getSku())
                         .variantName(productGetVM.getVariantName())
                         .thumbnail(productGetVM.getThumbnailUrl())
                         .quantity(item.getQuantity())
                         .listPrice(item.getListPrice())
                         .sellPrice(item.getSellPrice())
+                        .promotionName(productGetVM.getPromotionName())
                         .addedAt(item.getAddedAt())
                         .build()
                 )
@@ -206,12 +209,14 @@ public class CartServiceImpl implements CartService {
                         throw new RuntimeException("Product not exists");
                     }
 
-                    ProductGetVM productGetVM = productResponse.getResult().get(0);
+                    product = productResponse.getResult().get(0);
 
                     return CartItemResponse.builder()
                             .cartItemId(item.getCartItemId())
                             .sku(item.getSku())
                             .thumbnail(product != null ? product.getThumbnailUrl() : null)
+                            .variantName(product.getVariantName())
+                            .promotionName(product.getPromotionName())
                             .quantity(item.getQuantity())
                             .listPrice(item.getListPrice())
                             .sellPrice(item.getSellPrice())
@@ -254,7 +259,9 @@ public class CartServiceImpl implements CartService {
         return CartItemResponse.builder()
                 .cartItemId(cartItem.getCartItemId())
                 .sku(cartItem.getSku())
+                .variantName(product.getVariantName())
                 .thumbnail(product != null ? product.getThumbnailUrl() : null)
+                .promotionName(product.getPromotionName())
                 .quantity(cartItem.getQuantity())
                 .listPrice(cartItem.getListPrice())
                 .sellPrice(cartItem.getSellPrice())

@@ -7,7 +7,7 @@ import com.example.order_service.dto.request.OrderItemRequest;
 import com.example.order_service.dto.response.*;
 import com.example.order_service.enums.Status;
 import com.example.order_service.mapper.OrderItemMapper;
-import com.example.order_service.repository.httpClient.ProductClient;
+import com.example.order_service.repository.httpClient.SearchClient;
 import com.example.order_service.repository.httpClient.PromotionClient;
 import com.okits02.common_lib.dto.PageResponse;
 import com.okits02.common_lib.exception.AppException;
@@ -45,7 +45,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderItemMapper orderItemMapper;
     private final PromotionClient promotionClient;
     private final UserClient userClient;
-    private final ProductClient productClient;
+    private final SearchClient searchClient;
 
 
     @Override
@@ -66,7 +66,7 @@ public class OrderServiceImpl implements OrderService {
                 .distinct()
                 .toList();
 
-        var productResponse = productClient.getProductDetails(skus);
+        var productResponse = searchClient.getProductDetails(skus);
         if (productResponse == null || productResponse.getCode() != 200 || productResponse.getResult() == null) {
             throw new RuntimeException("Cannot fetch product info");
         }
@@ -176,7 +176,7 @@ public class OrderServiceImpl implements OrderService {
                 .distinct()
                 .toList();
 
-        var productResponse = productClient.getProductDetails(skus);
+        var productResponse = searchClient.getProductDetails(skus);
         if (productResponse == null || productResponse.getCode() != 200) {
             throw new RuntimeException("Cannot fetch product info");
         }
@@ -235,7 +235,7 @@ public class OrderServiceImpl implements OrderService {
                 .map(OrderItem::getSku)
                 .toList();
 
-        var productResponse = productClient.getProductDetails(skus);
+        var productResponse = searchClient.getProductDetails(skus);
         if (productResponse == null || productResponse.getCode() != 200) {
             throw new RuntimeException("Cannot fetch product info");
         }
@@ -296,7 +296,7 @@ public class OrderServiceImpl implements OrderService {
                 .stream()
                 .map(OrderItem::getSku)
                 .toList();
-        var productResponse = productClient.getProductDetails(skus);
+        var productResponse = searchClient.getProductDetails(skus);
         if (productResponse == null || productResponse.getCode() != 200) {
             throw new RuntimeException("Cannot fetch product info");
         }
@@ -392,7 +392,7 @@ public class OrderServiceImpl implements OrderService {
                 .map(OrderItem::getSku)
                 .toList();
 
-        var productResponse = productClient.getProductDetails(skus);
+        var productResponse = searchClient.getProductDetails(skus);
         if (productResponse == null || productResponse.getCode() != 200) {
             throw new RuntimeException("Cannot fetch product info");
         }
@@ -438,7 +438,7 @@ public class OrderServiceImpl implements OrderService {
                 .stream()
                 .map(OrderItem::getSku)
                 .toList();
-        var productResponse = productClient.getProductDetails(skus);
+        var productResponse = searchClient.getProductDetails(skus);
         if (productResponse == null || productResponse.getCode() != 200) {
             throw new RuntimeException("Cannot fetch product info");
         }
@@ -485,7 +485,7 @@ public class OrderServiceImpl implements OrderService {
                     .isVerifiedPurchase(false)
                     .build();
         }
-        var response = productClient.getListSkuByProductById(productId);
+        var response = searchClient.getListSkuByProductById(productId);
         if (response == null || response.getCode() != 200) {
             throw new RuntimeException("Cannot fetch product info");
         }
