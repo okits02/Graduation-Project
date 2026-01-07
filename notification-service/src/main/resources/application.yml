@@ -60,7 +60,7 @@ springdoc:
 open:
   api:
     version: v1.0.0
-    serverUrl: http://localhost:8064
+    serverUrl: http://localhost:8888/api/v1/notification-service
     serverName: Notification Service
 
 eureka:

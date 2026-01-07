@@ -26,6 +26,7 @@
         <module>discovery-service</module>
         <module>inventory-service</module>
         <module>order-service</module>
+        <module>common-lib</module>
     </modules>
 
     <properties>
@@ -61,11 +62,7 @@
             <artifactId>mysql-connector-j</artifactId>
             <scope>runtime</scope>
         </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
+
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

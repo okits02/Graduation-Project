@@ -22,7 +22,7 @@ springdoc:
 open:
   api:
     version: v1.0.0
-    serverUrl: http://localhost:8067
+    serverUrl: http://localhost:8888/api/v1/rating-service
     serverName: Test-ratingService
 
 eureka:

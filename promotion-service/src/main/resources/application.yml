@@ -32,7 +32,7 @@ springdoc:
 open:
   api:
     version: v1.0.0
-    serverUrl: http://localhost:8066
+    serverUrl: http://localhost:8888/api/v1/promotion-service
     serverName: Test-promotionService
 
 eureka:
