@@ -1,5 +1,6 @@
 package com.example.promotion_service.services.Impl;
 
+import com.example.promotion_service.dto.ProductSkuVM;
 import com.example.promotion_service.dto.request.CategoryLevelValidateRequest;
 import com.example.promotion_service.dto.request.CheckValidVoucherRequest;
 import com.example.promotion_service.dto.request.PromotionCreationRequest;
@@ -12,6 +13,7 @@ import com.example.promotion_service.kafka.UpdatePromotionEvent;
 import com.example.promotion_service.model.PromotionUsage;
 import com.example.promotion_service.repository.PromotionUsageRepository;
 import com.example.promotion_service.repository.httpClient.ProductClient;
+import com.example.promotion_service.repository.httpClient.SearchClient;
 import com.example.promotion_service.repository.httpClient.UserClient;
 import com.okits02.common_lib.dto.PageResponse;
 import com.example.promotion_service.dto.response.PromotionResponse;
@@ -35,7 +37,9 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.example.promotion_service.exception.PromotionErrorCode.*;
 
@@ -50,6 +54,7 @@ public class PromotionServiceImpl implements PromotionService {
     private final PromotionMapper promotionMapper;
     private final ProductClient productClient;
     private final UserClient userClient;
+    private final SearchClient searchClient;
 
     @Override
     public PromotionResponse createPromotion(PromotionCreationRequest request) {
@@ -284,14 +289,28 @@ public class PromotionServiceImpl implements PromotionService {
     }
 
     @Override
-    public List<PromotionResponse> getPromotionForOrder(CheckValidVoucherRequest request) {
+    public List<PromotionResponse> getPromotionForOrder(List<String> skus, Double totalAmount, Date today) {
         String userId = getUserId();
+        var productResponse = searchClient.getProductDetails(skus);
+        if (productResponse == null || productResponse.getCode() != 200 || productResponse.getResult() == null) {
+            throw new RuntimeException("Cannot fetch product info");
+        }
+        Map<String, ProductSkuVM> productMap = productResponse.getResult().stream()
+                .collect(Collectors.toMap(ProductSkuVM::getSku, Function.identity()));
+        List<String> productIds = productMap.values().stream()
+                .map(ProductSkuVM::getId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+        List<String> categoryIds = productMap.values().stream()
+                .flatMap(p -> p.getCategoriesId() == null ? Stream.empty() : p.getCategoriesId().stream())
+                .distinct()
+                .toList();
         List<Promotion> promotionList = promotionRepository.findApplicablePromotions(
-                request.getToday(),
-                request.getTotalAmount(),
-                request.getProductId(),
-                request.getCategoryId(),
-                request.getVoucherCode(),
+                today,
+                totalAmount,
+                productIds,
+                categoryIds,
                 userId
         );
         return promotionList.stream().map(promotionMapper::toPromotionResponse).toList();

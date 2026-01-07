@@ -36,10 +36,6 @@ public interface PromotionRepository extends JpaRepository<Promotion, String> {
       AND p.minimum_order_purchase_amount <= :totalAmount
       AND p.usage_count < p.usage_limited
       AND (
-            :voucherCode IS NULL
-            OR p.voucher_code = :voucherCode
-          )
-      AND (
             p.apply_to = 'ALL'
             OR (p.apply_to = 'PRODUCT' AND pa.product_id IN (:productIds))
             OR (p.apply_to = 'CATEGORY' AND pa.category_id IN (:categoryIds))
@@ -56,7 +52,6 @@ public interface PromotionRepository extends JpaRepository<Promotion, String> {
             @Param("totalAmount") Double totalAmount,
             @Param("productIds") List<String> productIds,
             @Param("categoryIds") List<String> categoryIds,
-            @Param("voucherCode") String voucherCode,
             @Param("userId") String userId
     );
 

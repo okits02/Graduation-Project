@@ -117,12 +117,16 @@ public class PromotionController {
                 .build();
     }
 
-    @PostMapping("/voucher")
-    ApiResponse<List<PromotionResponse>> getListVoucherForOrder(@RequestBody CheckValidVoucherRequest request){
+    @GetMapping("/voucher")
+    ApiResponse<List<PromotionResponse>> getListVoucherForOrder(
+            @RequestParam("skus") List<String> skus,
+            @RequestParam("totalAmount") Double totalAmount,
+            @RequestParam("today") Date today
+    ){
         return ApiResponse.<List<PromotionResponse>>builder()
                 .code(200)
                 .message("get list voucher successfully!")
-                .result(promotionService.getPromotionForOrder(request))
+                .result(promotionService.getPromotionForOrder(skus, totalAmount, today))
                 .build();
     }
 

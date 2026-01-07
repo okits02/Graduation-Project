@@ -128,7 +128,7 @@ public class CategoryServiceImpl implements CategoryService {
         Category root = categoryRepository.findByName("root");
         Set<String> rootChildrenIds = root.getChildrenId();
         if (rootChildrenIds.contains(categoryId)) {
-            brandService.removeCateInBrand(List.of(categoryId));
+            brandService.removeCategoryFromBrand(categoryId);
         }
         List<String> allDescendants = getAllDescendantIds(category);
         if(category.getParentId() != null && !category.getParentId().isEmpty()){
