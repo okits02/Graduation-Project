@@ -99,6 +99,17 @@ public class BrandServiceImpl implements BrandService {
         brandRepository.delete(brand);
     }
 
+    @Override
+    public void removeCategoryFromBrand(String categoryId) {
+        List<Brand> brands = brandRepository.findByCategoryId(categoryId);
+
+        for (Brand brand : brands) {
+            if (brand.getCategoryId() != null && brand.getCategoryId().remove(categoryId)) {
+                brandRepository.save(brand);
+            }
+        }
+    }
+
     private String getThumbnail(Brand brand){
         var variantMediaResponse =
                 mediaClient.getMedia(brand.getId(), MediaOwnerType.PRODUCT_VARIANT).getBody();

@@ -2,6 +2,8 @@ package com.example.media_service.service.Impl;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.example.media_service.dto.request.BannerCreationRequest;
+import com.example.media_service.dto.response.BannerResponse;
 import com.example.media_service.dto.response.ListMediaResponse;
 import com.example.media_service.dto.response.MediaResponse;
 import com.example.media_service.enums.MediaOwnerType;
@@ -128,6 +130,35 @@ public class ImageServiceImpl implements ImageService {
         return ListMediaResponse.builder()
                 .mediaResponseList(mediaResponses)
                 .build();
+    }
+
+    @Override
+    public List<BannerResponse> createBanner(BannerCreationRequest request) throws IOException {
+        List<BannerResponse> responses = new ArrayList<>();
+        for(MultipartFile file : request.getImageBanner()){
+            Media image = uploadAndSave(file, "", MediaOwnerType.BANNER, MediaPurpose.BANNER);
+            Media saveMedia = mediaRepository.save(image);
+            responses.add(BannerResponse.builder()
+                            .id(saveMedia.getId())
+                            .bannerUrl(saveMedia.getUrl())
+                    .build());
+        }
+        return responses;
+    }
+
+    @Override
+    public List<BannerResponse> getAllBanner() {
+        List<Media> medias = mediaRepository.findAllByMediaPurpose(MediaPurpose.BANNER);
+        if(medias == null || medias.isEmpty()){
+            throw new AppException(MediaErrorCode.BANNER_IS_NOT_EXISTS);
+        }
+
+        return medias.stream()
+                .map(media -> BannerResponse.builder()
+                        .id(media.getId())
+                        .bannerUrl(media.getUrl())
+                        .build())
+                .toList();
     }
 
     @Override

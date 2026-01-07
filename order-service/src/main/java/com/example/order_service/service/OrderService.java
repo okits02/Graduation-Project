@@ -2,10 +2,7 @@ package com.example.order_service.service;
 
 import com.example.order_service.dto.request.OrderCreationRequest;
 import com.example.order_service.dto.request.OrderUpdateRequest;
-import com.example.order_service.dto.response.CheckVerifiedPurchase;
-import com.example.order_service.dto.response.GetAmountResponse;
-import com.example.order_service.dto.response.OrderResponse;
-import com.example.order_service.dto.response.OrderSummaryResponse;
+import com.example.order_service.dto.response.*;
 import com.example.order_service.enums.Status;
 import com.okits02.common_lib.dto.PageResponse;
 import reactor.core.publisher.Mono;
@@ -21,4 +18,5 @@ public interface OrderService {
     public PageResponse<OrderSummaryResponse> getAllByStatus(int page, int size, Status status);
     public OrderResponse getById(String orderId);
     public CheckVerifiedPurchase checkVerifiedPurchase(String userId, String productId);
+    public GetListUserIdResponse getListUserId();
 }

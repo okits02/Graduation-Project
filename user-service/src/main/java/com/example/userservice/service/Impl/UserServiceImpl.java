@@ -1,14 +1,13 @@
 package com.example.userservice.service.Impl;
 
 import com.example.userservice.constant.PredefinedRole;
+import com.example.userservice.dto.response.*;
 import com.example.userservice.exception.UserErrorCode;
+import com.okits02.common_lib.dto.ApiResponse;
 import com.okits02.common_lib.dto.PageResponse;
 import com.example.userservice.dto.request.ForgotPasswordRequest;
 import com.example.userservice.dto.request.UserCreationRequest;
-import com.example.userservice.dto.response.UserIdResponse;
-import com.example.userservice.dto.response.UserResponse;
 import com.okits02.common_lib.exception.AppException;
-import com.okits02.common_lib.exception.GlobalErrorCode;
 import com.example.userservice.mapper.UserMapper;
 import com.example.userservice.model.ForgotPassword;
 import com.example.userservice.model.OTP;
@@ -22,6 +21,7 @@ import com.example.userservice.service.UserService;
 import com.example.userservice.service.VerificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.User;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -30,7 +30,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -154,7 +157,17 @@ public class UserServiceImpl implements UserService {
         {
             throw new AppException(UserErrorCode.USER_NOT_EXISTS);
         }
-        return userMapper.toUserResponse(user.get());
+        UserResponse response = userMapper.toUserResponse(user.get());
+
+        ServletRequestAttributes servletRequestAttributes =
+                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
+        ApiResponse<ProfileResponse> profileResponse =
+                profileClient.getUserProfile(authHeader, userId);
+        if (profileResponse != null && profileResponse.getCode() == 200) {
+            enrichUserWithProfile(response, profileResponse.getResult());
+        }
+        return response;
     }
 
     @Override
@@ -189,14 +202,99 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public PageResponse<UserResponse> getAll(int page, int size) {
+    public PageResponse<UserForAdminResponse> getAll(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        var pageData = userRepository.findAll(pageable);
-        return PageResponse.<UserResponse>builder()
+        var pageData = userRepository.getAll(pageable);
+        List<UserForAdminResponse> users =
+                pageData.getContent()
+                        .stream()
+                        .map(userMapper::toUserForAdminResponse)
+                        .toList();
+
+        if (users.isEmpty()) {
+            return PageResponse.<UserForAdminResponse>builder()
+                    .currentPage(page)
+                    .pageSize(size)
+                    .totalElements(pageData.getTotalElements())
+                    .data(List.of())
+                    .build();
+        }
+        List<String> userIds = pageData.getContent()
+                .stream()
+                .map(Users::getId)
+                .toList();
+        ServletRequestAttributes servletRequestAttributes =
+                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
+        var profileResponse = profileClient.getListUserProfile(authHeader, userIds);
+        if (profileResponse == null || profileResponse.getCode() != 200) {
+            log.warn("Failed to fetch profiles, return users without profile");
+            return PageResponse.<UserForAdminResponse>builder()
+                    .currentPage(page)
+                    .pageSize(size)
+                    .totalElements(pageData.getTotalElements())
+                    .data(users)
+                    .build();
+        }
+        Map<String, ProfileResponse> profileMap =
+                profileResponse.getResult()
+                        .stream()
+                        .collect(Collectors.toMap(
+                                ProfileResponse::getUserId,
+                                p -> p
+                        ));
+
+        users.forEach(user -> {
+            ProfileResponse profile = profileMap.get(user.getId());
+            if (profile != null) {
+                mergeProfile(user, profile);
+            }
+        });
+
+        return PageResponse.<UserForAdminResponse>builder()
                 .currentPage(page)
-                .pageSize(pageData.getSize())
+                .pageSize(size)
                 .totalElements(pageData.getTotalElements())
-                .data(pageData.getContent().stream().map(userMapper::toUserResponse).toList())
+                .data(users)
                 .build();
+    }
+
+    @Override
+    public ListEmailResponse getListEmailByListUserId(List<String> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return ListEmailResponse.builder()
+                    .emails(List.of())
+                    .build();
+        }
+
+        List<String> emails =
+                userRepository.findEmailsByUserIds(userIds);
+
+        return ListEmailResponse.builder()
+                .emails(emails)
+                .build();
+    }
+    private void enrichUserWithProfile(
+            UserResponse userResponse,
+            ProfileResponse profile
+    ) {
+        if (profile == null) return;
+
+        userResponse.setAvatarUrl(profile.getAvatarUrl());
+        userResponse.setFirstName(profile.getFirstName());
+        userResponse.setLastName(profile.getLastName());
+        userResponse.setPhone(profile.getPhone());
+        userResponse.setDob(profile.getDob());
+        userResponse.setAddress(profile.getAddress());
+    }
+
+    private void mergeProfile(UserForAdminResponse user, ProfileResponse profile) {
+
+        user.setAvatarUrl(profile.getAvatarUrl());
+        user.setFirstName(profile.getFirstName());
+        user.setLastName(profile.getLastName());
+        user.setPhone(profile.getPhone());
+        user.setDob(profile.getDob());
+        user.setAddress(profile.getAddress());
     }
 }

@@ -4,6 +4,7 @@ import com.example.rating_service.dto.CustomerVM;
 import com.example.rating_service.dto.request.ModifyRatingRequest;
 import com.example.rating_service.dto.request.RatingRequest;
 import com.example.rating_service.dto.response.RatingResponse;
+import com.example.rating_service.dto.response.RatingSummaryResponse;
 import com.example.rating_service.enums.RatingFilterType;
 import com.example.rating_service.repository.httpClient.OrderClient;
 import com.example.rating_service.repository.httpClient.UserClient;
@@ -25,6 +26,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.util.List;
+
 
 @Service
 @RequiredArgsConstructor
@@ -40,7 +43,7 @@ public class RatingServiceImpl implements RatingService {
     @Override
     public RatingResponse createRating(RatingRequest request) {
         String userId = getUserId();
-        if(ratingRepository.existsByCreatedByAndProductId(userId, request.getProductId())){
+        if(ratingRepository.existsByUserIdAndProductId(userId, request.getProductId())){
             throw new AppException(RatingErrorCode.RATING_EXISTS);
         };
         ServletRequestAttributes servletRequestAttributes =
@@ -106,9 +109,35 @@ public class RatingServiceImpl implements RatingService {
                             productId, pageable
                     );
         }
+        List<RatingResponse> data = ratingPage.getContent()
+                .stream()
+                .map(ratingMapper::toRatingResponse)
+                .toList();
 
         return PageResponse.<RatingResponse>builder()
-                .data(ratingPage.getContent())
+                .data(data)
+                .currentPage(page)
+                .totalElements(ratingPage.getTotalElements())
+                .totalPage(ratingPage.getTotalPages())
+                .build();
+    }
+
+    public RatingSummaryResponse getRatingSummary(String productId) {
+
+        Object[] result = ratingRepository.getRatingSummary(productId);
+
+        Double averageRating = result[0] != null
+                ? ((Number) result[0]).doubleValue()
+                : 0.0;
+
+        Integer totalReviews = result[1] != null
+                ? ((Number) result[1]).intValue()
+                : 0;
+
+        return RatingSummaryResponse.builder()
+                .averageRating(averageRating)
+                .totalReviews(totalReviews)
+                .maxRating(5)
                 .build();
     }
 

@@ -2,11 +2,13 @@ package com.example.userservice.repository;
 
 
 import com.example.userservice.model.Users;
+import feign.Param;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<Users, String> {
@@ -20,8 +22,18 @@ public interface UserRepository extends JpaRepository<Users, String> {
     @Query(value = """
     SELECT DISTINCT u
     FROM Users u
-    JOIN u.roles r
+    JOIN u.role r
     WHERE r.name = 'USER'
-    """, nativeQuery = true)
+    """)
     Page<Users> getAll(Pageable pageable);
+
+    @Query("""
+        SELECT DISTINCT u.email
+        FROM Users u
+        WHERE u.id IN :userIds
+          AND u.email IS NOT NULL
+    """)
+    List<String> findEmailsByUserIds(
+            @Param("userIds") List<String> userIds
+    );
 }

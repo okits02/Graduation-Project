@@ -107,6 +107,22 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
+    public List<ProfileForAdminResponse> getListProfile(List<String> userIds) {
+
+        if (userIds == null || userIds.isEmpty()) {
+            return List.of();
+        }
+
+        List<UserProfile> profiles = profileRepository.findByUserIds(userIds);
+
+        if (profiles == null || profiles.isEmpty()) {
+            return List.of();
+        }
+
+        return profileMapper.toProfileResponses(profiles);
+    }
+
+    @Override
     public void DeleteProfile(String userId) {
         UserProfile userProfile = profileRepository.findByUserId(userId);
         if (userProfile == null) {

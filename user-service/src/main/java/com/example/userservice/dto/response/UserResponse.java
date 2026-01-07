@@ -5,6 +5,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 @Builder
@@ -14,8 +15,11 @@ import java.util.Date;
 public class UserResponse {
     String username;
     String email;
-    String phone;
+    String avatarUrl;
     String firstName;
     String lastName;
+    String phone;
+    Date dob;
     Role role;
+    List<UserAddressResponse> address;
 }

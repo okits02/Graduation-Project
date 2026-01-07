@@ -12,7 +12,8 @@ public enum MediaErrorCode implements ErrorCode {
     CAN_NOT_FIND_MEDIA_BY_PRODUCT(1403, "Can not find media by productId!", HttpStatus.BAD_REQUEST),
     CAN_NOT_FIND_MEDIA_BY_URL(1404, "Can not find media by url", HttpStatus.BAD_REQUEST),
     THUMBNAIL_EXISTS(1405, "Thumbnail photo still exists!", HttpStatus.BAD_REQUEST),
-    CAN_NOT_FIND_MEDIA_BY_ID(1406, "Can not find media by Id", HttpStatus.BAD_REQUEST);
+    CAN_NOT_FIND_MEDIA_BY_ID(1406, "Can not find media by Id", HttpStatus.BAD_REQUEST),
+    BANNER_IS_NOT_EXISTS(1408, "Can not find another banner in system", HttpStatus.BAD_REQUEST);
     private final int code;
     private final String message;
     private final HttpStatusCode httpStatusCode;

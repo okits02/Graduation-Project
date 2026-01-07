@@ -20,6 +20,14 @@ public interface MediaRepository extends JpaRepository<Media, String> {
             """, nativeQuery = true)
     List<Media> findByOwnerIdAndOwnerType(@Param("ownerId") String ownerId,
                                           @Param("ownerType") String ownerType);
+
+    @Query(value = """
+            SELECT * FROM media 
+            WHERE media_purpose = :purPose
+            """, nativeQuery = true)
+    List<Media> findAllByMediaPurpose(
+            @Param("purPose") MediaPurpose mediaPurpose
+    );
     @Modifying
     @Transactional
     @Query(
@@ -70,4 +78,6 @@ public interface MediaRepository extends JpaRepository<Media, String> {
     Optional<Integer> findMaxPositionByOwnerIdAndPurpose(
             @Param("ownerId") String productId,
             @Param("purpose") String mediaPurpose);
+
+
 }

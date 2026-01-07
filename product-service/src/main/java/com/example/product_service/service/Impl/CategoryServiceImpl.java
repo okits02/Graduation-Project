@@ -2,6 +2,7 @@ package com.example.product_service.service.Impl;
 
 import com.example.product_service.dto.response.CategoryLevelValidateResponse;
 import com.example.product_service.kafka.CategoryEvent;
+import com.example.product_service.service.BrandService;
 import com.okits02.common_lib.dto.PageResponse;
 import com.okits02.common_lib.dto.ApiResponse;
 import com.example.product_service.dto.RemoveCategoryRequest;
@@ -37,6 +38,7 @@ public class CategoryServiceImpl implements CategoryService {
     private final ProductRepository productRepository;
     private final SearchClient searchClient;
     private final CategoryMappingHelper categoryMappingHelper;
+    private final BrandService brandService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
 
@@ -71,7 +73,6 @@ public class CategoryServiceImpl implements CategoryService {
                 parentCate.setChildrenId(childCate);
                 categoryRepository.save(parentCate);
             } else {
-                // Optional: Handle case where parentId is invalid (e.g., throw custom exception)
                 throw new IllegalArgumentException("Parent category with ID " + newCategory.getParentId() + " not found");
             }
         }
@@ -124,6 +125,11 @@ public class CategoryServiceImpl implements CategoryService {
     public void deleteCateById(String categoryId) {
         Category category = categoryRepository.findById(categoryId).orElseThrow(()
                 -> new AppException(ProductErrorCode.CATE_NOT_EXISTS));
+        Category root = categoryRepository.findByName("root");
+        Set<String> rootChildrenIds = root.getChildrenId();
+        if (rootChildrenIds.contains(categoryId)) {
+            brandService.removeCateInBrand(List.of(categoryId));
+        }
         List<String> allDescendants = getAllDescendantIds(category);
         if(category.getParentId() != null && !category.getParentId().isEmpty()){
             Category parent = categoryRepository.findById(category.getParentId()).orElseThrow(() ->

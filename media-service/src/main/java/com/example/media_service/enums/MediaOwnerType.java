@@ -5,5 +5,6 @@ public enum MediaOwnerType {
     CATEGORY,
     PRODUCT_VARIANT,
     BRAND,
-    USER
+    USER,
+    BANNER
 }

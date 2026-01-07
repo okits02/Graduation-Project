@@ -1,16 +1,14 @@
 package com.example.order_service.controller;
 
 import com.example.order_service.dto.request.OrderCreationRequest;
-import com.example.order_service.dto.response.CheckVerifiedPurchase;
-import com.example.order_service.dto.response.GetAmountResponse;
-import com.example.order_service.dto.response.OrderResponse;
-import com.example.order_service.dto.response.OrderSummaryResponse;
+import com.example.order_service.dto.response.*;
 import com.example.order_service.enums.Status;
 import com.example.order_service.service.OrderService;
 import com.okits02.common_lib.dto.ApiResponse;
 import com.okits02.common_lib.dto.PageResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -45,6 +43,7 @@ public class OrderController {
 
 
     @GetMapping("/get/status")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<PageResponse<OrderSummaryResponse>> getAllByStatus(
             @RequestParam("status") Status status,
             @RequestParam(value = "page", defaultValue = "1") Integer page,
@@ -105,4 +104,13 @@ public class OrderController {
                 .build();
     }
 
+    @GetMapping("/internal/get-user-id")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<GetListUserIdResponse> getListUserIdResponse(){
+        return ApiResponse.<GetListUserIdResponse>builder()
+                .code(200)
+                .message("get list userID successfully!")
+                .result(orderService.getListUserId())
+                .build();
+    }
 }

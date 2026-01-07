@@ -104,6 +104,13 @@ spring:
           filters:
               - StripPrefix=2
 
+        - id: rating-service
+          uri: lb://rating-service
+          predicates:
+            - Path=${app.api-prefix}/rating-service/**
+          filters:
+            - StripPrefix=2
+
 
 springdoc:
   swagger-ui:

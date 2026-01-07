@@ -3,6 +3,7 @@ package com.example.profile_service.service;
 import com.example.profile_service.dto.request.ProfileRequest;
 import com.example.profile_service.dto.request.ProfileUpdateRequest;
 import com.example.profile_service.dto.response.CustomerVM;
+import com.example.profile_service.dto.response.ProfileForAdminResponse;
 import com.okits02.common_lib.dto.PageResponse;
 import com.example.profile_service.dto.response.ProfileResponse;
 import org.springframework.data.domain.Page;
@@ -16,6 +17,7 @@ public interface ProfileService {
    public ProfileResponse getProfileByUserId(String userId);
    public ProfileResponse updateProfileByUserId(String userId, ProfileUpdateRequest request);
    public PageResponse<ProfileResponse> getAllProfile(int page, int size);
+   public List<ProfileForAdminResponse> getListProfile(List<String> userIds);
    public void DeleteProfile(String userId);
    public CustomerVM getProfileForRating();
    public String getUserId();

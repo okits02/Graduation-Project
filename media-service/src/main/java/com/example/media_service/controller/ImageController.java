@@ -1,5 +1,6 @@
 package com.example.media_service.controller;
 
+import com.example.media_service.dto.response.BannerResponse;
 import com.okits02.common_lib.dto.ApiResponse;
 import com.example.media_service.dto.request.*;
 import com.example.media_service.dto.response.ListMediaResponse;
@@ -12,12 +13,14 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.Banner;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -47,6 +50,7 @@ public class ImageController {
                 .build());
     }
     @PostMapping("/product/change-thumbnail")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<MediaResponse>> changeThumbnail(
             @ModelAttribute ChangeThumbnailRequest request
     ) throws IOException {
@@ -85,6 +89,19 @@ public class ImageController {
                 .build());
     }
 
+    @PostMapping("/banner")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<List<BannerResponse>> creationBanner(
+            @ModelAttribute BannerCreationRequest request
+    ) throws IOException {
+        return ApiResponse.<List<BannerResponse>>builder()
+                .code(200)
+                .message("creation banner successfully")
+                .result(imageService.createBanner(request))
+                .build();
+    }
+
+
     @PostMapping("/thumbnail")
     public ResponseEntity<ApiResponse<MediaResponse>> uploadImage(
             @ModelAttribute ImageUploadRequest request
@@ -110,6 +127,15 @@ public class ImageController {
                 .build());
     }
 
+    @GetMapping("/banner/get")
+    public ApiResponse<List<BannerResponse>> getAllBanner(){
+        return ApiResponse.<List<BannerResponse>>builder()
+                .code(200)
+                .message("creation banner successfully")
+                .result(imageService.getAllBanner())
+                .build();
+    }
+
     @GetMapping("/product/get-media")
     public ResponseEntity<ApiResponse<ListMediaResponse>> getMedia(
             @RequestParam("ownerId") String ownerId,
@@ -123,6 +149,7 @@ public class ImageController {
     }
 
     @DeleteMapping("/delete/ownerId")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<?>> deleteByOwnerId(
             @RequestBody DeleteMediaRequest request
             ){
@@ -145,6 +172,7 @@ public class ImageController {
     }
 
     @PutMapping("/product/reorder")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<?>> reorderImage(
             @RequestBody ReorderImageRequest request
             ) {

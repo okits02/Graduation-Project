@@ -8,7 +8,8 @@ import org.springframework.http.HttpStatusCode;
 @Getter
 public enum RatingErrorCode implements ErrorCode {
     UNAUTHENTICATED(HttpStatus.BAD_REQUEST, 4001, "Unauthenticate in promotion-service!"),
-    RATING_EXISTS(HttpStatus.BAD_REQUEST, 4020, "You have rated of product")
+    RATING_EXISTS(HttpStatus.BAD_REQUEST, 4020, "You have rated of product"),
+    COMMENT_NOT_EXISTS(HttpStatus.BAD_REQUEST, 4021, "Comment not exists!")
     ;
 
     RatingErrorCode(HttpStatus httpStatus, int code, String message) {

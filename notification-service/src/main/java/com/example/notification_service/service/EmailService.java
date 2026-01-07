@@ -1,6 +1,9 @@
 package com.example.notification_service.service;
 
+import com.example.notification_service.dto.request.SendEmailRequest;
 import com.example.notification_service.repository.NotificationRepository;
+import com.example.notification_service.repository.httpClient.OrderClient;
+import com.example.notification_service.repository.httpClient.UserClient;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -9,14 +12,19 @@ import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class EmailService {
     private final NotificationRepository notificationRepository;
     private final JavaMailSender mailSender;
+    private final OrderClient orderClient;
+    private final UserClient userClient;
 
     public void sendVerificationOtpEmail( String email, String otp)
             throws UnsupportedEncodingException, MessagingException {
@@ -77,5 +85,94 @@ public class EmailService {
         {
             throw new MessagingException("Error configuring email message: " + e.getMessage());
         }
+    }
+
+    public void sendMarketingEmailToTopBuyers(SendEmailRequest request) {
+        ServletRequestAttributes servletRequestAttributes =
+                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
+        var userIdResponse = orderClient.getListUserId(authHeader);
+        var userIds = userIdResponse.getResult().getUserIds();
+
+        if (userIds == null || userIds.isEmpty()) {
+            return;
+        }
+        var emailResponse = userClient.getListEmail(authHeader,userIds);
+        var emails = emailResponse.getResult().getEmails();
+
+        if (emails == null || emails.isEmpty()) {
+            return;
+        }
+        sendBulkMarketingEmail(emails, request);
+    }
+
+    private void sendBulkMarketingEmail(
+            List<String> emails,
+            SendEmailRequest request
+    ) {
+        for (String email : emails) {
+            try {
+                sendMarketingEmail(email, request);
+            } catch (Exception e) {
+                // log lỗi, KHÔNG break vòng lặp
+                System.err.println("Failed to send email to: " + email);
+            }
+        }
+    }
+
+    private void sendMarketingEmail(
+            String email,
+            SendEmailRequest request
+    ) throws MessagingException, UnsupportedEncodingException {
+
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message);
+
+        String content = buildMarketingEmailTemplate(
+                request.getContent(),
+                request.getBannerUrl()
+        );
+
+        helper.setFrom("AnhTu13@gmail.com", "Shop Promotion");
+        helper.setTo(email);
+        helper.setSubject(request.getSubject());
+        helper.setText(content, true);
+
+        mailSender.send(message);
+    }
+
+
+    private String buildMarketingEmailTemplate(String content, String bannerUrl) {
+        return """
+        <div style="font-family: Arial, sans-serif; background-color: #f6f6f6; padding: 20px;">
+            <div style="max-width: 600px; margin: auto; background: #ffffff; border-radius: 10px; overflow: hidden;">
+                
+                <img src="%s" alt="Promotion Banner" style="width: 100%%; height: auto;" />
+
+                <div style="padding: 20px;">
+                    <p style="font-size: 16px; color: #333;">
+                        %s
+                    </p>
+
+                    <div style="margin-top: 30px; text-align: center;">
+                        <a href="#" style="
+                            background-color: #e74c3c;
+                            color: #ffffff;
+                            padding: 12px 25px;
+                            text-decoration: none;
+                            border-radius: 5px;
+                            font-weight: bold;
+                        ">
+                            Mua ngay
+                        </a>
+                    </div>
+
+                    <p style="margin-top: 30px; font-size: 12px; color: #999;">
+                        Bạn nhận được email này vì đã từng mua hàng tại Shop.
+                    </p>
+                </div>
+            </div>
+        </div>
+        """.formatted(bannerUrl, content);
     }
 }

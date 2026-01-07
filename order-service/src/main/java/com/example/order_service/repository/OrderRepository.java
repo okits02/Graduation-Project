@@ -72,5 +72,14 @@ public interface OrderRepository extends JpaRepository<Orders, String> {
             Pageable pageable
     );
 
-
+    @Query("""
+        SELECT o.userId
+        FROM Orders o
+        WHERE o.orderStatus IN :statuses
+        GROUP BY o.userId
+        ORDER BY COUNT(o.id) DESC
+    """)
+    List<String> findUserIdsOrderByOrderCountDesc(
+            @Param("statuses") List<Status> statuses
+    );
 }

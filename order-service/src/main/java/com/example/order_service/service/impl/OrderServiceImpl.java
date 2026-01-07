@@ -501,6 +501,21 @@ public class OrderServiceImpl implements OrderService {
                 .build();
     }
 
+    @Override
+    public GetListUserIdResponse getListUserId() {
+
+        List<Status> validStatuses = List.of(
+                Status.COMPLETED
+        );
+
+        List<String> userIds =
+                orderRepository.findUserIdsOrderByOrderCountDesc(validStatuses);
+
+        return GetListUserIdResponse.builder()
+                .userIds(userIds)
+                .build();
+    }
+
     private String getUserId(){
         ServletRequestAttributes servletRequestAttributes =
                 (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();

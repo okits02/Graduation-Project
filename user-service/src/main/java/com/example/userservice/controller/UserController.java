@@ -1,5 +1,6 @@
 package com.example.userservice.controller;
 
+import com.example.userservice.dto.response.ListEmailResponse;
 import com.example.userservice.exception.UserErrorCode;
 import com.okits02.common_lib.dto.PageResponse;
 import com.example.userservice.dto.request.*;
@@ -32,6 +33,7 @@ import jakarta.validation.Valid;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -300,6 +302,17 @@ public class UserController {
                 .result(userService.getAll(page - 1
                         , size))
                 .build());
+    }
+
+    @GetMapping("/internal/emails")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<ListEmailResponse> getListEmailByListUserId(
+            @RequestParam(value = "userIds") List<String> userIds
+    ){
+        return ApiResponse.<ListEmailResponse>builder()
+                .code(200)
+                .result(userService.getListEmailByListUserId(userIds))
+                .build();
     }
 
     @PutMapping("/admin/reset-password")

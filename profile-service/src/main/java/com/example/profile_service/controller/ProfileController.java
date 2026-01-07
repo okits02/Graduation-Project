@@ -2,6 +2,7 @@ package com.example.profile_service.controller;
 
 import com.example.profile_service.dto.request.ProfileRequest;
 import com.example.profile_service.dto.request.ProfileUpdateRequest;
+import com.example.profile_service.dto.response.ProfileForAdminResponse;
 import com.okits02.common_lib.dto.ApiResponse;
 import com.example.profile_service.dto.response.CustomerVM;
 import com.okits02.common_lib.dto.PageResponse;
@@ -19,6 +20,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -62,9 +65,10 @@ public class ProfileController {
     @Operation(summary = "admin get user info",
             description = "Api used to get user's info",
             security = @SecurityRequirement(name = "bearerAuth"))
-    @GetMapping("/admin/{userId}")
+    @GetMapping("/admin")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<ProfileResponse>> getProfileByUserId(@PathVariable String userId)
+    public ResponseEntity<ApiResponse<ProfileResponse>> getProfileByUserId(
+            @RequestParam(value = "userId") String userId)
     {
         ProfileResponse profileResponse = profileService.getProfileByUserId(userId);
         return ResponseEntity.ok(ApiResponse.<ProfileResponse>builder()
@@ -72,6 +76,19 @@ public class ProfileController {
                         .message("Profile retrieved successfully!")
                         .result(profileResponse)
                 .build());
+    }
+
+    @GetMapping("/internal/admin/list")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<List<ProfileForAdminResponse>> getProfilesByUserIds(
+            @RequestParam(value = "userIds") List<String> userIds)
+    {
+        List<ProfileForAdminResponse> profileResponse = profileService.getListProfile(userIds);
+        return ApiResponse.<List<ProfileForAdminResponse>>builder()
+                        .code(200)
+                        .message("Profile retrieved successfully!")
+                        .result(profileResponse)
+                .build();
     }
 
     @Operation(summary = "admin update user info",

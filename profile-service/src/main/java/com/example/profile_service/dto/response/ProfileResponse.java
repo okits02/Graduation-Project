@@ -13,6 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProfileResponse {
+    String avatarUrl;
     String firstName;
     String lastName;
     String phone;

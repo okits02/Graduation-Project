@@ -7,6 +7,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -32,7 +33,6 @@ public class Comments {
 
     // null = comment gốc
     String parentId;
-
     @CreationTimestamp
     LocalDateTime createdAt;
 
