@@ -16,7 +16,7 @@ public interface InventoryClient {
             @RequestBody IsInStockRequest request
     );
 
-    @PostMapping(value = "/inventory-service/inventory/internal/decrease-stock",
+    @PostMapping(value = "/inventory-service/inventory/internal/o d-stock",
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse<?> decreaseStock(
             @RequestBody InventoryAdjustmentRequest request

@@ -125,7 +125,7 @@ public class CartServiceImpl implements CartService {
             throw new AppException(CartErrorCode.USER_DOES_NOT_HAVE_CART);
         }
         CartItem cartItem = cart.getItems().stream()
-                .filter(item -> item.getCartItemId().equals(request.getSku()))
+                .filter(item -> item.getSku().equals(request.getSku()))
                 .findFirst()
                 .orElseThrow(() -> new AppException(CartErrorCode.CART_ITEM_NOT_EXISTS));
         cartItem.setQuantity(request.getQuantity());
