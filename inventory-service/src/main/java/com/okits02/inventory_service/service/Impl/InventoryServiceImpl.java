@@ -55,11 +55,6 @@ public class InventoryServiceImpl implements InventoryService {
             Inventory inventory = inventoryRepository.findBySku(item.getSku()).orElseThrow(() ->
                     new AppException(InventoryErrorCode.PRODUCT_NOT_EXISTS));
             boolean wasInStock = isProductInStock(item.getSku());
-            if(inventory.getQuantity() == 0){
-                productStockEvent(item.getSku(),true);
-            }
-            int newQuantity = inventory.getQuantity() + item.getQuantity();
-            inventory.setQuantity(newQuantity);
 
             InventoryTransaction tx = buildTransaction(
                     inventory,

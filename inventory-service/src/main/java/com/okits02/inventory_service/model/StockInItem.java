@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 @Table(
         name = "stock_in_item",
         uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"sku"})
+                @UniqueConstraint(columnNames = {"stock_in_id", "sku"})
         }
 )
 public class StockInItem {

@@ -161,6 +161,21 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public UserResponse getUserByUserName(String userName) {
+        Users users = userRepository.findByUsername(userName).orElseThrow(() ->
+                new AppException(UserErrorCode.USER_NOT_EXISTS));
+
+        return userMapper.toUserResponse(users);
+    }
+
+    @Override
+    public UserResponse getUserByEmail(String email) {
+        Users users = userRepository.findByEmail(email).orElseThrow(()
+                -> new AppException(UserErrorCode.USER_NOT_EXISTS));
+        return userMapper.toUserResponse(users);
+    }
+
+    @Override
     public UserResponse getMyInfo() {
         var contex = SecurityContextHolder.getContext();
         String currentUsername = contex.getAuthentication().getName();
@@ -229,18 +244,6 @@ public class UserServiceImpl implements UserService {
         return ListEmailResponse.builder()
                 .emails(emails)
                 .build();
-    }
-
-    @Override
-    public Boolean checkVerifiedUser(String token) {
-        var contex = SecurityContextHolder.getContext();
-        String currentUsername = contex.getAuthentication().getName();
-        Users users = userRepository.findByUsername(currentUsername).orElseThrow(()
-                -> new AppException(UserErrorCode.USER_NOT_EXISTS));
-        if(users.getRole().equals("ADMIN")){
-            return true;
-        }
-        return users.isVerified();
     }
 
 }

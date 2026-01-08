@@ -235,7 +235,7 @@ public class UserController {
     @Operation(summary = "Toggle user status admin",
     description = "API for administrator, it has an exaggeration of user account",
     security = @SecurityRequirement(name = "bearerAuth"))
-    @PutMapping("/{userId}/status")
+    @PutMapping("/admin/{userId}/status")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<?>> toggleUserStatus(@PathVariable String userId,
                                                            @RequestParam boolean isActive) {
@@ -281,7 +281,7 @@ public class UserController {
         }
     }
 
-    @GetMapping("/get-user/{userId}")
+    @GetMapping("/admin/get-user/id/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<?>> getUserById(@PathVariable String userId){
         try{
@@ -298,7 +298,40 @@ public class UserController {
         }
     }
 
-    @GetMapping("/get-all")
+    @GetMapping("/admin/get-user/username/{username}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<?>> getUserByUserName(@PathVariable String userName){
+        try{
+            return ResponseEntity.ok(ApiResponse.builder()
+                    .code(200)
+                    .message("get user successfully!")
+                    .result(userService.getUserByUserName(userName))
+                    .build());
+        }catch (AppException e){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.builder()
+                    .code(e.getErrorCode().getCode())
+                    .message(e.getMessage())
+                    .build());
+        }
+    }
+    @GetMapping("/admin/get-user/email/{email}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<?>> getUserByEmail(@PathVariable String email){
+        try{
+            return ResponseEntity.ok(ApiResponse.builder()
+                    .code(200)
+                    .message("get user successfully!")
+                    .result(userService.getUserByEmail(email))
+                    .build());
+        }catch (AppException e){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.builder()
+                    .code(e.getErrorCode().getCode())
+                    .message(e.getMessage())
+                    .build());
+        }
+    }
+
+    @GetMapping("/admin/get-all")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<PageResponse<?>>> getAllUser(
             @RequestParam(value = "page", defaultValue = "1") int page,

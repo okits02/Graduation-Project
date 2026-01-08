@@ -48,18 +48,24 @@ public class AuthenticationService {
 
 
     public IntrospectResponse introspect(IntrospectRequest request) throws JOSEException, ParseException {
-        var token = request.getToken();
+        String token = request.getToken();
         boolean isValid = true;
-        boolean isVerified = userService.checkVerifiedUser(token);
+        boolean verified = false;
         try {
-            verifyToken(token);
+            SignedJWT signedJWT = verifyToken(token);
+            String username = signedJWT.getJWTClaimsSet().getSubject();
+            Users user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_EXISTS));
+            verified =
+                    "ADMIN".equalsIgnoreCase(user.getRole().getName())
+                            || Boolean.TRUE.equals(user.isVerified());
         }catch (AppException e)
         {
             isValid = false;
         }
         return  IntrospectResponse.builder()
                 .valid(isValid)
-                .verified(isVerified)
+                .verified(verified)
                 .build();
     }
 

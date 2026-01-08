@@ -79,19 +79,6 @@ public class ProfileController {
                 .build());
     }
 
-    @GetMapping("/internal/admin/list")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<List<ProfileForAdminResponse>> getProfilesByUserIds(
-            @RequestParam(value = "userIds") List<String> userIds)
-    {
-        List<ProfileForAdminResponse> profileResponse = profileService.getListProfile(userIds);
-        return ApiResponse.<List<ProfileForAdminResponse>>builder()
-                        .code(200)
-                        .message("Profile retrieved successfully!")
-                        .result(profileResponse)
-                .build();
-    }
-
     @Operation(summary = "admin update user info",
             description = "Api used to update user's info",
             security = @SecurityRequirement(name = "bearerAuth"))
