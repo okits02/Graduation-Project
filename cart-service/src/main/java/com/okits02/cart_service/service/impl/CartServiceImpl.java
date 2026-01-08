@@ -13,7 +13,7 @@ import com.okits02.cart_service.model.Cart;
 import com.okits02.cart_service.model.CartItem;
 import com.okits02.cart_service.repository.CartItemRepository;
 import com.okits02.cart_service.repository.CartRepository;
-import com.okits02.cart_service.repository.htppClient.ProductClient;
+import com.okits02.cart_service.repository.htppClient.SearchClient;
 import com.okits02.cart_service.repository.htppClient.UserClient;
 import com.okits02.cart_service.service.CartService;
 import jakarta.transaction.Transactional;
@@ -36,7 +36,7 @@ public class CartServiceImpl implements CartService {
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
     private final UserClient userClient;
-    private final ProductClient productClient;
+    private final SearchClient searchClient;
     private final CartItemMapper cartItemMapper;
 
     @Override
@@ -64,7 +64,7 @@ public class CartServiceImpl implements CartService {
             cart.setItems(new ArrayList<>());
         }
         var productResponse =
-                productClient.getProductDetails(List.of(request.getSku()));
+                searchClient.getProductDetails(List.of(request.getSku()));
 
         if (productResponse == null
                 || productResponse.getCode() != 200
@@ -131,7 +131,7 @@ public class CartServiceImpl implements CartService {
         cartItem.setQuantity(request.getQuantity());
         cart = cartRepository.save(cart);
         var productResponse =
-                productClient.getProductDetails(List.of(request.getSku()));
+                searchClient.getProductDetails(List.of(request.getSku()));
 
         if (productResponse == null
                 || productResponse.getCode() != 200
@@ -201,7 +201,7 @@ public class CartServiceImpl implements CartService {
                     ProductGetVM product = null;
 
                     var productResponse =
-                            productClient.getProductDetails(List.of(item.getSku()));
+                            searchClient.getProductDetails(List.of(item.getSku()));
 
                     if (productResponse == null
                             || productResponse.getCode() != 200
@@ -248,7 +248,7 @@ public class CartServiceImpl implements CartService {
         CartItem cartItem = cartItemOpt.get();
         ProductGetVM product = null;
         var productResponse =
-                productClient.getProductDetails(List.of(cartItem.getSku()));
+                searchClient.getProductDetails(List.of(cartItem.getSku()));
 
         if (productResponse != null
                 && productResponse.getCode() == 200
@@ -288,7 +288,7 @@ public class CartServiceImpl implements CartService {
         }
 
         try {
-            var response = productClient.getProductDetails(skus);
+            var response = searchClient.getProductDetails(skus);
 
             if (response == null || response.getResult() == null) {
                 return Collections.emptyMap();

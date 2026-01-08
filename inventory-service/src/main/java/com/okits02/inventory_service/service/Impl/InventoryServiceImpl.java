@@ -112,7 +112,7 @@ public class InventoryServiceImpl implements InventoryService {
 
     @Override
     public boolean checkIsStock(IsInStockRequest request) {
-        if (request == null || isBlank(request.getProductId()) || isBlank(request.getSku()) || request.getQuantity() == null) {
+        if (request == null || isBlank(request.getSku()) || request.getQuantity() == null) {
             return false;
         }
         Inventory inventory = inventoryRepository.findBySku(request.getSku())

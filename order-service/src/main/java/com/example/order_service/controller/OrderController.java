@@ -69,17 +69,38 @@ public class OrderController {
                 .build();
     }
 
+    @GetMapping
+    public ApiResponse<OrderResponse> getById(
+            @RequestParam(value = "orderId") String orderId){
+        return ApiResponse.<OrderResponse>builder()
+                .code(200)
+                .message("get order by id successfully")
+                .result(orderService.getById(orderId))
+                .build();
+    }
+
+    @PutMapping("/cancel")
+    public ApiResponse<?> cancelOderById(
+            @RequestParam(value = "orderId") String orderId
+    ){
+        orderService.cancelOrder(orderId);
+        return ApiResponse.<OrderResponse>builder()
+                .code(200)
+                .message("cancel order successfully")
+                .build();
+    }
+
     @GetMapping("/get-my-order")
     public ApiResponse<PageResponse<OrderSummaryResponse>> getByUserIdAndStatus(
             @RequestParam("userId") String userId,
             @RequestParam("status") Status status,
             @RequestParam(value = "page", defaultValue = "1") Integer page,
-            @RequestParam(value = "size", defaultValue = "0") Integer size
+            @RequestParam(value = "size", defaultValue = "10") Integer size
     ){
         return ApiResponse.<PageResponse<OrderSummaryResponse>>builder()
                 .code(200)
                 .message("get order for user successfully!")
-                .result(orderService.getByUserIdAndStatus(page, size, status))
+                .result(orderService.getByUserIdAndStatus(page - 1, size, status))
                 .build();
     }
 
@@ -113,4 +134,5 @@ public class OrderController {
                 .result(orderService.getListUserId())
                 .build();
     }
+
 }

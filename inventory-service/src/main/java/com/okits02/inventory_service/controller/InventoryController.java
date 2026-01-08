@@ -30,7 +30,7 @@ public class InventoryController {
                 .build();
     }
 
-    @PostMapping("/check-inStock")
+    @PostMapping("/internal/check-inStock")
     public ApiResponse<Boolean> checkInStock(
             @RequestBody IsInStockRequest request
     ){
@@ -40,7 +40,7 @@ public class InventoryController {
                 .build();
     }
 
-    @PostMapping("/decrease-stock")
+    @PostMapping("/internal/decrease-stock")
     public ApiResponse<?> decreaseStock(
             @RequestBody InventoryAdjustmentRequest request
     ){
@@ -52,7 +52,7 @@ public class InventoryController {
                 .build();
     }
 
-    @PostMapping("/increase-stock")
+    @PostMapping("/internal/increase-stock")
     public ApiResponse<?> increaseStock(
             @RequestBody InventoryAdjustmentRequest request
     ){

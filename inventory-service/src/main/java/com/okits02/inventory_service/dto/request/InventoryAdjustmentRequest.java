@@ -11,7 +11,6 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class InventoryAdjustmentRequest {
-    String productId;
     String sku;
     Integer quantity;
     String orderId;

@@ -126,7 +126,6 @@ public class UserServiceImpl implements UserService {
         String currentUsername = context.getAuthentication().getName();
         Users users = userRepository.findByUsername(currentUsername).orElseThrow(
                 () -> new AppException(UserErrorCode.USER_NOT_EXISTS));
-
         if(!passwordEncoder.matches(oldPassword,users.getPassword()))
         {
             throw new AppException(UserErrorCode.PASSWORD_NOT_MATCH);
@@ -141,7 +140,6 @@ public class UserServiceImpl implements UserService {
         String currentUsername = context.getAuthentication().getName();
         Users users = userRepository.findByUsername(currentUsername).orElseThrow(
                 () -> new AppException(UserErrorCode.USER_NOT_EXISTS));
-
         if(!passwordEncoder.matches(oldPassword,users.getPassword()))
         {
             throw new AppException(UserErrorCode.PASSWORD_NOT_MATCH);
@@ -164,7 +162,6 @@ public class UserServiceImpl implements UserService {
     public UserResponse getUserByUserName(String userName) {
         Users users = userRepository.findByUsername(userName).orElseThrow(() ->
                 new AppException(UserErrorCode.USER_NOT_EXISTS));
-
         return userMapper.toUserResponse(users);
     }
 
@@ -237,10 +234,13 @@ public class UserServiceImpl implements UserService {
                     .emails(List.of())
                     .build();
         }
-
         List<String> emails =
                 userRepository.findEmailsByUserIds(userIds);
-
+        if(emails.isEmpty() || emails == null){
+            return ListEmailResponse.builder()
+                    .emails(List.of())
+                    .build();
+        }
         return ListEmailResponse.builder()
                 .emails(emails)
                 .build();

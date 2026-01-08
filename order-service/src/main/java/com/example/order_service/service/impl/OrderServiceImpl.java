@@ -1,14 +1,14 @@
 package com.example.order_service.service.impl;
 
 import com.example.order_service.dto.ProductSkuVM;
-import com.example.order_service.dto.request.CheckValidVoucherRequest;
-import com.example.order_service.dto.request.OrderCreationRequest;
-import com.example.order_service.dto.request.OrderItemRequest;
+import com.example.order_service.dto.request.*;
 import com.example.order_service.dto.response.*;
 import com.example.order_service.enums.Status;
 import com.example.order_service.mapper.OrderItemMapper;
+import com.example.order_service.repository.httpClient.InventoryClient;
 import com.example.order_service.repository.httpClient.SearchClient;
 import com.example.order_service.repository.httpClient.PromotionClient;
+import com.okits02.common_lib.dto.ApiResponse;
 import com.okits02.common_lib.dto.PageResponse;
 import com.okits02.common_lib.exception.AppException;
 import com.example.order_service.exceptions.OrderErrorCode;
@@ -42,10 +42,10 @@ import java.util.stream.Stream;
 public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
-    private final OrderItemMapper orderItemMapper;
     private final PromotionClient promotionClient;
     private final UserClient userClient;
     private final SearchClient searchClient;
+    private final InventoryClient inventoryClient;
 
 
     @Override
@@ -290,6 +290,7 @@ public class OrderServiceImpl implements OrderService {
         orders.setOrderStatus(status);
         if (status.equals(Status.CANCELLED) || status.equals(Status.FAILED)) {
             rollbackVoucher(orderId);
+            increaseInventory(orders);
         }
         orderRepository.save(orders);
         List<String> skus = orders.getItems()
@@ -360,6 +361,10 @@ public class OrderServiceImpl implements OrderService {
                 -> new AppException(OrderErrorCode.ORDER_NOT_EXISTS));
         orders.setOrderStatus(status);
         orders.setPaymentId(paymentId);
+        switch (status) {
+            case CANCELLED, FAILED -> increaseInventory(orders);
+            default -> decreaseInventory(orders);
+        }
         orderRepository.save(orders);
     }
 
@@ -542,7 +547,6 @@ public class OrderServiceImpl implements OrderService {
             if(product == null){
                 throw new RuntimeException("Product not exists: " + item.getSku());
             }
-
             if(item.getListPrice() == null || item.getSellPrice() == null
                     || product.getListPrice() == null || product.getSellPrice() == null
                     || item.getListPrice().compareTo(product.getListPrice()) != 0
@@ -571,5 +575,33 @@ public class OrderServiceImpl implements OrderService {
         }
         orders.setItems(items);
         return responses;
+    }
+
+    private void decreaseInventory(Orders orders) {
+        for (OrderItem item : orders.getItems()) {
+            ApiResponse<?> response = inventoryClient.decreaseStock(
+                    InventoryAdjustmentRequest.builder()
+                            .orderId(orders.getOrderId())
+                            .sku(item.getSku())
+                            .quantity(item.getQuantity())
+                            .build()
+            );
+
+            if (response.getCode() != 200) {
+                throw new AppException(OrderErrorCode.INSUFFICIENT_STOCK);
+            }
+        }
+    }
+
+    private void increaseInventory(Orders orders) {
+        for (OrderItem item : orders.getItems()) {
+            inventoryClient.increaseStock(
+                    InventoryAdjustmentRequest.builder()
+                            .orderId(orders.getOrderId())
+                            .sku(item.getSku())
+                            .quantity(item.getQuantity())
+                            .build()
+            );
+        }
     }
 }
