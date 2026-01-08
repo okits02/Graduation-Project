@@ -37,13 +37,25 @@ public class ProductConsumer {
         log.info("Consumer received message: {}", productEvent);
         switch (productEventDTO.getEventType()){
             case "CREATED" -> {
-                productService.createProduct(productEventDTO);
+                try {
+                    productService.createProduct(productEventDTO);
+                } catch (Exception e) {
+                    log.error("Error processing CREATED event: {}", e.getMessage());
+                }
             }
             case "UPDATED" -> {
-                productService.updateProduct(productEventDTO);
+                try {
+                    productService.updateProduct(productEventDTO);
+                } catch (Exception e) {
+                    log.error("Error processing UPDATED event: {}", e.getMessage());
+                }
             }
             case "DELETED" -> {
-                productService.deleteProduct(productEventDTO.getId());
+                try {
+                    productService.deleteProduct(productEventDTO.getId());
+                } catch (Exception e) {
+                    log.error("Error processing DELETED event: {}", e.getMessage());
+                }
             }
         }
     }

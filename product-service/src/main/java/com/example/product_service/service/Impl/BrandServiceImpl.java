@@ -27,9 +27,10 @@ public class BrandServiceImpl implements BrandService {
     private final CategoryRepository categoryRepository;
     private final BrandMapper brandMapper;
     private final MediaClient mediaClient;
+
     @Override
     public BrandResponse save(BrandCreationRequest request) {
-        if(brandRepository.existsByName(request.getName())){
+        if (brandRepository.existsByName(request.getName())) {
             throw new AppException(ProductErrorCode.BRAND_EXISTS);
         }
         Brand brand = Brand.builder()
@@ -37,9 +38,10 @@ public class BrandServiceImpl implements BrandService {
                 .name(request.getName())
                 .build();
         Category root = categoryRepository.findByName("root");
-        Set<String> rootChildrenIds = root.getChildrenId();
-        boolean isValid = request.getCategoryId().stream()
-                .allMatch(rootChildrenIds::contains);
+        List<Category> categories = categoryRepository.findAllById(request.getCategoryId());
+        boolean isValid = categories.size() == request.getCategoryId().size()
+                && categories.stream().allMatch(c -> root.getId().equals(c.getParentId()));
+
         if (!isValid) {
             throw new AppException(ProductErrorCode.CATEGORY_NOT_UNDER_ROOT);
         }
@@ -54,15 +56,16 @@ public class BrandServiceImpl implements BrandService {
 
     @Override
     public BrandResponse update(BrandCreationRequest request) {
-        if(!brandRepository.existsByName(request.getName())){
+        if (!brandRepository.existsByName(request.getName())) {
             throw new AppException(ProductErrorCode.BRAND_NOT_EXISTS);
         }
         Brand brand = brandRepository.findByName(request.getName());
         brandMapper.updateBrand(brand, request);
         Category root = categoryRepository.findByName("root");
-        Set<String> rootChildrenIds = root.getChildrenId();
-        boolean isValid = request.getCategoryId().stream()
-                .allMatch(rootChildrenIds::contains);
+        List<Category> categories = categoryRepository.findAllById(request.getCategoryId());
+        boolean isValid = categories.size() == request.getCategoryId().size()
+                && categories.stream().allMatch(c -> root.getId().equals(c.getParentId()));
+
         if (!isValid) {
             throw new AppException(ProductErrorCode.CATEGORY_NOT_UNDER_ROOT);
         }
@@ -79,20 +82,18 @@ public class BrandServiceImpl implements BrandService {
     @Override
     public List<BrandResponse> getList() {
         List<Brand> brands = brandRepository.findAll();
-            return brands.stream().map(m
-                    -> BrandResponse
-                    .builder()
-                    .id(m.getId())
-                    .name(m.getName())
-                    .thumbnailUrl(getThumbnail(m))
-                    .categoryId(m.getCategoryId())
-                    .build()
-            ).toList();
+        return brands.stream().map(m -> BrandResponse
+                .builder()
+                .id(m.getId())
+                .name(m.getName())
+                .thumbnailUrl(getThumbnail(m))
+                .categoryId(m.getCategoryId())
+                .build()).toList();
     }
 
     @Override
     public void delete(String name) {
-        if(!brandRepository.existsByName(name)){
+        if (!brandRepository.existsByName(name)) {
             throw new AppException(ProductErrorCode.BRAND_NOT_EXISTS);
         }
         Brand brand = brandRepository.findByName(name);
@@ -110,9 +111,8 @@ public class BrandServiceImpl implements BrandService {
         }
     }
 
-    private String getThumbnail(Brand brand){
-        var variantMediaResponse =
-                mediaClient.getMedia(brand.getId(), MediaOwnerType.PRODUCT_VARIANT).getBody();
+    private String getThumbnail(Brand brand) {
+        var variantMediaResponse = mediaClient.getMedia(brand.getId(), MediaOwnerType.PRODUCT_VARIANT).getBody();
         String thumbnailUrl = null;
         if (variantMediaResponse != null
                 && variantMediaResponse.getResult() != null
