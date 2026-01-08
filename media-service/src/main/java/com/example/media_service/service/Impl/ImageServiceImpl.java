@@ -2,6 +2,7 @@ package com.example.media_service.service.Impl;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.example.media_service.dto.request.AvatarUserCreationRequest;
 import com.example.media_service.dto.request.BannerCreationRequest;
 import com.example.media_service.dto.response.BannerResponse;
 import com.example.media_service.dto.response.ListMediaResponse;
@@ -9,6 +10,8 @@ import com.example.media_service.dto.response.MediaResponse;
 import com.example.media_service.enums.MediaOwnerType;
 import com.example.media_service.enums.MediaPurpose;
 import com.example.media_service.enums.MediaType;
+import com.example.media_service.repository.httpClient.ProfileClient;
+import com.example.media_service.repository.httpClient.UserClient;
 import com.okits02.common_lib.exception.AppException;
 import com.example.media_service.exception.MediaErrorCode;
 import com.example.media_service.mapper.MediaMapper;
@@ -18,6 +21,8 @@ import com.example.media_service.service.ImageService;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -32,6 +37,8 @@ public class ImageServiceImpl implements ImageService {
     private final Cloudinary cloudinary;
     private final MediaRepository mediaRepository;
     private final MediaMapper mediaMapper;
+    private final UserClient userClient;
+    private final ProfileClient profileClient;
 
     @Override
     public ListMediaResponse imageProduct(List<MultipartFile> imageProductFile,
@@ -144,6 +151,22 @@ public class ImageServiceImpl implements ImageService {
                     .build());
         }
         return responses;
+    }
+
+    @Override
+    public MediaResponse createAvatarUser(AvatarUserCreationRequest request) throws IOException {
+        ServletRequestAttributes servletRequestAttributes =
+                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
+        var userResponse = userClient.getUserId(authHeader);
+        if(userResponse.getCode() != 200)
+        {
+            throw new RuntimeException("call to user-client failed");
+        }
+        Media image = uploadAndSave(request.getAvatarFile(), userResponse.getResult().getUserId(),
+                MediaOwnerType.USER, MediaPurpose.GALLERY);
+        profileClient.creationAvatar(authHeader, image.getUrl());
+        return mediaMapper.toMediaResponse(image);
     }
 
     @Override

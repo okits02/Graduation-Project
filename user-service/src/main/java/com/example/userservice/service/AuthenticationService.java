@@ -41,6 +41,7 @@ public class AuthenticationService {
     UserRepository  userRepository;
     InvalidateTokenRepository invalidateTokenRepository;
     PasswordEncoder passwordEncoder;
+    UserService userService;
     @NonFinal
     @Value("${jwt.signerKey}")
     protected String SIGNER_KEY;
@@ -49,13 +50,17 @@ public class AuthenticationService {
     public IntrospectResponse introspect(IntrospectRequest request) throws JOSEException, ParseException {
         var token = request.getToken();
         boolean isValid = true;
+        boolean isVerified = userService.checkVerifiedUser(token);
         try {
             verifyToken(token);
         }catch (AppException e)
         {
             isValid = false;
         }
-        return  IntrospectResponse.builder().valid(isValid).build();
+        return  IntrospectResponse.builder()
+                .valid(isValid)
+                .verified(isVerified)
+                .build();
     }
 
     public AuthenticationResponse authenticate(AuthenticationRequest request)

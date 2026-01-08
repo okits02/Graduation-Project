@@ -32,6 +32,7 @@ public class ProfileController {
 
     ProfileService profileService;
 
+
     @Operation(summary = "get my info",
             description = "Api used to get user's info",
             security = @SecurityRequirement(name = "bearerAuth"))
@@ -141,5 +142,15 @@ public class ProfileController {
                         .result(profileService.getProfileForRating())
                         .code(200)
                 .build());
+    }
+
+    @PostMapping("/internal/avatar")
+    public ApiResponse<?> creationAvatar(
+            @RequestParam(value = "avatarUrl") String avatarUrl
+    ){
+        return ApiResponse.builder()
+                .code(200)
+                .message("creation avatar for user successfully!")
+                .build();
     }
 }

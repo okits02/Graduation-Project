@@ -54,6 +54,8 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             "/search-service/search/search_suggest",
             "/search-service/search/autocomplete/quick",
             "/search-service/search/autocomplete/full",
+            "/search-service/search/product",
+            "/promotion-service/promotion/voucher",
             "/search-service/search/category/**",
             "/payment-service/bank/vnpay-ipn",
             "/product-service/brand/get-all",
@@ -80,11 +82,9 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
 
         return identityService.introspect(token).flatMap(introspectResponse -> {
             log.info("Introspect API response: {}", introspectResponse);
-            if(introspectResponse.getResult().isValid())
-                return chain.filter(exchange);
-            else
-                return unauthenticated(exchange.getResponse());
-
+            if(!introspectResponse.getResult().isValid()) return unauthenticated(exchange.getResponse());
+            if(!introspectResponse.getResult().isVerified()) return forbidden(exchange.getResponse());
+            return chain.filter(exchange);
         }).onErrorResume(throwable -> {
             log.error("Introspect failed: {}", throwable.getMessage(), throwable);
             return unauthenticated(exchange.getResponse());});
@@ -121,5 +121,22 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         response.setStatusCode(HttpStatus.UNAUTHORIZED);
         response.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         return response.writeWith(Mono.just(response.bufferFactory().wrap(body.getBytes())));
+    }
+
+    Mono<Void> forbidden(ServerHttpResponse response){
+        ApiResponse<?> apiResponse = ApiResponse.builder()
+                .code(1403)
+                .message("User is not verified email!")
+                .build();
+        try {
+            String body = objectMapper.writeValueAsString(apiResponse);
+            response.setStatusCode(HttpStatus.FORBIDDEN);
+            response.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+            return response.writeWith(
+                    Mono.just(response.bufferFactory().wrap(body.getBytes()))
+            );
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

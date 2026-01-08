@@ -14,6 +14,7 @@ import java.util.List;
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CustomerVM {
+    String avatarUrl;
     String firstName;
     String lastName;
 }

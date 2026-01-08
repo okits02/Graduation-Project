@@ -103,7 +103,7 @@
             log.info("search hits", productsSearchHits.get());
             List<ProductSummariseVM> productGetVMList = productsSearchHits.stream().map(i -> ProductSummariseVM
                     .fromEntity(i.getContent())).toList();
-            Map<String, Map<String, Long>> techAggregations = getAggregationTech(productsSearchHits);
+            Map<String, Map<String, Map<String, Long>>> techAggregations = getAggregationTech(productsSearchHits);
             Map<String, Long> categoriesAggregations = getAggregationsCategories(productsSearchHits);
             return ProductGetListVM.<ProductSummariseVM>builder()
                     .productGetVMList(productGetVMList)
@@ -190,8 +190,8 @@
             }
         }
 
-        public Map<String, Map<String, Long>> getAggregationTech(SearchHits<Products> hits){
-            Map<String, Map<String, Long>> result = new HashMap<>();
+        public Map<String, Map<String, Map<String, Long>>> getAggregationTech(SearchHits<Products> hits){
+            Map<String, Map<String, Map<String, Long>>> result = new HashMap<>();
 
             AggregationsContainer<?> container = hits.getAggregations();
             if (container == null) return result;
@@ -212,26 +212,33 @@
             StringTermsAggregate byGroup =
                     nested.aggregations().get("only_tech").sterms();
 
-            for(StringTermsBucket groupBucket : byGroup.buckets().array()) {
+            for (StringTermsBucket groupBucket : byGroup.buckets().array()) {
+
                 String group = groupBucket.key().stringValue();
-                Map<String, Long> valueMap = new HashMap<>();
+                Map<String, Map<String, Long>> keyMap = new HashMap<>();
+
                 StringTermsAggregate byKey =
                         groupBucket.aggregations().get("by_key").sterms();
 
                 for (StringTermsBucket keyBucket : byKey.buckets().array()) {
 
+                    String key = keyBucket.key().stringValue();
+                    Map<String, Long> valueMap = new HashMap<>();
+
                     StringTermsAggregate byValue =
                             keyBucket.aggregations().get("by_value").sterms();
 
                     for (StringTermsBucket valueBucket : byValue.buckets().array()) {
-                        valueMap.merge(
+                        valueMap.put(
                                 valueBucket.key().stringValue(),
-                                valueBucket.docCount(),
-                                Long::sum
+                                valueBucket.docCount()
                         );
                     }
+
+                    keyMap.put(key, valueMap);
                 }
-                result.put(group, valueMap);
+
+                result.put(group, keyMap);
             }
 
             return result;

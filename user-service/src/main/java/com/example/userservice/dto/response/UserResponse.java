@@ -13,13 +13,12 @@ import java.util.List;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserResponse {
+    String id;
     String username;
-    String email;
-    String avatarUrl;
     String firstName;
     String lastName;
+    String email;
     String phone;
-    Date dob;
+    String dob;
     Role role;
-    List<UserAddressResponse> address;
 }

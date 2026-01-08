@@ -157,17 +157,19 @@ public class UserServiceImpl implements UserService {
         {
             throw new AppException(UserErrorCode.USER_NOT_EXISTS);
         }
-        UserResponse response = userMapper.toUserResponse(user.get());
+        return userMapper.toUserResponse(user.get());
+    }
 
-        ServletRequestAttributes servletRequestAttributes =
-                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
-        ApiResponse<ProfileResponse> profileResponse =
-                profileClient.getUserProfile(authHeader, userId);
-        if (profileResponse != null && profileResponse.getCode() == 200) {
-            enrichUserWithProfile(response, profileResponse.getResult());
-        }
-        return response;
+    @Override
+    public UserResponse getMyInfo() {
+        var contex = SecurityContextHolder.getContext();
+        String currentUsername = contex.getAuthentication().getName();
+        Users users = userRepository.findByUsername(currentUsername).orElseThrow(()
+                -> new AppException(UserErrorCode.USER_NOT_EXISTS));
+        return UserResponse.builder()
+                .username(users.getUsername())
+                .phone(users.getEmail())
+                .build();
     }
 
     @Override
@@ -202,60 +204,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public PageResponse<UserForAdminResponse> getAll(int page, int size) {
+    public PageResponse<UserResponse> getAll(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         var pageData = userRepository.getAll(pageable);
-        List<UserForAdminResponse> users =
-                pageData.getContent()
-                        .stream()
-                        .map(userMapper::toUserForAdminResponse)
-                        .toList();
-
-        if (users.isEmpty()) {
-            return PageResponse.<UserForAdminResponse>builder()
-                    .currentPage(page)
-                    .pageSize(size)
-                    .totalElements(pageData.getTotalElements())
-                    .data(List.of())
-                    .build();
-        }
-        List<String> userIds = pageData.getContent()
-                .stream()
-                .map(Users::getId)
-                .toList();
-        ServletRequestAttributes servletRequestAttributes =
-                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
-        var profileResponse = profileClient.getListUserProfile(authHeader, userIds);
-        if (profileResponse == null || profileResponse.getCode() != 200) {
-            log.warn("Failed to fetch profiles, return users without profile");
-            return PageResponse.<UserForAdminResponse>builder()
-                    .currentPage(page)
-                    .pageSize(size)
-                    .totalElements(pageData.getTotalElements())
-                    .data(users)
-                    .build();
-        }
-        Map<String, ProfileResponse> profileMap =
-                profileResponse.getResult()
-                        .stream()
-                        .collect(Collectors.toMap(
-                                ProfileResponse::getUserId,
-                                p -> p
-                        ));
-
-        users.forEach(user -> {
-            ProfileResponse profile = profileMap.get(user.getId());
-            if (profile != null) {
-                mergeProfile(user, profile);
-            }
-        });
-
-        return PageResponse.<UserForAdminResponse>builder()
+        return PageResponse.<UserResponse>builder()
                 .currentPage(page)
                 .pageSize(size)
                 .totalElements(pageData.getTotalElements())
-                .data(users)
+                .data(pageData.getContent().stream().map(userMapper::toUserResponse).toList())
                 .build();
     }
 
@@ -274,27 +230,17 @@ public class UserServiceImpl implements UserService {
                 .emails(emails)
                 .build();
     }
-    private void enrichUserWithProfile(
-            UserResponse userResponse,
-            ProfileResponse profile
-    ) {
-        if (profile == null) return;
 
-        userResponse.setAvatarUrl(profile.getAvatarUrl());
-        userResponse.setFirstName(profile.getFirstName());
-        userResponse.setLastName(profile.getLastName());
-        userResponse.setPhone(profile.getPhone());
-        userResponse.setDob(profile.getDob());
-        userResponse.setAddress(profile.getAddress());
+    @Override
+    public Boolean checkVerifiedUser(String token) {
+        var contex = SecurityContextHolder.getContext();
+        String currentUsername = contex.getAuthentication().getName();
+        Users users = userRepository.findByUsername(currentUsername).orElseThrow(()
+                -> new AppException(UserErrorCode.USER_NOT_EXISTS));
+        if(users.getRole().equals("ADMIN")){
+            return true;
+        }
+        return users.isVerified();
     }
 
-    private void mergeProfile(UserForAdminResponse user, ProfileResponse profile) {
-
-        user.setAvatarUrl(profile.getAvatarUrl());
-        user.setFirstName(profile.getFirstName());
-        user.setLastName(profile.getLastName());
-        user.setPhone(profile.getPhone());
-        user.setDob(profile.getDob());
-        user.setAddress(profile.getAddress());
-    }
 }

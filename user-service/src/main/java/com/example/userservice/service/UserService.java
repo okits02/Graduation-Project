@@ -22,7 +22,9 @@ public interface UserService {
     public void deleteUser(String userId);
     public UserIdResponse getUserId();
     public UserResponse getUserById(String userId);
-    public PageResponse<UserForAdminResponse> getAll(int page, int size);
+    public UserResponse getMyInfo();
+    public PageResponse<UserResponse> getAll(int page, int size);
 
     public ListEmailResponse getListEmailByListUserId(List<String> userIds);
+    public Boolean checkVerifiedUser(String token);
 }

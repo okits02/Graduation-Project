@@ -16,16 +16,4 @@ public interface ProfileClient {
     ApiResponse<Void> deleteMyProfile(
             @RequestHeader("Authorization") String token,
             @PathVariable String userId);
-
-    @GetMapping(value = "/profile-service/profile/admin", produces = MediaType.APPLICATION_JSON_VALUE)
-    ApiResponse<ProfileResponse> getUserProfile(
-            @RequestHeader("Authorization") String token,
-            @RequestParam(value = "userId") String userId);
-
-    @GetMapping(value = "/profile-service/profile/myInfo", produces = MediaType.APPLICATION_JSON_VALUE)
-    ApiResponse<ProfileResponse> getMyInFo(@RequestHeader("Authorization") String token);
-    @GetMapping(value = "/profile-service/profile/internal/admin/list", produces = MediaType.APPLICATION_JSON_VALUE)
-    ApiResponse<List<ProfileResponse>> getListUserProfile(
-            @RequestHeader("Authorization") String token,
-            @RequestParam(value = "userIds") List<String> userIds);
 }

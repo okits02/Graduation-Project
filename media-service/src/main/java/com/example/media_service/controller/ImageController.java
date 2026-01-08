@@ -1,6 +1,7 @@
 package com.example.media_service.controller;
 
 import com.example.media_service.dto.response.BannerResponse;
+import com.example.media_service.model.Media;
 import com.okits02.common_lib.dto.ApiResponse;
 import com.example.media_service.dto.request.*;
 import com.example.media_service.dto.response.ListMediaResponse;
@@ -125,6 +126,17 @@ public class ImageController {
                         .message("create image successfully")
                         .result(mediaResponse)
                 .build());
+    }
+
+    @PostMapping("/user/avatar")
+    public ApiResponse<MediaResponse> creationAvatar(
+            @RequestBody AvatarUserCreationRequest request
+    ) throws IOException {
+        return ApiResponse.<MediaResponse>builder()
+                .code(200)
+                .message("creation avatar for user successfully")
+                .result(imageService.createAvatarUser(request))
+                .build();
     }
 
     @GetMapping("/banner/get")

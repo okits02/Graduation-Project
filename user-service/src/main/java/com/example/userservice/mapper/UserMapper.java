@@ -13,20 +13,5 @@ import java.util.Optional;
 @Mapper(componentModel = "spring")
 public interface UserMapper {
     Users toUser(UserCreationRequest request);
-
-    @Mapping(target = "avatarUrl", ignore = true)
-    @Mapping(target = "firstName", ignore = true)
-    @Mapping(target = "lastName", ignore = true)
-    @Mapping(target = "phone", ignore = true)
-    @Mapping(target = "dob", ignore = true)
-    @Mapping(target = "address", ignore = true)
     UserResponse toUserResponse(Users user);
-
-    @Mapping(target = "avatarUrl", ignore = true)
-    @Mapping(target = "firstName", ignore = true)
-    @Mapping(target = "lastName", ignore = true)
-    @Mapping(target = "phone", ignore = true)
-    @Mapping(target = "dob", ignore = true)
-    @Mapping(target = "address", ignore = true)
-    UserForAdminResponse toUserForAdminResponse(Users user);
 }

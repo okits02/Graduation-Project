@@ -1,14 +1,13 @@
-package com.example.api_gateway.dto.response;
+package com.example.media_service.dto.response;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 @Data
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class IntrospectResponse {
-    boolean valid;
-    boolean verified;
+public class GetUserIdResponse {
+    String userId;
 }

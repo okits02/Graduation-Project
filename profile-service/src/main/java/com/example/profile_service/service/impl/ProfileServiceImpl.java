@@ -123,6 +123,18 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
+    public void creationAvatar(String avatarUrl) {
+        String userId = getUserId();
+        UserProfile userProfile = profileRepository.findByUserId(userId);
+        if(userProfile == null)
+        {
+            throw new AppException(ProfileErrorCode.PROFILE_NOT_EXITS);
+        }
+        userProfile.setAvatarUrl(avatarUrl);
+        profileRepository.save(userProfile);
+    }
+
+    @Override
     public void DeleteProfile(String userId) {
         UserProfile userProfile = profileRepository.findByUserId(userId);
         if (userProfile == null) {

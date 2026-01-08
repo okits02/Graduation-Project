@@ -211,6 +211,15 @@ public class UserController {
         }
     }
 
+    @GetMapping("/myInfo")
+    ApiResponse<UserResponse> getMyInfo(){
+        return ApiResponse.<UserResponse>builder()
+                .code(200)
+                .message("get my info successfully")
+                .result(userService.getMyInfo())
+                .build();
+    }
+
     @Operation(summary = "get userId",
             description = "API used to get userId",
             security = @SecurityRequirement(name = "bearerAuth"))
@@ -318,7 +327,7 @@ public class UserController {
     @PutMapping("/admin/reset-password")
     @PreAuthorize("hasRole('ADMIN')")
     ResponseEntity<ApiResponse<?>> updatePasswordForAdmin(@RequestBody ResetPasswordRequest request) {
-            userService.updatePassword(request.getOldPassword(), request.getNewPassword());
+            userService.updatePasswordForAdmin(request.getOldPassword(), request.getNewPassword());
             return ResponseEntity.ok(ApiResponse.builder()
                     .code(200)
                     .message("Password updated successfully")
