@@ -17,6 +17,7 @@ public class InventoryTransactionResponse {
     String sku;
     String variantName;
     String thumbnail;
+    String color;
     TransactionType transactionType;
     Integer quantity;
     String referenceId;

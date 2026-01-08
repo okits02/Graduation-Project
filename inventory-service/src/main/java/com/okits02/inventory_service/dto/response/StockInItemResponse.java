@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 public class StockInItemResponse {
     String variantName;
     String thumbnail;
+    String color;
     String sku;
     Integer quantity;
     BigDecimal unitCost;

@@ -4,7 +4,6 @@ import com.okits02.common_lib.dto.PageResponse;
 import com.okits02.common_lib.exception.AppException;
 import com.okits02.inventory_service.dto.request.StockInCreationRequest;
 import com.okits02.inventory_service.dto.request.StockInItemRequest;
-import com.okits02.inventory_service.dto.response.InventoryResponse;
 import com.okits02.inventory_service.dto.response.ProductVariantResponse;
 import com.okits02.inventory_service.dto.response.StockInItemResponse;
 import com.okits02.inventory_service.dto.response.StockInResponse;
@@ -14,7 +13,7 @@ import com.okits02.inventory_service.mapper.StockInMapper;
 import com.okits02.inventory_service.model.StockIn;
 import com.okits02.inventory_service.model.StockInItem;
 import com.okits02.inventory_service.repository.StockInRepository;
-import com.okits02.inventory_service.repository.httpClient.ProductClient;
+import com.okits02.inventory_service.repository.httpClient.SearchClient;
 import com.okits02.inventory_service.service.InventoryService;
 import com.okits02.inventory_service.service.StockInService;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +35,7 @@ public class StockInServiceImpl implements StockInService {
     private final InventoryService inventoryService;
     private final StockInMapper stockInMapper;
     private final StockInItemMapper stockInItemMapper;
-    private final ProductClient productClient;
+    private final SearchClient searchClient;
 
 
     @Override
@@ -68,6 +67,7 @@ public class StockInServiceImpl implements StockInService {
                             if (variant != null) {
                                 res.setVariantName(variant.getVariantName());
                                 res.setThumbnail(variant.getThumbnailUrl());
+                                res.setColor(variant.getColor());
                             }
                             return res;
                         })
@@ -107,6 +107,7 @@ public class StockInServiceImpl implements StockInService {
                             if (variant != null) {
                                 res.setVariantName(variant.getVariantName());
                                 res.setThumbnail(variant.getThumbnailUrl());
+                                res.setColor(variant.getColor());
                             }
                             return res;
                         })
@@ -149,6 +150,7 @@ public class StockInServiceImpl implements StockInService {
                                                 if (variant != null) {
                                                     res.setVariantName(variant.getVariantName());
                                                     res.setThumbnail(variant.getThumbnailUrl());
+                                                    res.setColor(variant.getColor());
                                                 }
                                                 return res;
                                             })
@@ -207,6 +209,7 @@ public class StockInServiceImpl implements StockInService {
                             if (variant != null) {
                                 res.setVariantName(variant.getVariantName());
                                 res.setThumbnail(variant.getThumbnailUrl());
+                                res.setColor(variant.getColor());
                             }
                             return res;
                         })
@@ -243,7 +246,7 @@ public class StockInServiceImpl implements StockInService {
         }
 
         try {
-            var response = productClient.getVariantBySku(skus);
+            var response = searchClient.getVariantBySku(skus);
 
             if (response == null || response.getResult() == null) {
                 return Collections.emptyMap();

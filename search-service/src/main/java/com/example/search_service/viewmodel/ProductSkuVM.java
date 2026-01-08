@@ -18,6 +18,7 @@ public class ProductSkuVM {
     String id;
     String sku;
     String variantName;
+    String color;
     String thumbnailUrl;
     List<String> promotionName;
     List<String> categoriesId;
@@ -41,6 +42,7 @@ public class ProductSkuVM {
                 .id(products.getId())
                 .sku(variant.getSku())
                 .variantName(variant.getVariantName())
+                .color(variant.getColor())
                 .thumbnailUrl(variant.getThumbnail())
                 .listPrice(variant.getPrice())
                 .sellPrice(variant.getSellPrice())

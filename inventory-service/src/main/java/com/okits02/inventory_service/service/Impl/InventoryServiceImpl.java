@@ -3,7 +3,6 @@ package com.okits02.inventory_service.service.Impl;
 import com.okits02.common_lib.dto.PageResponse;
 import com.okits02.inventory_service.dto.ProductEventDTO;
 import com.okits02.inventory_service.dto.ProductVariantsEventDTO;
-import com.okits02.inventory_service.dto.request.InventoryRequest;
 import com.okits02.inventory_service.dto.request.IsInStockRequest;
 import com.okits02.inventory_service.dto.request.StockInItemRequest;
 import com.okits02.inventory_service.dto.response.InventoryResponse;
@@ -20,7 +19,7 @@ import com.okits02.inventory_service.model.Inventory;
 import com.okits02.inventory_service.model.InventoryTransaction;
 import com.okits02.inventory_service.repository.InventoryRepository;
 import com.okits02.inventory_service.repository.InventoryTransactionRepository;
-import com.okits02.inventory_service.repository.httpClient.ProductClient;
+import com.okits02.inventory_service.repository.httpClient.SearchClient;
 import com.okits02.inventory_service.service.InventoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,7 +45,7 @@ public class InventoryServiceImpl implements InventoryService {
     private final InventoryMapper inventoryMapper;
     private final InventoryTransactionMapper transactionMapper;
     private final KafkaTemplate<String, Object> kafkaTemplate;
-    private final ProductClient productClient;
+    private final SearchClient searchClient;
 
     @Override
     public void save(List<StockInItemRequest> request, String stockInId) {
@@ -153,6 +152,7 @@ public class InventoryServiceImpl implements InventoryService {
         if (variant != null) {
             response.setVariantName(variant.getVariantName());
             response.setThumbnail(variant.getThumbnailUrl());
+            response.setColor(variant.getColor());
         }
 
         return response;
@@ -227,6 +227,7 @@ public class InventoryServiceImpl implements InventoryService {
                     if (variant != null) {
                         res.setVariantName(variant.getVariantName());
                         res.setThumbnail(variant.getThumbnailUrl());
+                        res.setColor(variant.getColor());
                     }
                     return res;
                 }).toList();
@@ -267,6 +268,7 @@ public class InventoryServiceImpl implements InventoryService {
                             if (variant != null) {
                                 res.setVariantName(variant.getVariantName());
                                 res.setThumbnail(variant.getThumbnailUrl());
+                                res.setColor(variant.getColor());
                             }
                             return res;
                         })
@@ -337,7 +339,7 @@ public class InventoryServiceImpl implements InventoryService {
         }
 
         try {
-            var response = productClient.getVariantBySku(skus);
+            var response = searchClient.getVariantBySku(skus);
 
             if (response == null || response.getResult() == null) {
                 return Collections.emptyMap();

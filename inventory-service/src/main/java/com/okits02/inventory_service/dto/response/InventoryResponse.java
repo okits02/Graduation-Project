@@ -11,6 +11,7 @@ import lombok.experimental.FieldDefaults;
 public class InventoryResponse {
     String id;
     String sku;
+    String color;
     String variantName;
     String thumbnail;
     Integer quantity;

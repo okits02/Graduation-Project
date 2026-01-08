@@ -14,6 +14,7 @@ public class ProductVariantResponse {
     String id;
     String sku;
     String variantName;
+    String color;
     String thumbnailUrl;
     List<String> promotionName;
     BigDecimal sellPrice;
