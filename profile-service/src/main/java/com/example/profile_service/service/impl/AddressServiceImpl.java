@@ -79,6 +79,13 @@ public class AddressServiceImpl implements AddressService {
     }
 
     @Override
+    public AddressResponse getAddressByAddressId( String addressId) {
+        UserAddress address = addressRepository.findById(addressId).orElseThrow(()
+                -> new AppException(ProfileErrorCode.ADDRESS_NOT_EXITS));
+        return addressMapper.toAddressResponse(address);
+    }
+
+    @Override
     public void deleteAddress(String addressId) {
         profileRepository.deleteById(addressId);
     }

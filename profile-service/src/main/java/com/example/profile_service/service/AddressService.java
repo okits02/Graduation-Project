@@ -9,5 +9,6 @@ public interface AddressService {
     public AddressResponse createAddress(AddressRequest request);
     public List<AddressResponse> getAllMyAddress();
     public AddressResponse updateMyAddress(AddressRequest request);
+    public AddressResponse getAddressByAddressId(String addressId);
     public void deleteAddress(String addressId);
 }

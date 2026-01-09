@@ -2,6 +2,7 @@ package com.example.profile_service.controller;
 
 import com.example.profile_service.dto.request.AddressRequest;
 import com.example.profile_service.dto.response.AddressResponse;
+import com.example.profile_service.dto.response.ProfileResponse;
 import com.okits02.common_lib.dto.ApiResponse;
 import com.example.profile_service.service.AddressService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -79,5 +80,16 @@ public class AddressController {
                 .result("Địa chỉ đã được xoá")
                 .build();
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/internal/delivery")
+    public ApiResponse<AddressResponse> getAddressForDelivery(
+            @RequestParam(value = "addressId") String addressId
+    ){
+        return ApiResponse.<AddressResponse>builder()
+                .code(200)
+                .message("get delivery successfully")
+                .result(addressService.getAddressByAddressId(addressId))
+                .build();
     }
 }

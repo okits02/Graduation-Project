@@ -101,6 +101,7 @@ public class ProfileController {
     @DeleteMapping("/admin/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Void> deleteMyProfile(@PathVariable String userId) {
+        profileService.DeleteProfile(userId);
         return ApiResponse.<Void>builder()
                 .code(200)
                 .message("Profile deleted successfully")
@@ -135,9 +136,21 @@ public class ProfileController {
     public ApiResponse<?> creationAvatar(
             @RequestParam(value = "avatarUrl") String avatarUrl
     ){
+        profileService.creationAvatar(avatarUrl);
         return ApiResponse.builder()
                 .code(200)
                 .message("creation avatar for user successfully!")
                 .build();
+    }
+    @GetMapping("/internal/delivery")
+    public ResponseEntity<ApiResponse<ProfileResponse>> getProfileByUserIdForDelivery(
+            @RequestParam(value = "userId") String userId)
+    {
+        ProfileResponse profileResponse = profileService.getProfileByUserId(userId);
+        return ResponseEntity.ok(ApiResponse.<ProfileResponse>builder()
+                .code(200)
+                .message("Profile retrieved successfully!")
+                .result(profileResponse)
+                .build());
     }
 }

@@ -60,11 +60,17 @@ public class Orders extends AbstractMappedEntity{
 
 
     public void calculateTotalPrice() {
-        this.totalPrice = BigDecimal.ZERO;
-        for (OrderItem item : items) {
-            if (item.getSellPrice() != null) {
-                this.totalPrice = this.totalPrice.add(item.getSellPrice());
+        BigDecimal itemTotal = BigDecimal.ZERO;
+        if (items != null) {
+            for (OrderItem item : items) {
+                if (item.getSellPrice() != null) {
+                    itemTotal = itemTotal.add(item.getSellPrice());
+                }
             }
         }
+
+        BigDecimal fee = orderFee != null ? orderFee : BigDecimal.ZERO;
+
+        this.totalPrice = itemTotal.add(fee);
     }
 }

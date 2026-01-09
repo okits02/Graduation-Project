@@ -28,12 +28,9 @@ public class ChangStatusOrderConsumer {
             throw new RuntimeException(e);
         }
         switch (changeStatusOrderDTO.getStatus()){
-            case FAILED -> orderService.changStatusOrderForPayment(changeStatusOrderDTO.getPaymentId(),
+            case FAILED, EXPIRED, CANCELLED ->
+                    orderService.changStatusOrderForPayment(changeStatusOrderDTO.getPaymentId(),
                     changeStatusOrderDTO.getOrderId(), Status.FAILED);
-            case EXPIRED -> orderService.changStatusOrderForPayment(changeStatusOrderDTO.getPaymentId(),
-                    changeStatusOrderDTO.getOrderId(), Status.CANCELLED);
-            case CANCELLED -> orderService.changStatusOrderForPayment(changeStatusOrderDTO.getPaymentId(),
-                    changeStatusOrderDTO.getOrderId(), Status.CANCELLED);
             default -> orderService.changStatusOrderForPayment(changeStatusOrderDTO.getPaymentId(),
                     changeStatusOrderDTO.getOrderId(), Status.PROCESSING);
         }

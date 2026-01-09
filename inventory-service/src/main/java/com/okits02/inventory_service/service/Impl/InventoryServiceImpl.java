@@ -13,6 +13,7 @@ import com.okits02.inventory_service.enums.ReferenceType;
 import com.okits02.inventory_service.enums.TransactionType;
 import com.okits02.inventory_service.exceptions.InventoryErrorCode;
 import com.okits02.inventory_service.kafka.ChangeStatusStockEvent;
+import com.okits02.inventory_service.kafka.TransactionAnalysisEvent;
 import com.okits02.inventory_service.mapper.InventoryMapper;
 import com.okits02.inventory_service.mapper.InventoryTransactionMapper;
 import com.okits02.inventory_service.model.Inventory;
@@ -170,7 +171,7 @@ public class InventoryServiceImpl implements InventoryService {
         InventoryTransaction tx = buildTransaction(
                 inventory,
                 sku,
-                TransactionType.OUT,
+                TransactionType.RETURN,
                 quantity,
                 orderId,
                 ReferenceType.ORDER,
@@ -205,6 +206,7 @@ public class InventoryServiceImpl implements InventoryService {
                 ReferenceType.ORDER,
                 "Decrease stock"
         );
+        applyTransaction(inventory, tx);
         Inventory saved = inventoryRepository.save(inventory);
 
         boolean nowInStock = isProductInStock(sku);
@@ -302,7 +304,7 @@ public class InventoryServiceImpl implements InventoryService {
             ReferenceType referenceType,
             String note
     ) {
-        return InventoryTransaction.builder()
+        InventoryTransaction transaction = InventoryTransaction.builder()
                 .inventory(inventory)
                 .sku(sku)
                 .transactionType(type)
@@ -312,24 +314,77 @@ public class InventoryServiceImpl implements InventoryService {
                 .note(note)
                 .createdAt(LocalDateTime.now())
                 .build();
+        sendTransactionAnalysisEvent(transaction);
+        return transaction;
     }
     private boolean isProductInStock(String sku) {
         return inventoryRepository.existsBySkuAndQuantityGreaterThan(sku, 0);
     }
     private void productStockEvent(String sku, Boolean isInStock){
-        ChangeStatusStockEvent event = ChangeStatusStockEvent.builder()
-                .sku(sku)
-                .inStock(isInStock)
-                .build();
-        kafkaTemplate.send("change-status-event", event).whenComplete(
-                (result, ex) ->{
-                    if (ex != null)
-                    {
-                        System.err.println("Failed to send message" + ex.getMessage());
-                    } else {
-                        System.err.println("send message successfully" + result.getProducerRecord());
+        try {
+            ChangeStatusStockEvent event = ChangeStatusStockEvent.builder()
+                    .sku(sku)
+                    .inStock(isInStock)
+                    .build();
+
+            kafkaTemplate.send("change-status-event", event).whenComplete(
+                    (result, ex) -> {
+                        if (ex != null) {
+                            log.error("Failed to send ChangeStatusStockEvent for sku={}", sku, ex);
+                        } else {
+                            log.info("ChangeStatusStockEvent sent successfully: {}",
+                                    result.getProducerRecord());
+                        }
                     }
-                });
+            );
+        } catch (Exception e) {
+            log.error("Unexpected error when sending ChangeStatusStockEvent for sku={}", sku, e);
+        }
+    }
+
+    private void sendTransactionAnalysisEvent(InventoryTransaction transaction){
+        if (transaction == null) {
+            log.warn("InventoryTransaction is null, skip sending analysis event");
+            return;
+        }
+
+        try {
+            TransactionAnalysisEvent transactionAnalysisEvent =
+                    TransactionAnalysisEvent.builder()
+                            .id(transaction.getId())
+                            .sku(transaction.getSku())
+                            .quantity(transaction.getQuantity())
+                            .referenceId(transaction.getReferenceId())
+                            .referenceType(transaction.getReferenceType())
+                            .transactionType(transaction.getTransactionType())
+                            .createdAt(transaction.getCreatedAt())
+                            .build();
+
+            kafkaTemplate.send("transaction-analysis-event", transactionAnalysisEvent)
+                    .whenComplete((result, ex) -> {
+                        if (ex != null) {
+                            log.error(
+                                    "Failed to send TransactionAnalysisEvent, txId={}, sku={}",
+                                    transaction.getId(),
+                                    transaction.getSku(),
+                                    ex
+                            );
+                        } else {
+                            log.info(
+                                    "TransactionAnalysisEvent sent successfully: {}",
+                                    result.getProducerRecord()
+                            );
+                        }
+                    });
+
+        } catch (Exception e) {
+            log.error(
+                    "Unexpected error when sending TransactionAnalysisEvent, txId={}, sku={}",
+                    transaction.getId(),
+                    transaction.getSku(),
+                    e
+            );
+        }
     }
 
     private Map<String, ProductVariantResponse> fetchVariantsBySku(List<String> skus) {

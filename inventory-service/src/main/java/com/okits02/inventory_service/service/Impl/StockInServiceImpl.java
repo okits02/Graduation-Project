@@ -7,7 +7,10 @@ import com.okits02.inventory_service.dto.request.StockInItemRequest;
 import com.okits02.inventory_service.dto.response.ProductVariantResponse;
 import com.okits02.inventory_service.dto.response.StockInItemResponse;
 import com.okits02.inventory_service.dto.response.StockInResponse;
+import com.okits02.inventory_service.enums.EventType;
 import com.okits02.inventory_service.exceptions.StockInErrorCode;
+import com.okits02.inventory_service.kafka.StockInAnalysisEvent;
+import com.okits02.inventory_service.kafka.StockInItemEvent;
 import com.okits02.inventory_service.mapper.StockInItemMapper;
 import com.okits02.inventory_service.mapper.StockInMapper;
 import com.okits02.inventory_service.model.StockIn;
@@ -20,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +40,7 @@ public class StockInServiceImpl implements StockInService {
     private final StockInMapper stockInMapper;
     private final StockInItemMapper stockInItemMapper;
     private final SearchClient searchClient;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
 
     @Override
@@ -49,6 +54,7 @@ public class StockInServiceImpl implements StockInService {
         newStockIn.setItems(items);
         newStockIn = stockInRepository.save(newStockIn);
         inventoryService.save(request.getItems(), newStockIn.getId());
+        sendStockInAnalysisEvent(newStockIn, EventType.CREATE);
         List<String> skus = items.stream()
                 .map(StockInItem::getSku)
                 .distinct()
@@ -181,6 +187,7 @@ public class StockInServiceImpl implements StockInService {
         if(stockIn.get() == null){
             throw new AppException(StockInErrorCode.STOCK_IN_NOT_EXISTS);
         }
+        sendStockInAnalysisEvent(stockIn.get(), EventType.DELETE);
         stockInRepository.delete(stockIn.get());
     }
 
@@ -261,6 +268,74 @@ public class StockInServiceImpl implements StockInService {
         } catch (Exception e) {
             log.warn("Cannot fetch variants by skus {}", skus, e);
             return Collections.emptyMap();
+        }
+    }
+
+    private void sendStockInAnalysisEvent(StockIn stockIn, EventType eventType){
+        if(stockIn == null){
+            log.warn("stockIn is null, skip sending analysis event");
+            return;
+        }
+        try {
+            StockInAnalysisEvent stockInAnalysisEvent = StockInAnalysisEvent.builder()
+                    .id(stockIn.getId())
+                    .createdAt(stockIn.getCreatedAt())
+                    .referenceCode(stockIn.getReferenceCode())
+                    .totalAmount(stockIn.getTotalAmount())
+                    .supplierName(stockIn.getSupplierName())
+                    .items(stockIn.getItems().stream().map(item -> StockInItemEvent.builder()
+                                .id(item.getId())
+                                .sku(item.getSku())
+                                .totalCost(item.getTotalCost())
+                                .unitCost(item.getUnitCost())
+                                .quantity(item.getQuantity())
+                                .build()
+                            )
+                            .toList()
+                    )
+                    .createdAt(stockIn.getCreatedAt())
+                    .build();
+            switch (eventType){
+                case CREATE -> {
+                    stockInAnalysisEvent.setEventType(EventType.CREATE);
+                    kafkaTemplate.send("stockIn-analysis-event", stockInAnalysisEvent).whenComplete((result, ex)
+                            -> {
+                        if (ex != null) {
+                            log.error(
+                                    "Failed to send StockInAnalysisEvent, txId={}",
+                                    stockIn.getId(),
+                                    ex);
+                        } else {
+                            log.info(
+                                    "TransactionAnalysisEvent sent successfully: {}",
+                                    result.getProducerRecord()
+                            );
+                        }
+                    });
+                }
+                case DELETE -> {
+                    stockInAnalysisEvent.setEventType(EventType.DELETE);
+                    kafkaTemplate.send("stockIn-analysis-event", stockInAnalysisEvent).whenComplete((result, ex)
+                            -> {
+                        if (ex != null) {
+                            log.error(
+                                    "Failed to send StockInAnalysisEvent, txId={}",
+                                    stockIn.getId(),
+                                    ex);
+                        } else {
+                            log.info(
+                                    "TransactionAnalysisEvent sent successfully: {}",
+                                    result.getProducerRecord()
+                            );
+                        }
+                    });
+                }
+            }
+        }catch (Exception e) {
+            log.error(
+                    "Unexpected error when sending StockIn, txId={}",
+                    stockIn.getId()
+            );
         }
     }
 

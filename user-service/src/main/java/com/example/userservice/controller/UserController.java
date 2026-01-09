@@ -87,9 +87,9 @@ public class UserController {
     @Operation(summary = "send otp",
             description = "API is used to send OTP via email of users, OTP is used to verify email")
     @PostMapping("/verifyEmail/send-otp")
-    ApiResponse<?> sendVerificationOTP(@RequestBody @Valid UserCreationRequest request)
+    ApiResponse<?> sendVerificationOTP(@RequestBody @Valid SendOtpRequest request)
     {
-        Users users = userRepository.findByUsername(request.getUsername()).orElseThrow(()
+        Users users = userRepository.findByUsername(request.getUserName()).orElseThrow(()
                 -> new AppException(UserErrorCode.USER_NOT_EXISTS));
         verificationService.sendverifyOtp(users);
         Optional<OTP> otp = verificationService.getOtpByUserId(users.getId());

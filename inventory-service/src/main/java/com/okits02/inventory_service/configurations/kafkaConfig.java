@@ -14,4 +14,19 @@ public class kafkaConfig {
                 .replicas(2)
                 .build();
     }
+
+    @Bean
+    public NewTopic TransactionAnalysisEvent(){
+        return TopicBuilder.name("transaction-analysis-event")
+                .partitions(3)
+                .replicas(2)
+                .build();
+    }
+
+    @Bean NewTopic StockInAnalysisEvent(){
+        return TopicBuilder.name("stockIn-analysis-event")
+                .partitions(3)
+                .replicas(2)
+                .build();
+    }
 }
