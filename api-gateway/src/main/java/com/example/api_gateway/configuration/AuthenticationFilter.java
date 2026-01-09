@@ -125,7 +125,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
 
     Mono<Void> forbidden(ServerHttpResponse response){
         ApiResponse<?> apiResponse = ApiResponse.builder()
-                .code(1403)
+                .code(403)
                 .message("User is not verified email!")
                 .build();
         try {

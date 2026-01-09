@@ -7,12 +7,12 @@ import org.springframework.http.HttpStatusCode;
 
 @Getter
 public enum SearchErrorCode implements ErrorCode {
-    UNAUTHENTICATED(40300, "Unauthenticated!", HttpStatus.UNAUTHORIZED),
-    PRODUCT_EXISTS(40100, "Product is exists in search!", HttpStatus.BAD_REQUEST),
-    PRODUCT_NOT_EXISTS(40200, "Product is not exists in search!", HttpStatus.BAD_REQUEST),
-    CATEGORY_NOT_EXISTS(40800, "category is not exists in search!", HttpStatus.BAD_REQUEST),
-    ID_OF_PROMOTION_NOT_VALID(40600, "Promotion id on message is Empty!", HttpStatus.BAD_REQUEST),
-    INVALID_REQUEST(40700, "Request is not valid!", HttpStatus.BAD_REQUEST)
+    UNAUTHENTICATED(403, "Unauthenticated!", HttpStatus.UNAUTHORIZED),
+    PRODUCT_EXISTS(401, "Product is exists in search!", HttpStatus.BAD_REQUEST),
+    PRODUCT_NOT_EXISTS(402, "Product is not exists in search!", HttpStatus.BAD_REQUEST),
+    CATEGORY_NOT_EXISTS(408, "category is not exists in search!", HttpStatus.BAD_REQUEST),
+    ID_OF_PROMOTION_NOT_VALID(406, "Promotion id on message is Empty!", HttpStatus.BAD_REQUEST),
+    INVALID_REQUEST(407, "Request is not valid!", HttpStatus.BAD_REQUEST)
     ;
     private final int code;
     private final String message;
