@@ -33,6 +33,7 @@ public class SecurityConfig {
             "/auth/introspect",
             "/auth/login",
             "/auth/verify",
+            "/auth/verified",
             "/users/verifyEmail/send-otp",
             "/users/forgot-password/send-otp",
             "/auth/forgot-password",

@@ -21,8 +21,8 @@ public class Users {
     String username;
     String password;
     String email;
-    boolean isActive;
-    boolean isVerified;
+    Boolean isActive;
+    Boolean isVerified;
     @ManyToOne
     @JoinColumn(name = "role_name", referencedColumnName = "name")
     Role role;

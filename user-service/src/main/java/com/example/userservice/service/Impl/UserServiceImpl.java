@@ -69,8 +69,8 @@ public class UserServiceImpl implements UserService {
                     return roleRepository.save(newRole);
                 });
         user.setRole(roles);
-        user.setActive(true);
-        user.setVerified(false);
+        user.setIsActive(true);
+        user.setIsVerified(false);
         userRepository.save(user);
         return user;
     }
@@ -91,7 +91,7 @@ public class UserServiceImpl implements UserService {
         {
             throw new AppException(UserErrorCode.OTP_INVALID);
         }
-        users.setVerified(true);
+        users.setIsVerified(true);
         userRepository.save(users);
         verificationService.deleteOtpById(otp);
     }
@@ -188,7 +188,7 @@ public class UserServiceImpl implements UserService {
     public void toggleUserStatus(String userId, boolean isActive) {
         Users users = userRepository.findById(userId).orElseThrow(()
                 -> new AppException(UserErrorCode.USER_NOT_EXISTS));
-        users.setActive(isActive);
+        users.setIsActive(isActive);
         userRepository.save(users);
     }
 

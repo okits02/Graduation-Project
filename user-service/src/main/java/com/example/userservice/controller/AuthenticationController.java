@@ -1,6 +1,7 @@
 package com.example.userservice.controller;
 
 import com.example.userservice.dto.request.*;
+import com.example.userservice.dto.response.IsVerifiedResponse;
 import com.example.userservice.exception.UserErrorCode;
 import com.okits02.common_lib.dto.ApiResponse;
 import com.example.userservice.dto.response.AuthenticationResponse;
@@ -55,6 +56,14 @@ public class AuthenticationController {
                 .build();
     }
 
+    @PostMapping("/verified")
+    ApiResponse<IsVerifiedResponse> isVerified(@RequestBody IntrospectRequest request) throws ParseException, JOSEException {
+        var result = authenticationService.isVerified(request);
+        return ApiResponse.<IsVerifiedResponse>builder()
+                .result(result)
+                .build();
+    }
+
     @Operation(summary = "refresh",
     description = "Api for refresh jwt token")
     @PostMapping("/refresh")
@@ -81,7 +90,7 @@ public class AuthenticationController {
 
     @Operation(summary = "verify otp forgot password",
             description = "API is used to authenticate otp when users forgot password")
-    @PostMapping("/forgot-password")
+    @PostMapping("/verify/forgot-password")
     ResponseEntity<ApiResponse<ForgotPasswordResponse>> forgotPasswordVerify(@RequestBody ForgotPasswordRequest request)
     {
         userService.forgotPasswordVerify(request);

@@ -1,6 +1,7 @@
 package com.example.api_gateway.service;
 
 import com.example.api_gateway.dto.request.IntrospectRequest;
+import com.example.api_gateway.dto.response.IsVerifiedResponse;
 import com.okits02.common_lib.dto.ApiResponse;
 import com.example.api_gateway.dto.response.IntrospectResponse;
 import com.example.api_gateway.repository.IdentityClient;
@@ -26,5 +27,12 @@ public class IdentityService {
         return identityClient.introspect(IntrospectRequest.builder()
                 .token(token)
                 .build());
+    }
+
+    public Mono<ApiResponse<IsVerifiedResponse>> verified(String token){
+        IntrospectRequest verifiedRequest = IntrospectRequest.builder()
+                .token(token)
+                .build();
+        return identityClient.verified(verifiedRequest);
     }
 }

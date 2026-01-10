@@ -4,6 +4,7 @@ import com.example.userservice.dto.request.*;
 import com.example.userservice.dto.response.AuthenticationResponse;
 import com.example.userservice.dto.response.ForgotPasswordResponse;
 import com.example.userservice.dto.response.IntrospectResponse;
+import com.example.userservice.dto.response.IsVerifiedResponse;
 import com.example.userservice.exception.UserErrorCode;
 import com.okits02.common_lib.exception.AppException;
 import com.okits02.common_lib.exception.GlobalErrorCode;
@@ -21,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -35,6 +37,7 @@ import java.util.UUID;
 
 @Service
 @CommonsLog
+@Slf4j
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthenticationService {
@@ -49,21 +52,27 @@ public class AuthenticationService {
     public IntrospectResponse introspect(IntrospectRequest request) throws JOSEException, ParseException {
         String token = request.getToken();
         boolean isValid = true;
-        boolean verified = false;
         try {
             SignedJWT signedJWT = verifyToken(token);
-            String username = signedJWT.getJWTClaimsSet().getSubject();
-            Users user = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_EXISTS));
-            verified =
-                    "ADMIN".equalsIgnoreCase(user.getRole().getName())
-                            || Boolean.TRUE.equals(user.isVerified());
         }catch (AppException e)
         {
             isValid = false;
         }
         return  IntrospectResponse.builder()
                 .valid(isValid)
+                .build();
+    }
+
+    public IsVerifiedResponse isVerified(IntrospectRequest request) throws ParseException, JOSEException {
+        String token = request.getToken();
+        boolean verified = false;
+        SignedJWT signedJWT = verifyToken(token);
+        String username = signedJWT.getJWTClaimsSet().getSubject();
+        Users user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(UserErrorCode.USER_NOT_EXISTS));
+        verified = "ADMIN".equalsIgnoreCase(user.getRole().getName())
+                            || Boolean.TRUE.equals(user.getIsVerified());
+        return IsVerifiedResponse.builder()
                 .verified(verified)
                 .build();
     }
@@ -73,18 +82,17 @@ public class AuthenticationService {
         var users = userRepository.findByUsername(request.getUsername()).orElseThrow(()
                 -> new AppException(UserErrorCode.USER_NOT_EXISTS));
         boolean authenticate = passwordEncoder.matches(request.getPassword(), users.getPassword());
-        boolean active = users.isActive();
+        boolean active = users.getIsActive();
         if (!authenticate) {
             throw new AppException(GlobalErrorCode.UNAUTHENTICATED);
         }
 
-        if (users.getRole().toString().equalsIgnoreCase("ADMIN") && !users.isActive()) {
+        if (users.getRole().toString().equalsIgnoreCase("ADMIN") && !users.getIsVerified()) {
             throw new AppException(GlobalErrorCode.UNAUTHENTICATED);
         }
 
         var token = generateToken(users);
-        return AuthenticationResponse.builder()
-                .token(token)
+        return AuthenticationResponse.builder()                .token(token)
                 .authenticated(true)
                 .build();
     }
