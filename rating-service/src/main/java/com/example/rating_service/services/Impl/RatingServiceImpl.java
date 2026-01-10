@@ -1,6 +1,7 @@
 package com.example.rating_service.services.Impl;
 
 import com.example.rating_service.dto.CustomerVM;
+import com.example.rating_service.dto.RatingEvent;
 import com.example.rating_service.dto.request.ModifyRatingRequest;
 import com.example.rating_service.dto.request.RatingRequest;
 import com.example.rating_service.dto.response.RatingResponse;
@@ -22,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -38,6 +40,7 @@ public class RatingServiceImpl implements RatingService {
     private final ProfileClient profileClient;
     private final UserClient userClient;
     private final OrderClient orderClient;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
 
     @Override
@@ -57,7 +60,9 @@ public class RatingServiceImpl implements RatingService {
         rating.setUserId(userId);
         var responseOrder = orderClient.checkVerifiedPurchase(userId, request.getProductId());
         rating.setVerifiedPurchase(responseOrder.getResult().getIsVerifiedPurchase());
-        return ratingMapper.toRatingResponse(ratingRepository.save(rating));
+        var ratingResponse = ratingMapper.toRatingResponse(ratingRepository.save(rating));
+        publishRatingEvent(ratingResponse.getProductId());
+        return ratingResponse;
     }
 
     @Override
@@ -146,6 +151,7 @@ public class RatingServiceImpl implements RatingService {
         Rating rating = ratingRepository.findById(id).orElseThrow(() ->
                 new AppException(RatingErrorCode.RATING_EXISTS));
         ratingRepository.delete(rating);
+        publishRatingEvent(rating.getProductId());
     }
     private String getUserId(){
         ServletRequestAttributes servletRequestAttributes =
@@ -155,4 +161,34 @@ public class RatingServiceImpl implements RatingService {
         return apiResponse.getResult().getUserId();
     }
 
+    private void publishRatingEvent(String productId){
+        Double avgRating = ratingRepository
+                .calculateAvgRatingByProductId(productId);
+
+        if (avgRating == null) {
+            avgRating = 0.0;
+        }
+        avgRating = Math.min(avgRating, 5.0);
+        avgRating = Math.max(avgRating, 0.0);
+
+        RatingEvent event = RatingEvent.builder()
+                .productId(productId)
+                .avgRating(avgRating)
+                .build();
+
+    }
+
+
+    private void sendRatingEvent(RatingEvent ratingEvent){
+        kafkaTemplate.send("rating-event", ratingEvent).whenComplete(
+                (result, ex) -> {
+                    if(ex != null)
+                    {
+                        System.err.println("Failed to send message" + ex.getMessage());
+                    }else
+                    {
+                        System.err.println("send message successfully" + result.getProducerRecord());
+                    }
+                });
+    }
 }

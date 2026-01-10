@@ -13,15 +13,12 @@ import com.example.search_service.model.ProductVariants;
 import com.example.search_service.viewmodel.CategoryGetVM;
 import com.example.search_service.viewmodel.ProductGetListVM;
 import com.example.search_service.viewmodel.ProductGetVM;
-import com.example.search_service.viewmodel.dto.ProductEventDTO;
-import com.example.search_service.viewmodel.dto.UpdatePromotionDTO;
+import com.example.search_service.viewmodel.dto.*;
 import com.okits02.common_lib.exception.AppException;
 import com.example.search_service.exceptions.SearchErrorCode;
 import com.example.search_service.mapper.ProductsMapper;
 import com.example.search_service.model.Products;
 import com.example.search_service.model.Promotion;
-import com.example.search_service.viewmodel.dto.ApplyPromotionEventDTO;
-import com.example.search_service.viewmodel.dto.StatusPromotionDTO;
 import com.example.search_service.viewmodel.dto.request.ApplyThumbnailRequest;
 import lombok.RequiredArgsConstructor;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
@@ -30,6 +27,7 @@ import org.hibernate.validator.constraints.LuhnCheck;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
+import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
 import org.springframework.data.elasticsearch.core.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -547,6 +545,32 @@ public class ProductService {
                 } catch (IOException e) {
                         throw new RuntimeException(e);
                 }
+        }
+
+        public void publishRating(RatingEventDTO ratingEventDTO) throws IOException {
+            boolean exists = elasticsearchClient.exists(e -> e
+                    .index("product")
+                    .id(ratingEventDTO.getProductId())).value();
+
+            if (!exists) {
+                throw new AppException(SearchErrorCode.PRODUCT_NOT_EXISTS);
+            }
+            final Double avgRating = Math.max(
+                    0.0,
+                    Math.min(
+                            ratingEventDTO.getAvgRating() != null
+                                    ? ratingEventDTO.getAvgRating()
+                                    : 0.0,
+                            5.0
+                    )
+            );
+            elasticsearchClient.update(
+                    u -> u
+                            .index("product")
+                            .id(ratingEventDTO.getProductId())
+                            .doc(Map.of("avgRating", avgRating)),
+                    Products.class
+            );
         }
 
         public ProductGetVM getDetailsProduct(String productId) {

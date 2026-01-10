@@ -28,16 +28,7 @@ import javax.crypto.spec.SecretKeySpec;
 @EnableMethodSecurity
 @Slf4j
 public class SecurityConfig {
-    private final String[] END_POINTS = {
-            "/users/register",
-            "/auth/introspect",
-            "/auth/login",
-            "/auth/verify",
-            "/auth/verified",
-            "/users/verifyEmail/send-otp",
-            "/users/forgot-password/send-otp",
-            "/auth/forgot-password",
-            "/auth/refresh"};
+    private final String[] END_POINTS = {};
     @Value("${jwt.signerKey}")
     protected String SIGNER_KEY;
     @Autowired
@@ -50,12 +41,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request -> request
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**")
-                .permitAll()
-                .requestMatchers(HttpMethod.POST, END_POINTS)
-                .permitAll()
                 .anyRequest()
-                .authenticated());
+                .permitAll());
 
         httpSecurity.oauth2ResourceServer(oauth2 ->
                 oauth2.jwt(jwtConfigurer -> jwtConfigurer.decoder(customJwtDecoder)

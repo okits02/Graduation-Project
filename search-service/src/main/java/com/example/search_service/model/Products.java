@@ -28,7 +28,7 @@ public class Products {
     @Field(type = FieldType.Object)
     Set<Promotion> promotions;
     @Field(type = FieldType.Double)
-    double avgRating;
+    Double avgRating;
     @Field(type = FieldType.Keyword)
     List<String> categoriesId;
     @Field(type = FieldType.Nested)

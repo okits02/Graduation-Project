@@ -47,7 +47,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             "/user-service/auth/verify",
             "/user-service/users/verifyEmail/send-otp",
             "/user-service/users/forgot-password/send-otp",
-            "/user-service/auth/forgot-password",
+            "/user-service/auth/verify/forgot-password",
             "/user-service/auth/refresh",
             "/product-service/category/getAll",
             "/search-service/search/catalog-search",
@@ -110,7 +110,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
     {
         ApiResponse<?> apiResponse = ApiResponse.builder()
                 .code(401)
-                .message("Unauthenticated!!")
+                .message("Unauthenticated!!!")
                 .build();
         String body = null;
         try{

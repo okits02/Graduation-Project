@@ -136,6 +136,7 @@ public class AuthenticationService {
                 -> new AppException(UserErrorCode.USER_NOT_EXISTS));
         var token = generateResetToken(users);
         return ForgotPasswordResponse.builder()
+                .email(request.getEmail())
                 .token(token)
                 .authenticated(true)
                 .build();

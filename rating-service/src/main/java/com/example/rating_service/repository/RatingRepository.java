@@ -36,4 +36,11 @@ public interface RatingRepository extends JpaRepository<Rating, String> {
         WHERE r.product_id = :productId
     """, nativeQuery = true)
     Object[] getRatingSummary(@Param("productId") String productId);
+
+    @Query("""
+        SELECT AVG(r.ratingScore)
+        FROM Rating r
+        WHERE r.productId = :productId
+    """)
+    Double calculateAvgRatingByProductId(String productId);
 }
