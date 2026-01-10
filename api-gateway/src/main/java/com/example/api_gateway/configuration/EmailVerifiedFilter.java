@@ -35,7 +35,7 @@ public class EmailVerifiedFilter implements GlobalFilter, Ordered {
     static final PathMatcher PATH_MATCHER = new AntPathMatcher();
 
     private final String[] verifiedIgnoreEndpoints = {
-        "/user-service/users/myInfo"
+        "/user-service/users/myInfo", "/user-service/users/forgot-password"
     };
     @Value("${app.api-prefix}")
     private String apiPrefix;

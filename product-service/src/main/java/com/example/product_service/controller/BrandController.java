@@ -46,6 +46,7 @@ public class BrandController {
     }
 
     @DeleteMapping("/delete/{brandName}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<?> delete(@PathVariable String brandName){
         brandService.delete(brandName);
         return ApiResponse.builder()

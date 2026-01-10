@@ -31,6 +31,7 @@ public class OrderController {
 
 
     @PostMapping("/status")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<OrderResponse> changeStatusOrder(
             @RequestParam("orderId") String orderId,
             @RequestParam("status") Status status

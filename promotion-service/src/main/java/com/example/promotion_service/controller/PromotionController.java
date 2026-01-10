@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -27,6 +28,7 @@ public class PromotionController {
     private final PromotionService promotionService;
 
     @PostMapping("/create")
+    @PreAuthorize("hasRole('ADMIN')")
     ResponseEntity<ApiResponse<PromotionResponse>> createPromotion(@RequestBody PromotionCreationRequest request)
     {
         if (request.getUsageLimited() == 0)
@@ -42,6 +44,7 @@ public class PromotionController {
     }
 
     @PutMapping("/update")
+    @PreAuthorize("hasRole('ADMIN')")
     ResponseEntity<ApiResponse<PromotionResponse>> updatePromotion(@RequestBody PromotionUpdateRequest request) {
         if(request.getUsageLimited() == 0)
         {
@@ -60,6 +63,7 @@ public class PromotionController {
     }
 
     @GetMapping("/getPromotion/{promotionId}")
+    @PreAuthorize("hasRole('ADMIN')")
     ResponseEntity<ApiResponse<PromotionResponse>> getPromotionById(@PathVariable String promotionId){
         return ResponseEntity.ok(ApiResponse.<PromotionResponse>builder()
                         .code(200)
@@ -69,6 +73,7 @@ public class PromotionController {
     }
 
     @GetMapping("/getAll")
+    @PreAuthorize("hasRole('ADMIN')")
     ResponseEntity<ApiResponse<PageResponse<PromotionResponse>>> getAllPromotionAuto(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
@@ -93,6 +98,7 @@ public class PromotionController {
     }
 
     @DeleteMapping("/delete/{promotionId}")
+    @PreAuthorize("hasRole('ADMIN')")
     ResponseEntity<ApiResponse<?>> deletePromotion(@PathVariable String promotionId){
         try {
             promotionService.deletePromotion(promotionId);

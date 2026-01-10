@@ -8,6 +8,7 @@ import com.okits02.inventory_service.dto.response.StockInResponse;
 import com.okits02.inventory_service.service.StockInService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,6 +21,7 @@ public class StockInController {
     private final StockInService stockInService;
 
     @PostMapping("/create")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<StockInResponse> save(@RequestBody StockInCreationRequest request){
         return ApiResponse.<StockInResponse>builder()
                 .code(200)
@@ -29,6 +31,7 @@ public class StockInController {
     }
 
     @GetMapping("/get-by-referenceCode/{referenceCode}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<StockInResponse> getByReferenceCode(@PathVariable String referenceCode){
         return ApiResponse.<StockInResponse>builder()
                 .code(200)
@@ -38,6 +41,7 @@ public class StockInController {
     }
 
     @GetMapping("/get-history")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<PageResponse<StockInResponse>> getHistory(
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
@@ -52,6 +56,7 @@ public class StockInController {
     }
 
     @DeleteMapping("/delete/{referenceCode}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<?> delete(@PathVariable String referenceCode){
         stockInService.deleteStockIn(referenceCode);
         return ApiResponse.<StockInResponse>builder()
@@ -61,6 +66,7 @@ public class StockInController {
     }
 
     @GetMapping("/get-by-id/{stockInId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<StockInResponse> getById(
             @PathVariable String stockInId
     ){

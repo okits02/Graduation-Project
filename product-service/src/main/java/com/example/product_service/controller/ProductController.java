@@ -76,6 +76,7 @@ public class ProductController {
 
     @Operation(summary = "get all product")
     @GetMapping("/getAll")
+    @PreAuthorize("hasRole('ADMIN')")
     ResponseEntity<ApiResponse<PageResponse<ProductResponse>>> getAllProduct(
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "10") int size)
@@ -95,6 +96,7 @@ public class ProductController {
 
     @Operation(summary = "get product by id")
     @GetMapping("/{productId}")
+    @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<ProductResponse> getById(@PathVariable String productId)
     {
         try{

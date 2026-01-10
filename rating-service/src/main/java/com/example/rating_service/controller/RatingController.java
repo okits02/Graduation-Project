@@ -10,6 +10,7 @@ import com.example.rating_service.services.RatingService;
 import com.okits02.common_lib.dto.ApiResponse;
 import com.okits02.common_lib.dto.PageResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -66,6 +67,7 @@ public class RatingController {
     }
 
     @DeleteMapping("/delete")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<?> delete(
             @RequestParam(value = "id") String id
     ){

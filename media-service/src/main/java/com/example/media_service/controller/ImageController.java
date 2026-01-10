@@ -78,6 +78,7 @@ public class ImageController {
     }
 
     @PostMapping("/product/change-image")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ListMediaResponse>> changeImage(
             @ModelAttribute ChangeImageProductRequest request
     ) throws IOException {
@@ -104,6 +105,7 @@ public class ImageController {
 
 
     @PostMapping("/thumbnail")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<MediaResponse>> uploadImage(
             @ModelAttribute ImageUploadRequest request
             ) throws IOException {
@@ -173,6 +175,7 @@ public class ImageController {
     }
 
     @DeleteMapping("/delete/url")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<?>> deleteUrl(
         @RequestBody DeleteMediaByUrlRequest request
     ){

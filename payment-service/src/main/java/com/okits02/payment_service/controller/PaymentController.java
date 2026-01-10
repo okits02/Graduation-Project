@@ -9,6 +9,7 @@ import com.okits02.payment_service.service.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.UnsupportedEncodingException;
@@ -51,6 +52,7 @@ public class PaymentController {
     }
 
     @GetMapping("/history")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<PageResponse<HistoryPaymentInfoResponse>> getHistoryPayment(
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "10") int size){

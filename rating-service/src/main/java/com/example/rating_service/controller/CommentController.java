@@ -8,6 +8,7 @@ import com.okits02.common_lib.dto.ApiResponse;
 import com.okits02.common_lib.dto.PageResponse;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.query.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -52,6 +53,7 @@ public class CommentController {
     }
 
     @DeleteMapping("/delete")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<?>  deleteById(
             @RequestParam(value = "id" ) String id
     ){
@@ -64,6 +66,7 @@ public class CommentController {
 
 
     @DeleteMapping("/delete/product")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<?>  deleteByProductId(
             @RequestParam(value = "ProductId" ) String productId
     ){

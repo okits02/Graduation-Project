@@ -7,6 +7,7 @@ import com.example.notification_service.model.Notification;
 import com.example.notification_service.service.NotificationConsumer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,6 +31,7 @@ public class NotificationController {
     }
 
     @PostMapping("/marketing")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<?> sendEmailForUsers(
             @RequestBody SendEmailRequest request
             ){
