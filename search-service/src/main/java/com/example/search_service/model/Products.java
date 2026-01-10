@@ -37,11 +37,11 @@ public class Products {
     List<ProductVariants> productVariants;
     @Field(type = FieldType.Date,
             format = DateFormat.date,
-            pattern = "yyy-MM-dd")
+            pattern = "yyyy-MM-dd")
     LocalDate createAt;
     @Field(type = FieldType.Date,
             format = DateFormat.date,
-            pattern = "yyy-MM-dd")
+            pattern = "yyyy-MM-dd")
     LocalDate updateAt;
 
 

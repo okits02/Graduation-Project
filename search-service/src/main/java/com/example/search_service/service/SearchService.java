@@ -93,6 +93,16 @@
                     nativeQueryBuilder.withSort(Sort.by(Sort.Direction.ASC, "avgRating"));
                     break;
                 }
+                case YEAR_ASC -> {
+                    nativeQueryBuilder.withSort(s -> s.field(
+                            f -> f.field("createAt").order(SortOrder.Asc)
+                    ));
+                }
+                case YEAR_DESC -> {
+                    nativeQueryBuilder.withSort(s -> s.field(
+                            f -> f.field("createAt").order(SortOrder.Desc)
+                    ));
+                }
             }
             buildAggregations(nativeQueryBuilder);
             log.error("ES QUERY = {}", nativeQueryBuilder.getQuery());
@@ -115,6 +125,8 @@
                     .categoriesAggregations(categoriesAggregations)
                     .build();
         }
+
+
 
         public ProductGetVM getProductById(String id){
             NativeQueryBuilder query = NativeQuery.builder()
