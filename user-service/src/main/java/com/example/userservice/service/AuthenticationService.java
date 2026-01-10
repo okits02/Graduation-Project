@@ -82,17 +82,36 @@ public class AuthenticationService {
         var users = userRepository.findByUsername(request.getUsername()).orElseThrow(()
                 -> new AppException(UserErrorCode.USER_NOT_EXISTS));
         boolean authenticate = passwordEncoder.matches(request.getPassword(), users.getPassword());
-        boolean active = users.getIsActive();
+        Boolean active = users.getIsActive();
         if (!authenticate) {
             throw new AppException(GlobalErrorCode.UNAUTHENTICATED);
         }
 
-        if (users.getRole().toString().equalsIgnoreCase("ADMIN") && !users.getIsVerified()) {
+        if (!users.getRole().toString().equalsIgnoreCase("ADMIN") && !active) {
             throw new AppException(GlobalErrorCode.UNAUTHENTICATED);
         }
 
         var token = generateToken(users);
-        return AuthenticationResponse.builder()                .token(token)
+        return AuthenticationResponse.builder()
+                .token(token)
+                .authenticated(true)
+                .build();
+    }
+
+    public AuthenticationResponse authenticateForAdmin(AuthenticationRequest request)
+    {
+        var users = userRepository.findByUsername(request.getUsername()).orElseThrow(()
+                -> new AppException(UserErrorCode.USER_NOT_EXISTS));
+        boolean authenticate = passwordEncoder.matches(request.getPassword(), users.getPassword());
+        if (!authenticate) {
+            throw new AppException(GlobalErrorCode.UNAUTHENTICATED);
+        }
+        if (users.getRole().toString().equalsIgnoreCase("USER")) {
+            throw new AppException(GlobalErrorCode.UNAUTHORIZED);
+        }
+        var token = generateToken(users);
+        return AuthenticationResponse.builder()
+                .token(token)
                 .authenticated(true)
                 .build();
     }

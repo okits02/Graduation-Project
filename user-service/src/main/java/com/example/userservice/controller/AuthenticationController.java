@@ -21,6 +21,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
@@ -45,6 +46,18 @@ public class AuthenticationController {
                 .result(result)
                 .build();
     }
+
+    @Operation(summary = "login",
+            description = "API login for user")
+    @PostMapping("/admin/login")
+    ApiResponse<AuthenticationResponse> authenticatedForAdmin(@RequestBody AuthenticationRequest request)
+    {
+        var result = authenticationService.authenticateForAdmin(request);
+        return ApiResponse.<AuthenticationResponse>builder()
+                .result(result)
+                .build();
+    }
+
 
     @Operation(summary = "introspect",
     description = "API check JWT token")

@@ -44,6 +44,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             "/user-service/users/register",
             "/user-service/auth/introspect",
             "/user-service/auth/login",
+            "/user-service/auth/admin/login",
             "/user-service/auth/verify",
             "/user-service/users/verifyEmail/send-otp",
             "/user-service/users/forgot-password/send-otp",
