@@ -21,7 +21,8 @@ public enum ProductErrorCode implements ErrorCode {
     PRODUCT_VARIANTS_EXISTS(1018, "product_variants exists!", HttpStatus.BAD_REQUEST),
     PRODUCT_VARIANTS_NOT_FOUND(1020, "product_variants not found", HttpStatus.BAD_REQUEST),
     INVALID_PRODUCT_VARIANT(1022, "product_variants invalid in product!", HttpStatus.BAD_REQUEST),
-    CATEGORY_NOT_UNDER_ROOT(1024, "Category id in request not under root!", HttpStatus.BAD_REQUEST);
+    CATEGORY_NOT_UNDER_ROOT(1024, "Category id in request not under root!", HttpStatus.BAD_REQUEST),
+    CATE_PARENT_SELF(1026, "Category cannot be parent of itself", HttpStatus.BAD_REQUEST);
     private final int code;
     private final String message;
     private final HttpStatusCode httpStatusCode;

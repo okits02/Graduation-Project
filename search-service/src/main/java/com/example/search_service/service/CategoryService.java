@@ -91,19 +91,21 @@ public class CategoryService {
             updateFields.put("name", request.getName());
         }
         if (request.getDescriptions() != null) {
-            updateFields.put("descriptions", request.getDescriptions());
+            updateFields.put("description", request.getDescriptions());
         }
         if (request.getParentId() != null) {
             updateFields.put("parentId", request.getParentId());
         }
-
+        if (request.getChildrentId() != null){
+            updateFields.put("childrenId", request.getChildrentId());
+        }
 
         elasticsearchClient.update(
                 u -> u
                         .index("category")
                         .id(request.getId())
                         .doc(updateFields),
-                Object.class
+                Category.class
         );
     }
 

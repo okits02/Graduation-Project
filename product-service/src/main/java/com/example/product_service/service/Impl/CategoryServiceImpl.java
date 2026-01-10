@@ -83,15 +83,40 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public CategoryResponse updateCate(CategoryRequest request) {
-        Optional<Category> category = categoryRepository.findById(request.getId());
-        if(category.isEmpty()){
-            throw new AppException(ProductErrorCode.CATE_EXISTS);
+        Category category = categoryRepository.findById(request.getId())
+                .orElseThrow(() -> new AppException(ProductErrorCode.CATE_NOT_EXISTS));
+
+        String oldParentId = category.getParentId();
+        String newParentId = request.getParentId();
+        if (newParentId != null && newParentId.equals(category.getId())) {
+            throw new AppException(ProductErrorCode.CATE_PARENT_SELF);
         }
-        categoryMapper.updateCategory(category.orElse(null), request);
-        category.get().setParentId(request.getParentId());
-        CategoryResponse categoryResponse = categoryMapper.toCategoryResponse(categoryRepository.save(category.get()));
-        sendKafKaEvent(category.get(), "CATEGORY_UPDATED");
-        return categoryResponse;
+        if (!Objects.equals(oldParentId, newParentId)) {
+
+            if (oldParentId != null) {
+                Category oldParent = categoryRepository.findById(oldParentId)
+                        .orElseThrow(() -> new AppException(ProductErrorCode.CATE_NOT_EXISTS));
+                oldParent.getChildrenId().remove(category.getId());
+                categoryRepository.save(oldParent);
+                sendKafKaEvent(oldParent, "CATEGORY_UPDATED");
+            }
+
+            if (newParentId != null) {
+                Category newParent = categoryRepository.findById(newParentId)
+                        .orElseThrow(() -> new AppException(ProductErrorCode.CATE_NOT_EXISTS));
+                newParent.getChildrenId().add(category.getId());
+                categoryRepository.save(newParent);
+                sendKafKaEvent(newParent, "CATEGORY_UPDATED");
+            }
+
+            category.setParentId(newParentId);
+        }
+
+        categoryMapper.updateCategory(category, request);
+        Category saved = categoryRepository.save(category);
+
+        sendKafKaEvent(saved, "CATEGORY_UPDATED");
+        return categoryMapper.toCategoryResponse(saved);
     }
 
     @Override
@@ -237,9 +262,10 @@ public class CategoryServiceImpl implements CategoryService {
                 List<String> children = category.getChildrenId() == null ? new ArrayList<>()
                         : new ArrayList<>(category.getChildrenId());
                 CategoryEvent categoryEvent = CategoryEvent.builder()
-                        .eventType("CATEGORY_UPDATE")
+                        .eventType("CATEGORY_UPDATED")
                         .id(category.getId())
                         .name(category.getName())
+                        .descriptions(category.getDescription())
                         .parentId(category.getParentId())
                         .special(category.getSpecial())
                         .childrentId(children)
