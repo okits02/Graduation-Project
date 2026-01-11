@@ -17,6 +17,7 @@ public class RePaymentForOrder {
     BigDecimal orderFee;
     String addressId;
     String voucher;
+    BigDecimal totalPrice;
     PaymentMethod paymentMethod;
     List<OrderItemRequest> items;
 }

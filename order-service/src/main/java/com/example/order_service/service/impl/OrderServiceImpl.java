@@ -306,6 +306,8 @@
             var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
             Orders order = orderRepository.findById(request.getOrderId()).orElseThrow(() ->
                     new AppException(OrderErrorCode.ORDER_NOT_EXISTS));
+            BigDecimal totalPrice = request.getTotalPrice();
+            BigDecimal discountAmount = BigDecimal.ZERO;
             if(!order.getOrderStatus().equals(Status.PENDING)){
                 throw new AppException(OrderErrorCode.ORDER_CAN_NOT_REPAYMENT);
             }
@@ -333,11 +335,13 @@
                     .distinct()
                     .toList();
             if (request.getVoucher() != null && !request.getVoucher().isBlank()){
-
+                if(request.getVoucher().equals(order.getVoucherCode())){
+                    throw new AppException(OrderErrorCode.VOUCHER_NOT_ARRIVE);
+                }
                 CheckValidVoucherRequest checkValidVoucherRequest = CheckValidVoucherRequest.builder()
                         .today(Date.from(Instant.now()))
-                        .totalAmount(order.getTotalPrice().doubleValue())
-                        .voucherCode(order.getVoucherCode())
+                        .totalAmount(request.getTotalPrice().doubleValue())
+                        .voucherCode(request.getVoucher())
                         .productId(productIds)
                         .categoryId(categoryIds)
                         .build();
@@ -345,6 +349,9 @@
                 if (promotionResponse == null) {
                     throw new AppException(OrderErrorCode.VOUCHER_APPLY_FAILED);
                 }
+                var promo = promotionResponse.getResult();
+
+                discountAmount = calculateDiscount(order.getTotalPrice(), promo);
             }
             List<OrderItemResponse> itemResponses = order.getItems().stream().map(
                     item -> {
@@ -370,6 +377,10 @@
                                 .build();
                     }
             ).toList();
+            BigDecimal finalTotal =
+                    totalPrice.subtract(discountAmount)
+                            .max(BigDecimal.ZERO);
+            order.setTotalPrice(finalTotal);
             var response = orderMapper.toOrderResponse(order);
             var paymentResponse = paymentClient.createPayment(authHeader, order.getOrderId(),
                     order.getTotalPrice(), request.getPaymentMethod());

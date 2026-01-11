@@ -12,6 +12,7 @@ public enum OrderErrorCode implements ErrorCode {
             "Order can not re payment because status order not valid!", HttpStatus.BAD_REQUEST),
     VOUCHER_APPLY_FAILED(6806, "Voucher không thể áp dụng cho đơn hàng", HttpStatus.BAD_REQUEST),
     VOUCHER_APPLY_EXPIRED(6806, "Voucher đã hết hạn", HttpStatus.BAD_REQUEST),
+    VOUCHER_NOT_ARRIVE(6806, "voucher khong dung cho order", HttpStatus.BAD_REQUEST),
     PROMOTION_SERVICE_UNAVAILABLE(6808, "Không thể kết nối promotion-service", HttpStatus.BAD_REQUEST),
     INSUFFICIENT_STOCK(6810, "Insufficient stock for the requested product", HttpStatus.BAD_REQUEST);
     private final int code;
