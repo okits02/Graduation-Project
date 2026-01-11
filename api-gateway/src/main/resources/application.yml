@@ -16,7 +16,7 @@ spring:
     gateway:
       globalcors:
         cors-configurations:
-          '[/**]':
+          "[/**]":
             allowedOrigins: "*"
             allowedMethods:
               - "*"
@@ -51,9 +51,9 @@ spring:
         - id: promotion-service
           uri: lb://promotion-service
           predicates:
-              - Path=${app.api-prefix}/promotion-service/**
+            - Path=${app.api-prefix}/promotion-service/**
           filters:
-              - StripPrefix=2
+            - StripPrefix=2
 
         - id: profile-service
           uri: lb://profile-service
@@ -86,23 +86,23 @@ spring:
         - id: cart-service
           uri: lb://cart-service
           predicates:
-              - Path=${app.api-prefix}/cart-service/**
+            - Path=${app.api-prefix}/cart-service/**
           filters:
-              - StripPrefix=2
+            - StripPrefix=2
 
         - id: order-service
           uri: lb://order-service
           predicates:
             - Path=${app.api-prefix}/order-service/**
           filters:
-              - StripPrefix=2
+            - StripPrefix=2
 
         - id: payment-service
           uri: lb://payment-service
           predicates:
-              - Path=${app.api-prefix}/payment-service/**
+            - Path=${app.api-prefix}/payment-service/**
           filters:
-              - StripPrefix=2
+            - StripPrefix=2
 
         - id: rating-service
           uri: lb://rating-service
@@ -110,7 +110,6 @@ spring:
             - Path=${app.api-prefix}/rating-service/**
           filters:
             - StripPrefix=2
-
 
 springdoc:
   swagger-ui:
@@ -131,6 +130,14 @@ springdoc:
         url: ${app.api-prefix}/promotion-service/v3/api-docs
       - name: Inventory
         url: ${app.api-prefix}/inventory-service/v3/api-docs
+      - name: Cart
+        url: ${app.api-prefix}/cart-service/v3/api-docs
+      - name: Order
+        url: ${app.api-prefix}/order-service/v3/api-docs
+      - name: Payment
+        url: ${app.api-prefix}/payment-service/v3/api-docs
+      - name: Rating
+        url: ${app.api-prefix}/rating-service/v3/api-docs
 
 eureka:
   client:
