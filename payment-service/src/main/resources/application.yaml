@@ -57,4 +57,7 @@ eureka:
     prefer-ip-address: true
     lease-renewal-interval-in-seconds: 30
     lease-expiration-duration-in-seconds: 90
-
+vnpay:
+  pay-url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+  refund-url: https://sandbox.vnpayment.vn
+  api-url: https://sandbox.vnpayment.vn/merchant_webapi/api/transaction

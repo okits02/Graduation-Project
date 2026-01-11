@@ -9,11 +9,13 @@ import com.okits02.payment_service.dto.request.VnPayPaymentInfoRequest;
 import com.okits02.payment_service.dto.response.VnpResponseDTO;
 import com.okits02.payment_service.enums.PaymentMethod;
 import com.okits02.payment_service.enums.PaymentStatus;
+import com.okits02.payment_service.enums.TransactionType;
 import com.okits02.payment_service.kafka.ChangeStatusOrdersEvent;
 import com.okits02.payment_service.model.Payment;
 import com.okits02.payment_service.model.PaymentSession;
 import com.okits02.payment_service.repository.PaymentRepository;
 import com.okits02.payment_service.repository.PaymentSessionRepository;
+import com.okits02.payment_service.repository.httpClient.VnPayRefundClient;
 import com.okits02.payment_service.service.PaymentGatewayService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +31,7 @@ import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static java.lang.System.out;
@@ -39,35 +42,34 @@ import static java.lang.System.out;
 public class PaymentGatewayServiceImpl implements PaymentGatewayService {
     private final PaymentSessionRepository paymentSessionRepository;
     private final PaymentRepository paymentRepository;
+    private final VnPayRefundClient vnPayRefundClient;
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Override
     public ResponseEntity<?> createVnPayPayment(Payment payment) throws UnsupportedEncodingException, JsonProcessingException {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-        BigDecimal amount = payment.getAmount();
-        long vnpAmount = amount.multiply(BigDecimal.valueOf(100)).longValue();
+        HttpServletRequest request =
+                ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+
+        long vnpAmount = payment.getAmount()
+                .multiply(BigDecimal.valueOf(100))
+                .longValue();
+
         String vnp_TxnRef = VnpayConfig.getRandomNumber(8);
         String vnp_IpAddr = VnpayConfig.getIpAddress(request);
-        String orderType = "other";
         String vnp_TmnCode = VnpayConfig.vnp_TmnCode;
-
         Map<String, String> vnp_Params = new HashMap<>();
         vnp_Params.put("vnp_Version", VnpayConfig.vnp_Version);
         vnp_Params.put("vnp_Command", VnpayConfig.vnp_Command);
         vnp_Params.put("vnp_TmnCode", vnp_TmnCode);
         vnp_Params.put("vnp_Amount", String.valueOf(vnpAmount));
         vnp_Params.put("vnp_CurrCode", "VND");
-
-        vnp_Params.put("vnp_CurrCode", "VND");
         vnp_Params.put("vnp_BankCode", "NCB");
-
         vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
         vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang:" + vnp_TxnRef);
-        vnp_Params.put("vnp_OrderType", orderType);
+        vnp_Params.put("vnp_OrderType", "order");
         vnp_Params.put("vnp_Locale", "vn");
         vnp_Params.put("vnp_ReturnUrl", VnpayConfig.vnp_ReturnUrl);
         vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
-
         Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
         String vnp_CreateDate = formatter.format(cld.getTime());
@@ -86,11 +88,11 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
             String fieldName = (String) itr.next();
             String fieldValue = (String) vnp_Params.get(fieldName);
             if ((fieldValue != null) && (fieldValue.length() > 0)) {
-                //Build hash data
+                // Build hash data
                 hashData.append(fieldName);
                 hashData.append('=');
                 hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
-                //Build query
+                // Build query
                 query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString()));
                 query.append('=');
                 query.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
@@ -104,22 +106,121 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         String vnp_SecureHash = VnpayConfig.hmacSHA512(VnpayConfig.secretKey, hashData.toString());
         queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
         String paymentUrl = VnpayConfig.vnp_PayUrl + "?" + queryUrl;
-        String providerDataJson = new ObjectMapper().writeValueAsString(vnp_Params);
+
+        // ================= SAVE SESSION =================
         PaymentSession session = PaymentSession.builder()
                 .payment(payment)
                 .transactionId(vnp_TxnRef)
-                .providerData(providerDataJson)
+                .transactionType(TransactionType.PAYMENT)
                 .method(PaymentMethod.VNPAY)
-                .status(payment.getStatus())
+                .status(PaymentStatus.PENDING)
+                .vnp_PayDate(vnp_CreateDate)
+                .providerData(new ObjectMapper().writeValueAsString(vnp_Params))
                 .build();
+
         paymentSessionRepository.save(session);
-        return ResponseEntity.ok(VnpResponseDTO.builder()
-                .paymentUrl(paymentUrl)
-                .txnRef(vnp_TxnRef)
-                .amount(payment.getAmount())
-                .method(PaymentMethod.VNPAY)
-                .build());
+
+        return ResponseEntity.ok(
+                VnpResponseDTO.builder()
+                        .paymentUrl(paymentUrl)
+                        .txnRef(vnp_TxnRef)
+                        .amount(payment.getAmount())
+                        .method(PaymentMethod.VNPAY)
+                        .build()
+        );
     }
+
+    @Override
+    public ResponseEntity<?> refundVnPay(Payment payment, String reason) throws JsonProcessingException {
+        HttpServletRequest request =
+                ((ServletRequestAttributes) RequestContextHolder
+                        .getRequestAttributes()).getRequest();
+        PaymentSession paidSession =
+                paymentSessionRepository
+                        .findTopByPaymentIdAndTransactionTypeAndStatusOrderByCreateAtDesc(
+                                payment.getId(),
+                                TransactionType.PAYMENT,
+                                PaymentStatus.SUCCESS
+                        );
+
+        if (paidSession == null) {
+            throw new RuntimeException("Original transaction not found");
+        }
+        String requestId = UUID.randomUUID().toString();
+        String refundTxnRef = VnpayConfig.getRandomNumber(8);
+        long vnpAmount = payment.getAmount()
+                .multiply(BigDecimal.valueOf(100))
+                .longValue();
+
+        String ipAddr = VnpayConfig.getIpAddress(request);
+        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+        String now = formatter.format(cld.getTime());
+        String transactionDate = paidSession.getVnp_PayDate();
+
+        PaymentSession refundSession = PaymentSession.builder()
+                .payment(payment)
+                .transactionId(refundTxnRef)
+                .transactionType(TransactionType.REFUND)
+                .method(PaymentMethod.VNPAY)
+                .status(PaymentStatus.PENDING)
+                .build();
+        paymentSessionRepository.save(refundSession);
+
+        Map<String, String> body = new LinkedHashMap<>();
+        body.put("vnp_RequestId", requestId);
+        body.put("vnp_Version", "2.1.0");
+        body.put("vnp_Command", "refund");
+        body.put("vnp_TmnCode", VnpayConfig.vnp_TmnCode);
+        body.put("vnp_TransactionType", "02");
+        body.put("vnp_TxnRef", paidSession.getTransactionId());
+        body.put("vnp_Amount", String.valueOf(vnpAmount));
+        body.put("vnp_TransactionNo", "");
+        body.put("vnp_TransactionDate", transactionDate);
+        body.put("vnp_CreateBy", "system");
+        body.put("vnp_CreateDate", now);
+        body.put("vnp_IpAddr", ipAddr);
+        body.put("vnp_OrderInfo", reason);
+
+        String hashData = String.join("|",
+                requestId,
+                "2.1.0",
+                "refund",
+                VnpayConfig.vnp_TmnCode,
+                "02",
+                paidSession.getTransactionId(),
+                String.valueOf(vnpAmount),
+                "",
+                transactionDate,
+                "system",
+                now,
+                ipAddr,
+                reason
+        );
+
+        String secureHash = VnpayConfig.hmacSHA512(
+                VnpayConfig.secretKey,
+                hashData
+        );
+        body.put("vnp_SecureHash", secureHash);
+
+        Map<String, String> response = vnPayRefundClient.refund(body);
+
+        refundSession.setProviderData(new ObjectMapper().writeValueAsString(response));
+
+        String responseCode = response.get("vnp_ResponseCode");
+
+        if ("00".equals(responseCode)) {
+            refundSession.setStatus(PaymentStatus.SUCCESS);
+        } else {
+            refundSession.setStatus(PaymentStatus.FAILED);
+        }
+
+        paymentSessionRepository.save(refundSession);
+
+        return ResponseEntity.ok(response);
+    }
+
 
     @Override
     public ResponseEntity<?> vnPayIPN(HttpServletRequest request) throws UnsupportedEncodingException {
@@ -180,21 +281,9 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
                 OrderStatusEvent(payment.getId(), payment.getOrderId(), PaymentStatus.CANCELLED);
             }
 
-            case "09" -> {
-                session.setStatus(PaymentStatus.FAILED);
-                payment.setStatus(PaymentStatus.FAILED);
-                OrderStatusEvent(payment.getId(), payment.getOrderId(), PaymentStatus.FAILED);
-            }
-
             case "10" -> {
                 session.setStatus(PaymentStatus.EXPIRED);
                 payment.setStatus(PaymentStatus.EXPIRED);
-                OrderStatusEvent(payment.getId(), payment.getOrderId(), PaymentStatus.FAILED);
-            }
-
-            case "11", "12" -> {
-                session.setStatus(PaymentStatus.FAILED);
-                payment.setStatus(PaymentStatus.FAILED);
                 OrderStatusEvent(payment.getId(), payment.getOrderId(), PaymentStatus.FAILED);
             }
 

@@ -6,6 +6,6 @@ public enum Status {
     DELIVERED,
     CANCELLED,
     RETURNED,
-    FAILED,
-    COMPLETED
+    COMPLETED,
+    REFUNDED
 }

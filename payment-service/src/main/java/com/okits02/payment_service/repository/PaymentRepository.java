@@ -20,4 +20,5 @@ public interface PaymentRepository extends JpaRepository<Payment, String> {
             """)
     public Page<Payment> findAllByUserId(@Param("userId") String userId,
                                                  Pageable pageable);
+
 }

@@ -7,9 +7,7 @@
     import com.example.order_service.kafka.OrderAnalysisEvent;
     import com.example.order_service.kafka.OrderItemEvent;
     import com.example.order_service.mapper.OrderItemMapper;
-    import com.example.order_service.repository.httpClient.InventoryClient;
-    import com.example.order_service.repository.httpClient.SearchClient;
-    import com.example.order_service.repository.httpClient.PromotionClient;
+    import com.example.order_service.repository.httpClient.*;
     import com.okits02.common_lib.dto.ApiResponse;
     import com.okits02.common_lib.dto.PageResponse;
     import com.okits02.common_lib.exception.AppException;
@@ -18,7 +16,6 @@
     import com.example.order_service.model.OrderItem;
     import com.example.order_service.model.Orders;
     import com.example.order_service.repository.OrderRepository;
-    import com.example.order_service.repository.httpClient.UserClient;
     import com.example.order_service.service.OrderService;
     import feign.FeignException;
     import lombok.RequiredArgsConstructor;
@@ -49,6 +46,7 @@
         private final UserClient userClient;
         private final SearchClient searchClient;
         private final InventoryClient inventoryClient;
+        private final PaymentClient paymentClient;
         private final KafkaTemplate<String, Object> kafkaTemplate;
 
 
@@ -65,6 +63,7 @@
                     .orderDesc(request.getOrderDesc())
                     .orderDate(LocalDateTime.now())
                     .build();
+
             List<String> skus = request.getItems().stream()
                     .map(OrderItemRequest::getSku)
                     .distinct()
@@ -82,16 +81,19 @@
             orders.calculateTotalPrice();
             BigDecimal totalPrice = orders.getTotalPrice();
             BigDecimal discountAmount = BigDecimal.ZERO;
+
             List<String> productIds = productMap.values().stream()
                     .map(ProductSkuVM::getId)
                     .filter(Objects::nonNull)
                     .distinct()
                     .toList();
+
             List<String> categoryIds = productMap.values().stream()
                     .flatMap(p -> p.getCategoriesId() == null ? Stream.empty() : p.getCategoriesId().stream())
                     .distinct()
                     .toList();
             if (request.getVoucher() != null && !request.getVoucher().isBlank()){
+
                 CheckValidVoucherRequest checkValidVoucherRequest = CheckValidVoucherRequest.builder()
                         .today(Date.from(Instant.now()))
                         .totalAmount(orders.getTotalPrice().doubleValue())
@@ -99,6 +101,7 @@
                         .productId(productIds)
                         .categoryId(categoryIds)
                         .build();
+
                 var promotionResponse = promotionClient.checkValidPromotion(checkValidVoucherRequest, authHeader);
                 if (promotionResponse != null
                         && promotionResponse.getResult() != null) {
@@ -107,6 +110,7 @@
                     discountAmount = calculateDiscount(totalPrice, promo);
                 }
             }
+
             BigDecimal finalTotal =
                     totalPrice.subtract(discountAmount)
                             .max(BigDecimal.ZERO);
@@ -115,8 +119,13 @@
             orders.setOrderStatus(Status.PENDING);
             Orders savedOrder = orderRepository.save(orders);
             applyVoucherToOrder(request.getVoucher(), savedOrder.getOrderId(), authHeader);
+
             var response = orderMapper.toOrderResponse(savedOrder);
+            var paymentResponse = paymentClient.createPayment(authHeader, orders.getOrderId(),
+                    orders.getTotalPrice(), request.getPaymentMethod());
+
             response.setItems(itemResponses);
+            response.setPaymentUrl(paymentResponse.getBody().getResult().toString());
             return response;
         }
 
@@ -290,6 +299,50 @@
         }
 
         @Override
+        public void rePaymentForOrder(String orderId) {
+            String userId = getUserId();
+            Orders order = orderRepository.findById(orderId).orElseThrow(() ->
+                    new AppException(OrderErrorCode.ORDER_NOT_EXISTS));
+            if(!order.getOrderStatus().equals(Status.PENDING)){
+                throw new AppException(OrderErrorCode.ORDER_CAN_NOT_REPAYMENT);
+            }
+            List<String> skus = order.getItems().stream()
+                    .map(OrderItem::getSku)
+                    .distinct()
+                    .toList();
+
+            var productResponse = searchClient.getProductDetails(skus);
+            if (productResponse == null || productResponse.getCode() != 200 || productResponse.getResult() == null) {
+                throw new RuntimeException("Cannot fetch product info");
+            }
+
+            Map<String, ProductSkuVM> productMap = productResponse.getResult().stream()
+                    .collect(Collectors.toMap(ProductSkuVM::getSku, Function.identity()));
+
+            List<String> productIds = productMap.values().stream()
+                    .map(ProductSkuVM::getId)
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .toList();
+
+            List<String> categoryIds = productMap.values().stream()
+                    .flatMap(p -> p.getCategoriesId() == null ? Stream.empty() : p.getCategoriesId().stream())
+                    .distinct()
+                    .toList();
+            if (order.getVoucherCode() != null && !order.getVoucherCode().isBlank()){
+
+                CheckValidVoucherRequest checkValidVoucherRequest = CheckValidVoucherRequest.builder()
+                        .today(Date.from(Instant.now()))
+                        .totalAmount(order.getTotalPrice().doubleValue())
+                        .voucherCode(order.getVoucherCode())
+                        .productId(productIds)
+                        .categoryId(categoryIds)
+                        .build();
+
+            }
+        }
+
+        @Override
         public OrderResponse changeStatusOrder(String orderId, Status status) {
             Orders orders = orderRepository.findById(orderId).orElseThrow(
                     () -> new AppException(OrderErrorCode.ORDER_NOT_EXISTS));
@@ -371,13 +424,7 @@
                     -> new AppException(OrderErrorCode.ORDER_NOT_EXISTS));
             orders.setOrderStatus(status);
             orders.setPaymentId(paymentId);
-            switch (status) {
-                case FAILED -> {
-                    rollbackVoucher(orderId);
-                    sendKafkaEventToAnalysis(orders);
-                }
-                default -> decreaseInventory(orders);
-            }
+            decreaseInventory(orders);
             orderRepository.save(orders);
         }
 
@@ -532,6 +579,20 @@
             return GetListUserIdResponse.builder()
                     .userIds(userIds)
                     .build();
+        }
+
+        @Override
+        public void cleanupExpiredPendingOrders() {
+            List<Orders> expiredOrders =
+                    orderRepository.findExpiredPendingOrders(LocalDateTime.now().minusDays(1), Status.PENDING);
+
+            for (Orders order : expiredOrders) {
+                if(order.getVoucherCode() != null) {
+                    rollbackVoucher(order.getOrderId());
+                }
+                increaseInventory(order);
+                orderRepository.delete(order);
+            }
         }
 
         private String getUserId(){

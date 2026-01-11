@@ -12,6 +12,7 @@ public interface OrderService {
     public PageResponse<OrderSummaryResponse> getByUserId(int page, int size);
     public PageResponse<OrderSummaryResponse> getByUserIdAndStatus(int page, int size, Status status);
     public void cancelOrder(String orderId);
+    public void rePaymentForOrder(String orderId);
     public OrderResponse changeStatusOrder(String orderId, Status status);
     public void changStatusOrderForPayment(String paymentId, String orderId, Status status);
     public GetAmountResponse getAmount(String orderId);
@@ -19,4 +20,6 @@ public interface OrderService {
     public OrderResponse getById(String orderId);
     public CheckVerifiedPurchase checkVerifiedPurchase(String userId, String productId);
     public GetListUserIdResponse getListUserId();
+
+    void cleanupExpiredPendingOrders();
 }

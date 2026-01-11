@@ -1,6 +1,7 @@
 package com.example.order_service.dto.request;
 
 import com.example.order_service.constant.AppConstant;
+import com.example.order_service.enums.PaymentMethod;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -25,5 +26,6 @@ public class OrderCreationRequest implements Serializable {
     BigDecimal orderFee;
     String addressId;
     String voucher;
+    PaymentMethod paymentMethod;
     List<OrderItemRequest> items;
 }

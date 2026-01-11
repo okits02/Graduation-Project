@@ -5,6 +5,7 @@ import com.okits02.common_lib.dto.ApiResponse;
 import com.okits02.common_lib.dto.PageResponse;
 import com.okits02.payment_service.dto.request.PaymentCreationRequest;
 import com.okits02.payment_service.dto.response.HistoryPaymentInfoResponse;
+import com.okits02.payment_service.enums.PaymentMethod;
 import com.okits02.payment_service.service.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
 import java.util.Map;
 
 @RestController
@@ -21,13 +23,15 @@ import java.util.Map;
 public class PaymentController {
     private final PaymentService paymentService;
 
-    @PostMapping("/create")
+    @GetMapping("/create")
     public ResponseEntity<ApiResponse<?>> createPayment(
-            @RequestBody PaymentCreationRequest request) throws UnsupportedEncodingException, JsonProcessingException {
+            @RequestParam(value = "orderId") String orderId,
+            @RequestParam(value = "amount") BigDecimal amount,
+            @RequestParam(value = "PaymentMethod") PaymentMethod paymentMethod) throws UnsupportedEncodingException, JsonProcessingException {
         return ResponseEntity.ok(ApiResponse.<Object>builder()
                         .code(200)
                         .message("create payment successfully!")
-                        .result(paymentService.createPayment(request))
+                        .result(paymentService.createPayment(orderId, amount, paymentMethod))
                 .build());
     }
 
@@ -60,6 +64,15 @@ public class PaymentController {
                 .code(200)
                 .message("get history successfully!")
                 .result(paymentService.getHistory(page, size))
+                .build();
+    }
+
+    @GetMapping("/refund")
+    public ApiResponse<?> refundPayment(
+        @RequestParam("paymentId") String paymentId
+    ) throws JsonProcessingException {
+        return ApiResponse.builder()
+                .result(paymentService.refundPayment(paymentId, PaymentMethod.VNPAY))
                 .build();
     }
 }

@@ -5,13 +5,15 @@ import com.example.order_service.dto.response.OrderSummaryResponse;
 import com.example.order_service.enums.Status;
 import com.example.order_service.model.Orders;
 import com.okits02.common_lib.dto.PageResponse;
-import org.hibernate.query.Order;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface OrderRepository extends JpaRepository<Orders, String> {
@@ -81,5 +83,15 @@ public interface OrderRepository extends JpaRepository<Orders, String> {
     """)
     List<String> findUserIdsOrderByOrderCountDesc(
             @Param("statuses") List<Status> statuses
+    );
+
+    @Query("""
+    SELECT o FROM Orders o
+    WHERE o.orderStatus = :status
+    AND o.orderDate < :expiredTime
+""")
+    List<Orders> findExpiredPendingOrders(
+            @Param("expiredTime") LocalDateTime expiredTime,
+            @Param("status") Status status
     );
 }

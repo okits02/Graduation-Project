@@ -8,6 +8,8 @@ import org.springframework.http.HttpStatusCode;
 @Getter
 public enum OrderErrorCode implements ErrorCode {
     ORDER_NOT_EXISTS(6804, "Orders not exists!", HttpStatus.BAD_REQUEST),
+    ORDER_CAN_NOT_REPAYMENT(6812,
+            "Order can not re payment because status order not valid!", HttpStatus.BAD_REQUEST),
     VOUCHER_APPLY_FAILED(6806, "Voucher không thể áp dụng cho đơn hàng", HttpStatus.BAD_REQUEST),
     PROMOTION_SERVICE_UNAVAILABLE(6808, "Không thể kết nối promotion-service", HttpStatus.BAD_REQUEST),
     INSUFFICIENT_STOCK(6810, "Insufficient stock for the requested product", HttpStatus.BAD_REQUEST);
