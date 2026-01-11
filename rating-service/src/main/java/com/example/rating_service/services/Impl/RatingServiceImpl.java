@@ -49,10 +49,7 @@ public class RatingServiceImpl implements RatingService {
         if(ratingRepository.existsByUserIdAndProductId(userId, request.getProductId())){
             throw new AppException(RatingErrorCode.RATING_EXISTS);
         };
-        ServletRequestAttributes servletRequestAttributes =
-                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
-        var response = profileClient.getProfileForRating(authHeader).getBody();
+        var response = profileClient.getProfileForRating(userId).getBody();
         if (response == null || response.getCode() != 200) {
             throw new RuntimeException("Failed to delete profile from Profile-service");
         }

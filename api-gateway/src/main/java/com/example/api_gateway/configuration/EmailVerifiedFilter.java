@@ -64,12 +64,13 @@ public class EmailVerifiedFilter implements GlobalFilter, Ordered {
                 )
                 .flatMap(response -> {
                     log.info("verified API response: {}", response);
-                    if (!response.getResult().isVerified()) {
+
+                    if (!Boolean.TRUE.equals(response.getResult().isVerified())) {
                         return emailNotVerified(exchange.getResponse());
                     }
+
                     return chain.filter(exchange);
-                })
-                .onErrorResume(e -> emailNotVerified(exchange.getResponse()));
+                });
     }
 
     @Override

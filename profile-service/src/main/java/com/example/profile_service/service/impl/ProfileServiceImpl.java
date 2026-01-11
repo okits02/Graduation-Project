@@ -136,8 +136,7 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
-    public CustomerVM getProfileForRating() {
-        String userId = getUserId();
+    public CustomerVM getProfileForRating(String userId) {
         UserProfile userProfile = profileRepository.findByUserId(userId);
         if(userProfile == null){
             throw new AppException(ProfileErrorCode.PROFILE_NOT_EXITS);

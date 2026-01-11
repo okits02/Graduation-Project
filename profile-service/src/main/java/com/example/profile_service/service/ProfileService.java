@@ -19,6 +19,6 @@ public interface ProfileService {
    public PageResponse<ProfileResponse> getAllProfile(int page, int size);
    public void creationAvatar(String avatarUrl);
    public void DeleteProfile(String userId);
-   public CustomerVM getProfileForRating();
+   public CustomerVM getProfileForRating(String userId);
    public String getUserId();
 }

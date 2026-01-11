@@ -124,10 +124,12 @@ public class ProfileController {
                 .build());
     }
 
-    @GetMapping("/rating/getProfile")
-    public ResponseEntity<ApiResponse<CustomerVM>> getProfileForRating(){
+    @GetMapping("/internal/rating/getProfile")
+    public ResponseEntity<ApiResponse<CustomerVM>> getProfileForRating(
+            @RequestHeader("userI") String userId
+    ){
         return ResponseEntity.ok(ApiResponse.<CustomerVM>builder()
-                        .result(profileService.getProfileForRating())
+                        .result(profileService.getProfileForRating(userId))
                         .code(200)
                 .build());
     }
