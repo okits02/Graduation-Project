@@ -299,9 +299,12 @@
         }
 
         @Override
-        public void rePaymentForOrder(String orderId) {
+        public void rePaymentForOrder(RePaymentForOrder request) {
             String userId = getUserId();
-            Orders order = orderRepository.findById(orderId).orElseThrow(() ->
+            ServletRequestAttributes servletRequestAttributes =
+                    (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
+            Orders order = orderRepository.findById(request.getOrderId()).orElseThrow(() ->
                     new AppException(OrderErrorCode.ORDER_NOT_EXISTS));
             if(!order.getOrderStatus().equals(Status.PENDING)){
                 throw new AppException(OrderErrorCode.ORDER_CAN_NOT_REPAYMENT);
@@ -329,7 +332,7 @@
                     .flatMap(p -> p.getCategoriesId() == null ? Stream.empty() : p.getCategoriesId().stream())
                     .distinct()
                     .toList();
-            if (order.getVoucherCode() != null && !order.getVoucherCode().isBlank()){
+            if (request.getVoucher() != null && !request.getVoucher().isBlank()){
 
                 CheckValidVoucherRequest checkValidVoucherRequest = CheckValidVoucherRequest.builder()
                         .today(Date.from(Instant.now()))
@@ -338,8 +341,39 @@
                         .productId(productIds)
                         .categoryId(categoryIds)
                         .build();
-
+                var promotionResponse = promotionClient.checkValidPromotion(checkValidVoucherRequest, authHeader);
+                if (promotionResponse == null) {
+                    throw new AppException(OrderErrorCode.VOUCHER_APPLY_FAILED);
+                }
             }
+            List<OrderItemResponse> itemResponses = order.getItems().stream().map(
+                    item -> {
+                        ProductSkuVM product = productMap.get(item.getSku());
+                        if(product == null){
+                            throw new RuntimeException("Product not exists: " + item.getSku());
+                        }
+                        if(item.getListPrice() == null || item.getSellPrice() == null
+                                || product.getListPrice() == null || product.getSellPrice() == null
+                                || item.getListPrice().compareTo(product.getListPrice()) != 0
+                                || item.getSellPrice().compareTo(product.getSellPrice()) != 0){
+                            throw new RuntimeException("Price for sku " + item.getSku() + " not valid");
+                        }
+
+                        return OrderItemResponse.builder()
+                                .sku(item.getSku())
+                                .productName(product.getVariantName())
+                                .thumbnailUrl(product.getThumbnailUrl())
+                                .quantity(item.getQuantity())
+                                .sellPrice(product.getSellPrice())
+                                .listPrice(product.getListPrice())
+                                .addAt(LocalDateTime.now())
+                                .build();
+                    }
+            ).toList();
+            var response = orderMapper.toOrderResponse(order);
+            var paymentResponse = paymentClient.createPayment(authHeader, order.getOrderId(),
+                    order.getTotalPrice(), request.getPaymentMethod());
+            return;
         }
 
         @Override

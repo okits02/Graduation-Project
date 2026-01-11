@@ -2,6 +2,7 @@ package com.example.order_service.service;
 
 import com.example.order_service.dto.request.OrderCreationRequest;
 import com.example.order_service.dto.request.OrderUpdateRequest;
+import com.example.order_service.dto.request.RePaymentForOrder;
 import com.example.order_service.dto.response.*;
 import com.example.order_service.enums.Status;
 import com.okits02.common_lib.dto.PageResponse;
@@ -12,7 +13,7 @@ public interface OrderService {
     public PageResponse<OrderSummaryResponse> getByUserId(int page, int size);
     public PageResponse<OrderSummaryResponse> getByUserIdAndStatus(int page, int size, Status status);
     public void cancelOrder(String orderId);
-    public void rePaymentForOrder(String orderId);
+    public void rePaymentForOrder(RePaymentForOrder request);
     public OrderResponse changeStatusOrder(String orderId, Status status);
     public void changStatusOrderForPayment(String paymentId, String orderId, Status status);
     public GetAmountResponse getAmount(String orderId);
