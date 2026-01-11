@@ -19,4 +19,10 @@ public interface PaymentClient {
             @RequestParam(value = "orderId") String orderId,
             @RequestParam(value = "amount") BigDecimal amount,
             @RequestParam(value = "PaymentMethod")PaymentMethod paymentMethod);
+
+    @GetMapping(value = "payment-service/pay/refund", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse<?> refundPayment(
+            @RequestHeader("Authorization") String token,
+            @RequestParam("paymentId") String paymentId
+    );
 }

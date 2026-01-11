@@ -289,17 +289,35 @@
         }
 
         @Override
-        public void cancelOrder(String orderId) {
+        public Object cancelOrder(String orderId) {
             String userId = getUserId();
-            Orders orders = orderRepository.findById(orderId).orElseThrow(
-                    () -> new AppException(OrderErrorCode.ORDER_NOT_EXISTS));
+            ServletRequestAttributes servletRequestAttributes =
+                    (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
+            Orders orders = orderRepository.findById(orderId)
+                    .orElseThrow(() -> new AppException(OrderErrorCode.ORDER_NOT_EXISTS));
+
+            if (!orders.getUserId().equals(userId)) {
+                throw new AppException(OrderErrorCode.FORBIDDEN);
+            }
+
+            if (orders.getOrderStatus() != Status.PROCESSING) {
+                throw new AppException(OrderErrorCode.ORDER_CANNOT_CANCEL);
+            }
+
+            var refundResponse = paymentClient.refundPayment(authHeader, orders.getPaymentId());
+
+
             orders.setOrderStatus(Status.CANCELLED);
-            sendKafkaEventToAnalysis(orders);
+            orders.setCancelledAt(LocalDateTime.now());
+
             orderRepository.save(orders);
+            sendKafkaEventToAnalysis(orders);
+            return refundResponse.getResult();
         }
 
         @Override
-        public void rePaymentForOrder(RePaymentForOrder request) {
+        public OrderResponse rePaymentForOrder(RePaymentForOrder request) {
             String userId = getUserId();
             ServletRequestAttributes servletRequestAttributes =
                     (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
@@ -377,14 +395,17 @@
                                 .build();
                     }
             ).toList();
+            orderMapper.update(order, request);
             BigDecimal finalTotal =
                     totalPrice.subtract(discountAmount)
                             .max(BigDecimal.ZERO);
             order.setTotalPrice(finalTotal);
-            var response = orderMapper.toOrderResponse(order);
+            var response = orderMapper.toOrderResponse(orderRepository.save(order));
             var paymentResponse = paymentClient.createPayment(authHeader, order.getOrderId(),
                     order.getTotalPrice(), request.getPaymentMethod());
-            return;
+            response.setPaymentUrl(paymentResponse);
+            response.setTotalPrice(finalTotal);
+            return response;
         }
 
         @Override
@@ -559,28 +580,72 @@
                             Function.identity()
                     ));
 
+            boolean isPending = orders.getOrderStatus() == Status.PENDING;
+
             List<OrderItemResponse> itemResponses = orders.getItems().stream()
                     .map(item -> {
                         ProductSkuVM product = productMap.get(item.getSku());
+                        BigDecimal listPrice;
+                        BigDecimal sellPrice;
 
+                        if (isPending && product != null) {
+                            listPrice = product.getListPrice();
+                            sellPrice = product.getSellPrice();
+                        } else {
+                            listPrice = item.getListPrice();
+                            sellPrice = item.getSellPrice();
+                        }
                         return OrderItemResponse.builder()
                                 .sku(item.getSku())
                                 .productName(product != null ? product.getVariantName() : null)
                                 .thumbnailUrl(product != null ? product.getThumbnailUrl() : null)
                                 .quantity(item.getQuantity())
-                                .sellPrice(item.getSellPrice())
-                                .listPrice(item.getListPrice())
+                                .sellPrice(sellPrice)
+                                .listPrice(listPrice)
                                 .addAt(item.getAddAt())
                                 .build();
                     })
                     .toList();
+            BigDecimal totalPrice = orders.getTotalPrice();
+            String voucher = null;
+            BigDecimal discountAmount = BigDecimal.ZERO;
+            if(isPending && orders.getVoucherCode() != null){
+                ServletRequestAttributes servletRequestAttributes =
+                        (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+                var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
+                List<String> productIds = productMap.values().stream()
+                        .map(ProductSkuVM::getId)
+                        .filter(Objects::nonNull)
+                        .distinct()
+                        .toList();
 
+                List<String> categoryIds = productMap.values().stream()
+                        .flatMap(p -> p.getCategoriesId() == null ? Stream.empty() : p.getCategoriesId().stream())
+                        .distinct()
+                        .toList();
+                CheckValidVoucherRequest checkValidVoucherRequest = CheckValidVoucherRequest.builder()
+                        .today(Date.from(Instant.now()))
+                        .totalAmount(totalPrice.doubleValue())
+                        .voucherCode(orders.getVoucherCode())
+                        .productId(productIds)
+                        .categoryId(categoryIds)
+                        .build();
+                var promotionResponse = promotionClient.checkValidPromotion(checkValidVoucherRequest, authHeader);
+                if (promotionResponse != null) {
+                    var promo = promotionResponse.getResult();
+                    discountAmount = calculateDiscount(totalPrice, promo);
+                    voucher = orders.getVoucherCode();
+                }
+                totalPrice = totalPrice.subtract(discountAmount)
+                                .max(BigDecimal.ZERO);
+            }
             return OrderResponse.builder()
                     .orderId(orders.getOrderId())
                     .userId(orders.getUserId())
                     .orderStatus(orders.getOrderStatus())
                     .orderDate(orders.getOrderDate())
-                    .totalPrice(orders.getTotalPrice())
+                    .totalPrice(totalPrice)
+                    .voucherCode(voucher)
                     .orderFee(orders.getOrderFee())
                     .orderDesc(orders.getOrderDesc())
                     .items(itemResponses)

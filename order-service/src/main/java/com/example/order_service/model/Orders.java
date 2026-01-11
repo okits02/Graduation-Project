@@ -55,6 +55,10 @@ public class Orders extends AbstractMappedEntity{
     private String addressId;
     @Column(name = "total_price")
     private BigDecimal totalPrice;
+    @Column(name = "canceled_at")
+    private LocalDateTime cancelledAt;
+    @Column(name = "completed_at")
+    private LocalDateTime completedAT;
     @OneToMany(mappedBy = "orders", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items;
 

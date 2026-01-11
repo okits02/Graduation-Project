@@ -23,7 +23,7 @@ import java.util.List;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class OrderResponse implements Serializable {
-    String paymentUrl;
+    Object paymentUrl;
     String orderId;
     LocalDateTime orderDate;
     String orderDesc;
@@ -33,6 +33,7 @@ public class OrderResponse implements Serializable {
     String paymentId;
     String addressId;
     String deliveryId;
+    String voucherCode;
     BigDecimal totalPrice;
     List<OrderItemResponse> items;
 }

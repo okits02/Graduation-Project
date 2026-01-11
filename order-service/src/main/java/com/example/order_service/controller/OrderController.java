@@ -1,6 +1,7 @@
 package com.example.order_service.controller;
 
 import com.example.order_service.dto.request.OrderCreationRequest;
+import com.example.order_service.dto.request.RePaymentForOrder;
 import com.example.order_service.dto.response.*;
 import com.example.order_service.enums.Status;
 import com.example.order_service.service.OrderService;
@@ -29,6 +30,16 @@ public class OrderController {
                 .build();
     }
 
+    @PostMapping("/rePayment")
+    public ApiResponse<OrderResponse> rePayment(
+            @RequestBody RePaymentForOrder rePaymentForOrder
+            ){
+        return ApiResponse.<OrderResponse>builder()
+                .code(200)
+                .message("save order successfully!")
+                .result(orderService.rePaymentForOrder(rePaymentForOrder))
+                .build();
+    }
 
     @PostMapping("/status")
     @PreAuthorize("hasRole('ADMIN')")
@@ -84,10 +95,10 @@ public class OrderController {
     public ApiResponse<?> cancelOderById(
             @RequestParam(value = "orderId") String orderId
     ){
-        orderService.cancelOrder(orderId);
-        return ApiResponse.<OrderResponse>builder()
+        return ApiResponse.<Object>builder()
                 .code(200)
                 .message("cancel order successfully")
+                .result(orderService.cancelOrder(orderId))
                 .build();
     }
 

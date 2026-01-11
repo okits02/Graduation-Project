@@ -12,8 +12,8 @@ public interface OrderService {
     public OrderResponse save(OrderCreationRequest request);
     public PageResponse<OrderSummaryResponse> getByUserId(int page, int size);
     public PageResponse<OrderSummaryResponse> getByUserIdAndStatus(int page, int size, Status status);
-    public void cancelOrder(String orderId);
-    public void rePaymentForOrder(RePaymentForOrder request);
+    public Object cancelOrder(String orderId);
+    public OrderResponse rePaymentForOrder(RePaymentForOrder request);
     public OrderResponse changeStatusOrder(String orderId, Status status);
     public void changStatusOrderForPayment(String paymentId, String orderId, Status status);
     public GetAmountResponse getAmount(String orderId);

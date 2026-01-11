@@ -14,7 +14,9 @@ public enum OrderErrorCode implements ErrorCode {
     VOUCHER_APPLY_EXPIRED(6806, "Voucher đã hết hạn", HttpStatus.BAD_REQUEST),
     VOUCHER_NOT_ARRIVE(6806, "voucher khong dung cho order", HttpStatus.BAD_REQUEST),
     PROMOTION_SERVICE_UNAVAILABLE(6808, "Không thể kết nối promotion-service", HttpStatus.BAD_REQUEST),
-    INSUFFICIENT_STOCK(6810, "Insufficient stock for the requested product", HttpStatus.BAD_REQUEST);
+    INSUFFICIENT_STOCK(6810, "Insufficient stock for the requested product", HttpStatus.BAD_REQUEST),
+    FORBIDDEN(404, "forbidden", HttpStatus.BAD_REQUEST),
+    ORDER_CANNOT_CANCEL(6812, "order can not  cancel", HttpStatus.BAD_REQUEST);
     private final int code;
     private final String message;
     private final HttpStatusCode httpStatusCode;
