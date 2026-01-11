@@ -197,6 +197,7 @@ public class ProductServiceImpl implements ProductService {
                 .name(product.getName())
                 .brand(product.getBrandName())
                 .description(product.getDescription())
+                .videoUrl(product.getVideoUrl())
                 .categoriesId(categoryList)
                 .specifications(product.getSpecifications())
                 .productVariants(productVariantsService.getVariantForKafkaEvent(product.getId()))

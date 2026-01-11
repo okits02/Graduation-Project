@@ -21,6 +21,7 @@ public class ProductEventDTO {
     String description;
     Integer quantity;
     double avgRating;
+    String videoUrl;
     List<String> categoriesId;
     List<Specification> specifications;
     List<ProductVariants> productVariants;

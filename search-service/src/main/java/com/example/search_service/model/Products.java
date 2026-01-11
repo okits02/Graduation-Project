@@ -29,6 +29,8 @@ public class Products {
     Set<Promotion> promotions;
     @Field(type = FieldType.Double)
     Double avgRating;
+    @Field(type = FieldType.Text)
+    String videoUrl;
     @Field(type = FieldType.Keyword)
     List<String> categoriesId;
     @Field(type = FieldType.Nested)

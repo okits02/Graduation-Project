@@ -5,9 +5,12 @@
     import co.elastic.clients.elasticsearch._types.SortOrder;
     import co.elastic.clients.elasticsearch._types.aggregations.*;
     import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
+    import com.example.search_service.enums.MediaOwnerType;
     import com.example.search_service.exceptions.SearchErrorCode;
     import com.example.search_service.model.ProductVariants;
+    import com.example.search_service.repository.httpClient.MediaClient;
     import com.example.search_service.viewmodel.dto.AutoCompletedResponse;
+    import com.example.search_service.viewmodel.dto.response.MediaResponse;
     import com.okits02.common_lib.exception.AppException;
     import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregation;
 
@@ -36,6 +39,7 @@
     public class SearchService {
         private final ElasticsearchOperations elasticsearchOperations;
         private final CategoryService categoryService;
+        private final MediaClient mediaClient;
 
         public ProductGetListVM searchProductAdvance(String keyword,
                                                      Integer page,
@@ -140,11 +144,17 @@
             if (hits.isEmpty()) {
                 throw new AppException(SearchErrorCode.PRODUCT_NOT_EXISTS);
             }
-
             Products product = hits.getSearchHit(0).getContent();
+            var responses = mediaClient.getMedia(product.getId(), MediaOwnerType.PRODUCT).getBody();
+            List<MediaResponse> listMedia = new ArrayList<>();
+            if(responses.getResult() != null){
+                listMedia = responses.getResult().getMediaResponseList();
+            }
             Map<String, CategoryGetVM> categoryMap =
                     categoryService.getCategoryByIds(new HashSet<>(product.getCategoriesId()));
-            return ProductGetVM.fromEntity(product, categoryMap);
+            ProductGetVM response = ProductGetVM.fromEntity(product, categoryMap);
+            response.setImageList(listMedia.stream().map(MediaResponse::getUrl).toList());
+            return response;
         }
 
         public ProductGetListVM searchProductAdmin(int page, int size, AdminSearchRequest request){

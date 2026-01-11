@@ -1,4 +1,4 @@
-package com.example.search_service.viewmodel.dto;
+package com.example.search_service.viewmodel.dto.response;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;

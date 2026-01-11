@@ -4,12 +4,11 @@ import com.example.search_service.service.CategoryService;
 import com.example.search_service.service.SearchService;
 import com.example.search_service.viewmodel.CategoryDetailsVM;
 import com.example.search_service.viewmodel.CategoryGetListVM;
-import com.example.search_service.viewmodel.dto.ApiResponse;
+import com.example.search_service.viewmodel.dto.response.ApiResponse;
 import com.example.search_service.viewmodel.dto.AutoCompletedResponse;
 import com.example.search_service.viewmodel.dto.request.CategoryGetByListIdRequest;
 import com.example.search_service.viewmodel.dto.request.SearchCateRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

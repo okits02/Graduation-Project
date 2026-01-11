@@ -22,6 +22,7 @@ public class ProductEvent {
     String description;
     Integer quantity;
     double avgRating;
+    String videoUrl;
     List<String> categoriesId;
     List<Specifications> specifications;
     List<ProductVariants> productVariants;
