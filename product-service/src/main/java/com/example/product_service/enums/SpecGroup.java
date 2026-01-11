@@ -7,6 +7,7 @@ public enum SpecGroup {
     BasicSpecification,
     Sound,
     Performance, //CPU, RAM
+    RAM,
     Storage, //ROM
     Camera, // Front, rear
     Battery, // Capacity
