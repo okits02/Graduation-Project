@@ -93,10 +93,10 @@ public class ImageController {
 
     @PostMapping("/banner")
     @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<List<BannerResponse>> creationBanner(
+    public ApiResponse<BannerResponse> creationBanner(
             @ModelAttribute BannerCreationRequest request
     ) throws IOException {
-        return ApiResponse.<List<BannerResponse>>builder()
+        return ApiResponse.<BannerResponse>builder()
                 .code(200)
                 .message("creation banner successfully")
                 .result(imageService.createBanner(request))

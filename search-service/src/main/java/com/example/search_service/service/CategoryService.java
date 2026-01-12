@@ -19,6 +19,7 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.util.*;
@@ -79,7 +80,7 @@ public class CategoryService {
                 .id(request.getId())
                 .document(category)
         );
-        if (request.getParentId() != null) {
+        if (StringUtils.hasText(request.getParentId())) {
             updateParentCategory(request.getParentId(), request.getId());
         }
     }

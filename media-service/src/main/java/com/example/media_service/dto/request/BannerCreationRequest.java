@@ -11,7 +11,9 @@ import java.util.List;
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class BannerCreationRequest {
+    String ownerId;
+    String ownerType;
     @ListFileImageConstraint(allowedTypes = {"image/jpeg", "image/png", "image/gif", "image/webp"},
             message = "File type not allowed. Allowed types are: JPEG, PNG, GIF")
-    List<MultipartFile> imageBanner;
+    MultipartFile imageBanner;
 }

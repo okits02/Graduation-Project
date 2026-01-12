@@ -58,6 +58,8 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public Category createCate(CategoryRequest request) {
         Category category = categoryMapper.toCategory(request);
+        category.setId(UUID.randomUUID().toString());
+
         category.setDescription(request.getDescription());
         category.setParentId(request.getParentId());
         Category newCategory = categoryRepository.save(category);
@@ -245,7 +247,9 @@ public class CategoryServiceImpl implements CategoryService {
                         .id(category.getId())
                         .name(category.getName())
                         .special(category.getSpecial())
-                        .parentId(category.getParentId())
+                        .parentId(category.getParentId() != null
+                                ? category.getParentId()
+                                : null)
                         .build();
                 kafkaTemplate.send("category-event", categoryEvent).whenComplete(
                         (result, ex) -> {
@@ -266,7 +270,9 @@ public class CategoryServiceImpl implements CategoryService {
                         .id(category.getId())
                         .name(category.getName())
                         .descriptions(category.getDescription())
-                        .parentId(category.getParentId())
+                        .parentId(category.getParentId() != null
+                                ? category.getParentId()
+                                : null)
                         .special(category.getSpecial())
                         .childrentId(children)
                         .build();

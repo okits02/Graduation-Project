@@ -20,7 +20,7 @@ public class ProductEventDTO {
     String brand;
     String description;
     Integer quantity;
-    double avgRating;
+    Double avgRating;
     String videoUrl;
     List<String> categoriesId;
     List<Specification> specifications;
