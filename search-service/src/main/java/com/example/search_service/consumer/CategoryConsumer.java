@@ -1,6 +1,7 @@
 package com.example.search_service.consumer;
 
 import com.example.search_service.service.CategoryService;
+import com.example.search_service.viewmodel.DeleteCategoryEvent;
 import com.example.search_service.viewmodel.dto.CategoryEventDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -38,6 +39,25 @@ public class CategoryConsumer {
             case "CATEGORY_CREATED" -> categoryService.indexCategory(categoryEventDTO);
             case "CATEGORY_UPDATED" -> categoryService.updateCategory(categoryEventDTO);
             case "CATEGORY_DELETED" -> categoryService.deleteCategory(categoryEventDTO.getId());
+        }
+    }
+
+    @KafkaListener(topics = "category-event-topics",
+            containerFactory = "deleteCateKafkaListenerContainerFactory")
+    public void categoryDeleteListener(String categoryDeleteEvent){
+        log.error("🔥 CATEGORY LISTENER HIT: {}", categoryDeleteEvent);
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        DeleteCategoryEvent deleteCategoryEvent;
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        try {
+            deleteCategoryEvent = objectMapper.readValue(categoryDeleteEvent, DeleteCategoryEvent.class);
+        }catch (JsonProcessingException e) {
+            throw new RuntimeException("Cannot deserialize ProductEvent: " + e.getMessage(), e);
+        }
+        switch (deleteCategoryEvent.getDeleteEventType()){
+            case "DELETE_ALL" -> categoryService.deleteAllCate();
         }
     }
 

@@ -23,6 +23,7 @@ public class ProductGetVM {
     String description;
     double avgRating;
     Integer sold;
+    String videoUrl;
     String thumbnailUrl;
     List<String> imageList;
     List<ProductVariants> variants;
@@ -43,6 +44,7 @@ public class ProductGetVM {
                         .map(categoryMap::get)
                         .filter(Objects::nonNull)
                         .toList())
+                .videoUrl(products.getVideoUrl())
                 .variants(products.getProductVariants())
                 .specifications(products.getSpecifications())
                 .createAt(products.getCreateAt())

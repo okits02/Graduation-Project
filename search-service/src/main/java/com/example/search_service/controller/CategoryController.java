@@ -51,5 +51,12 @@ public class CategoryController {
                 .build();
     }
 
-
+    @GetMapping("/root")
+    public ApiResponse<CategoryGetListVM> getChildOfRoot(){
+        return ApiResponse.<CategoryGetListVM>builder()
+                .code(200)
+                .message("get child for root successfully!")
+                .result(categoryService.getChildOfRoot())
+                .build();
+    }
 }

@@ -62,13 +62,26 @@ public class ProductController {
                 .build();
     }
 
-    @GetMapping("/internal/get-product/{productId}")
-    public ResponseEntity<ApiResponse<ProductGetVM>> getDetailsProduct(@PathVariable String productId){
-        return ResponseEntity.ok(ApiResponse.<ProductGetVM>builder()
+    @GetMapping("/product")
+    public ApiResponse<ProductGetVM> getById(
+            @RequestParam("productId") String productId
+    ){
+        return ApiResponse.<ProductGetVM>builder()
                 .code(200)
-                .result(productService.getDetailsProduct(productId))
-                .build());
+                .message("Get product by id successfully!")
+                .result(searchService.getProductById(productId))
+                .build();
     }
+
+    @GetMapping("/product/sku")
+    public ApiResponse<ProductGetVM> getBySku(@RequestParam("sku") String sku){
+        return ApiResponse.<ProductGetVM>builder()
+                .code(200)
+                .message("Get product by sku successfully!")
+                .result(searchService.getProductBySku(sku))
+                .build();
+    }
+
 
     @PostMapping("/admin")
     public ApiResponse<ProductGetListVM> searchAdmin(
@@ -93,6 +106,14 @@ public class ProductController {
                 .build();
     }
 
+    @GetMapping("/internal/get-product/{productId}")
+    public ResponseEntity<ApiResponse<ProductGetVM>> getDetailsProduct(@PathVariable String productId){
+        return ResponseEntity.ok(ApiResponse.<ProductGetVM>builder()
+                .code(200)
+                .result(productService.getDetailsProduct(productId))
+                .build());
+    }
+
     @PutMapping("/internal/categories/remove")
     public ResponseEntity<ApiResponse<Long>> removeCategoriesFromProducts(
             @RequestBody RemoveCategoryIdsRequest request
@@ -104,17 +125,6 @@ public class ProductController {
                         .message("Remove categories from products successfully")
                 .build()
         );
-    }
-
-    @GetMapping("/product")
-    public ApiResponse<ProductGetVM> getById(
-            @RequestParam("productId") String productId
-    ){
-        return ApiResponse.<ProductGetVM>builder()
-                .code(200)
-                .message("Get product by id successfully!")
-                .result(searchService.getProductById(productId))
-                .build();
     }
 
     @GetMapping("/internal/product/sku")

@@ -74,7 +74,14 @@ public class ProductConsumer {
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Cannot deserialize ProductEvent: " + e.getMessage(), e);
         }
+        switch (deleteProductEvent.getDeleteEventType()){
+            case "DELETE_LIST" -> {
+                productService.deleteProductByList(deleteProductEvent.getProductId());
+            }
+            case "DELETE_ALL" -> {
+                productService.deleteAllProduct();
+            }
+        }
     }
-
 
 }

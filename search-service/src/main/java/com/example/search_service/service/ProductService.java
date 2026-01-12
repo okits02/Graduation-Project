@@ -143,6 +143,60 @@ public class ProductService {
           }
         }
 
+    public void deleteProductByList(List<String> productIds) {
+        if (productIds == null || productIds.isEmpty()) {
+            log.warn("ES BULK DELETE: productIds is empty");
+            return;
+        }
+
+        try {
+            BulkRequest.Builder bulkBuilder = new BulkRequest.Builder();
+
+            for (String productId : productIds) {
+                bulkBuilder.operations(op -> op
+                        .delete(d -> d
+                                .index("product")
+                                .id(productId)
+                        )
+                );
+            }
+
+            BulkResponse response = elasticsearchClient.bulk(bulkBuilder.build());
+
+            if (response.errors()) {
+                response.items().forEach(item -> {
+                    if (item.error() != null) {
+                        log.error(
+                                "ES BULK DELETE FAILED id={}, reason={}",
+                                item.id(),
+                                item.error().reason()
+                        );
+                    }
+                });
+            } else {
+                log.warn("ES BULK DELETE SUCCESS, total={}", productIds.size());
+            }
+
+        } catch (Exception e) {
+            log.error("ES BULK DELETE EXCEPTION", e);
+        }
+    }
+
+    public void deleteAllProduct() {
+        try {
+            DeleteByQueryResponse response = elasticsearchClient.deleteByQuery(d -> d
+                    .index("product")
+                    .query(q -> q.matchAll(m -> m))
+                    .refresh(true)
+            );
+
+            log.warn("ES DELETE ALL PRODUCT: deleted={}", response.deleted());
+
+        } catch (Exception e) {
+            log.error("ES DELETE ALL PRODUCT FAILED", e);
+        }
+    }
+
         public void createPromotion(ApplyPromotionEventDTO request) throws IOException {
                 Promotion promotion = Promotion.builder()
                                 .id(request.getId())

@@ -3,6 +3,7 @@ package com.example.search_service.service;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch.core.DeleteByQueryResponse;
 import co.elastic.clients.elasticsearch.core.GetResponse;
 import com.example.search_service.exceptions.SearchErrorCode;
 import com.example.search_service.model.Category;
@@ -157,6 +158,21 @@ public class CategoryService {
                 )
         );
     }
+
+    public void deleteAllCate() {
+        try {
+            DeleteByQueryResponse response = elasticsearchClient.deleteByQuery(d -> d
+                    .index("category")
+                    .query(q -> q.matchAll(m -> m))
+                    .refresh(true)
+            );
+
+            log.warn("ES DELETE ALL PRODUCT: deleted={}", response.deleted());
+
+        } catch (Exception e) {
+            log.error("ES DELETE ALL PRODUCT FAILED", e);
+        }
+    }
     public void applyThumbnailToCategory(ApplyThumbnailRequest request) {
 
         if (request == null
@@ -249,6 +265,43 @@ public class CategoryService {
 
         return hits.getSearchHit(0).getContent();
     }
+
+    public CategoryGetListVM getChildOfRoot(){
+        NativeQuery query = NativeQuery.builder()
+                .withQuery(q -> q.term(
+                        t -> t.field("name").value("root")
+                ))
+                .build();
+        SearchHits<Category> hits =
+                elasticsearchOperations.search(query, Category.class);
+        if(hits.isEmpty()){
+            log.info("root didn't to exist");
+        }
+        List<String> childrentOfRoot = hits.getSearchHit(0).getContent().getChildrenId();
+        NativeQuery nativeQuery = NativeQuery.builder()
+                .withQuery(q -> q
+                        .terms(t -> t
+                                .field("_id")
+                                .terms(terms -> terms
+                                        .value(childrentOfRoot
+                                                .stream()
+                                                .map(FieldValue::of)
+                                                .toList()
+                                        )
+                                )
+                        ))
+                .build();
+        SearchHits<Category> searchHits = elasticsearchOperations.search(nativeQuery, Category.class);
+        List<CategoryGetVM> categoryGetVMS = searchHits.stream()
+                .map(i -> CategoryGetVM
+                        .fromEntity(i.getContent()
+                        )
+                ).toList();
+        return CategoryGetListVM.builder()
+                .CategoryGetVM(categoryGetVMS)
+                .build();
+    }
+
     private CategoryDetailsVM buildTreeByChildrenId(
             Category category,
             Set<String> visited

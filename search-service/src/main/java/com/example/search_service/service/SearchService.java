@@ -157,6 +157,34 @@
             return response;
         }
 
+        public ProductGetVM getProductBySku(String sku){
+            NativeQueryBuilder queryBuilder = NativeQuery.builder()
+                    .withQuery(q -> q
+                            .nested(n -> n
+                                    .path("productVariants")
+                                    .query(query -> query
+                                            .term(t -> t
+                                                    .field("productVariants.sku")
+                                                    .value(sku)
+                                            )
+                                    )
+                            )
+                    );
+
+            SearchHits<Products> hits = elasticsearchOperations.search(queryBuilder.build(), Products.class);
+            Products product = hits.getSearchHit(0).getContent();
+            var responses = mediaClient.getMedia(product.getId(), MediaOwnerType.PRODUCT).getBody();
+            List<MediaResponse> listMedia = new ArrayList<>();
+            if(responses.getResult() != null){
+                listMedia = responses.getResult().getMediaResponseList();
+            }
+            Map<String, CategoryGetVM> categoryMap =
+                    categoryService.getCategoryByIds(new HashSet<>(product.getCategoriesId()));
+            ProductGetVM response = ProductGetVM.fromEntity(product, categoryMap);
+            response.setImageList(listMedia.stream().map(MediaResponse::getUrl).toList());
+            return response;
+        }
+
         public ProductGetListVM searchProductAdmin(int page, int size, AdminSearchRequest request){
             NativeQueryBuilder nativeQueryBuilder = NativeQuery.builder();
             nativeQueryBuilder.withQuery(q -> q.bool(b -> {
