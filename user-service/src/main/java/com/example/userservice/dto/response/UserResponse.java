@@ -22,5 +22,6 @@ public class UserResponse {
     String email;
     String phone;
     String dob;
+    Boolean isVerified;
     Role role;
 }

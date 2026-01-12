@@ -188,6 +188,9 @@ public class UserServiceImpl implements UserService {
 
         return UserInfoResponse.builder()
                 .username(users.getUsername())
+                .id(users.getId())
+                .email(users.getEmail())
+                .isVerified(users.getIsVerified())
                 .email(users.getEmail())
                 .phone(profileResponse.getResult().getPhone())
                 .firstName(profileResponse.getResult().getFirstName())
@@ -195,6 +198,7 @@ public class UserServiceImpl implements UserService {
                 .sex(profileResponse.getResult().getSex())
                 .dob(profileResponse.getResult().getDob())
                 .address(profileResponse.getResult().getAddress())
+
                 .build();
     }
 
