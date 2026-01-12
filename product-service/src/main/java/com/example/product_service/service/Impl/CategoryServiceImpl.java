@@ -2,6 +2,8 @@ package com.example.product_service.service.Impl;
 
 import com.example.product_service.dto.response.CategoryLevelValidateResponse;
 import com.example.product_service.kafka.CategoryEvent;
+import com.example.product_service.kafka.DeleteCategoryEvent;
+import com.example.product_service.kafka.DeleteProductEvent;
 import com.example.product_service.service.BrandService;
 import com.okits02.common_lib.dto.PageResponse;
 import com.okits02.common_lib.dto.ApiResponse;
@@ -58,6 +60,8 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public Category createCate(CategoryRequest request) {
         Category category = categoryMapper.toCategory(request);
+        category.setId(UUID.randomUUID().toString());
+
         category.setDescription(request.getDescription());
         category.setParentId(request.getParentId());
         Category newCategory = categoryRepository.save(category);
@@ -183,6 +187,19 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    public void deleteCateByListId(List<String> categoryIds) {
+        for(String id : categoryIds){
+            deleteCateById(id);
+        }
+    }
+
+    @Override
+    public void deleteAll() {
+        sendDeleteCategoryEvent(List.of(),"DELETE_ALL");
+        categoryRepository.deleteAll();
+    }
+
+    @Override
     public CategoryLevelValidateResponse validateSameLevel(List<String> categoryIds) {
         if (categoryIds == null || categoryIds.size() <= 1) {
             return CategoryLevelValidateResponse.builder().valid(true).build();
@@ -245,7 +262,9 @@ public class CategoryServiceImpl implements CategoryService {
                         .id(category.getId())
                         .name(category.getName())
                         .special(category.getSpecial())
-                        .parentId(category.getParentId())
+                        .parentId(category.getParentId() != null
+                                ? category.getParentId()
+                                : null)
                         .build();
                 kafkaTemplate.send("category-event", categoryEvent).whenComplete(
                         (result, ex) -> {
@@ -266,7 +285,9 @@ public class CategoryServiceImpl implements CategoryService {
                         .id(category.getId())
                         .name(category.getName())
                         .descriptions(category.getDescription())
-                        .parentId(category.getParentId())
+                        .parentId(category.getParentId() != null
+                                ? category.getParentId()
+                                : null)
                         .special(category.getSpecial())
                         .childrentId(children)
                         .build();
@@ -287,6 +308,25 @@ public class CategoryServiceImpl implements CategoryService {
                         .id(category.getId())
                         .build();
                 kafkaTemplate.send("category-event", categoryEvent).whenComplete(
+                        (result, ex) -> {
+                            if(ex != null)
+                            {
+                                System.err.println("Failed to send message" + ex.getMessage());
+                            }else
+                            {
+                                System.err.println("send message successfully" + result.getProducerRecord());
+                            }
+                        });
+            }
+        }
+    }
+    private void sendDeleteCategoryEvent(List<String> categoryIds, String deleteEventType){
+        switch (deleteEventType){
+            case "DELETE_ALL" -> {
+                DeleteProductEvent deleteProductEvent = DeleteProductEvent.builder()
+                        .deleteEventType("DELETE_ALL")
+                        .build();
+                kafkaTemplate.send("category-event-topics", deleteProductEvent).whenComplete(
                         (result, ex) -> {
                             if(ex != null)
                             {

@@ -43,10 +43,11 @@ public class CartController {
     }
 
     @DeleteMapping("/delete-items")
-    public ApiResponse<CartResponse> delete(@RequestBody CartDeleteItemRequest request){
-        return ApiResponse.<CartResponse>builder()
+    public ApiResponse<?> delete(@RequestBody CartDeleteItemRequest request){
+        cartService.removeItem(request);
+        return ApiResponse.builder()
                 .code(200)
-                .result(cartService.removeItem(request))
+                .message("delete item successfully!")
                 .build();
     }
 

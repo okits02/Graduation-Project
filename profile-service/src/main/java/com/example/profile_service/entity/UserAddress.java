@@ -1,5 +1,6 @@
 package com.example.profile_service.entity;
 
+import com.example.profile_service.validator.UserPhoneConstraint;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
@@ -18,8 +19,12 @@ public class UserAddress {
     @Id
     @GeneratedValue(generatorClass = UUIDStringGenerator.class)
     String id;
-
+    String receiverName;
+    String receiverPhone;
+    String addressLine;
     String street;
+    String ward;
+    String district;
     String city;
     String postalCode;
     String addressType;

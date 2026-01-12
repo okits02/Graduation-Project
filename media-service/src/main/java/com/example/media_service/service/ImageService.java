@@ -19,7 +19,7 @@ public interface ImageService {
     public ListMediaResponse changeImageProduct(List<MultipartFile> listFileImage, String productId ) throws IOException;
     public void deleteByOwnerId(String OwnerId, MediaOwnerType mediaOwnerType);
     public ListMediaResponse getMedia(String ownerId, MediaOwnerType mediaOwnerType);
-    public List<BannerResponse> createBanner(BannerCreationRequest request) throws IOException;
+    public BannerResponse createBanner(BannerCreationRequest request) throws IOException;
     public MediaResponse createAvatarUser(AvatarUserCreationRequest request) throws IOException;
     public List<BannerResponse> getAllBanner();
     public void changePosition(String mediaId, Integer newPosition);

@@ -173,16 +173,32 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse getMyInfo() {
+    public UserInfoResponse getMyInfo() {
         var contex = SecurityContextHolder.getContext();
         String currentUsername = contex.getAuthentication().getName();
         Users users = userRepository.findByUsername(currentUsername).orElseThrow(()
                 -> new AppException(UserErrorCode.USER_NOT_EXISTS));
-        return UserResponse.builder()
+        ServletRequestAttributes servletRequestAttributes =
+                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
+        var profileResponse = profileClient.getMyInfoResponse(authHeader);
+        if(profileResponse == null || profileResponse.getCode() != 200){
+            throw new AppException(UserErrorCode.PROFILE_NOT_EXISTS);
+        }
+
+        return UserInfoResponse.builder()
                 .username(users.getUsername())
                 .id(users.getId())
                 .email(users.getEmail())
                 .isVerified(users.getIsVerified())
+                .email(users.getEmail())
+                .phone(profileResponse.getResult().getPhone())
+                .firstName(profileResponse.getResult().getFirstName())
+                .lastName(profileResponse.getResult().getLastName())
+                .sex(profileResponse.getResult().getSex())
+                .dob(profileResponse.getResult().getDob())
+                .address(profileResponse.getResult().getAddress())
+
                 .build();
     }
 

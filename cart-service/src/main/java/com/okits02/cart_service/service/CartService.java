@@ -12,7 +12,7 @@ import java.util.List;
 public interface CartService {
     public CartResponse save(CartItemRequest request);
     public CartResponse update(CartUpdateRequest request);
-    public CartResponse removeItem(CartDeleteItemRequest request);
+    public void removeItem(CartDeleteItemRequest request);
     public CartResponse getCart();
     public CartItemResponse getCartItem(String cartItemId);
 }

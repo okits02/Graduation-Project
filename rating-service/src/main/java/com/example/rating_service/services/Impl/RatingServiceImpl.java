@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 
@@ -55,6 +56,7 @@ public class RatingServiceImpl implements RatingService {
         }
         Rating rating = ratingMapper.toRating(request);
         rating.setUserId(userId);
+        log.info("userId: {}", userId);
         var responseOrder = orderClient.checkVerifiedPurchase(userId, request.getProductId());
         rating.setVerifiedPurchase(responseOrder.getResult().getIsVerifiedPurchase());
         var ratingResponse = ratingMapper.toRatingResponse(ratingRepository.save(rating));
@@ -72,7 +74,7 @@ public class RatingServiceImpl implements RatingService {
 
     @Override
     public PageResponse<RatingResponse> getAllByFilter(int page, int size, RatingFilterType type, String productId) {
-        Pageable pageable = PageRequest.of(page - 1, size);
+        Pageable pageable = PageRequest.of(page, size);
         Page<Rating> ratingPage = null;
 
         switch (type) {
@@ -126,19 +128,13 @@ public class RatingServiceImpl implements RatingService {
 
     public RatingSummaryResponse getRatingSummary(String productId) {
 
-        Object[] result = ratingRepository.getRatingSummary(productId);
+        var result = ratingRepository.getRatingSummary(productId);
 
-        Double averageRating = result[0] != null
-                ? ((Number) result[0]).doubleValue()
-                : 0.0;
-
-        Integer totalReviews = result[1] != null
-                ? ((Number) result[1]).intValue()
-                : 0;
-
+        BigDecimal avgRating = result.getAverage();
+        Long totalReviews = result.getTotal();
         return RatingSummaryResponse.builder()
-                .averageRating(averageRating)
-                .totalReviews(totalReviews)
+                .averageRating(avgRating.doubleValue())
+                .totalReviews(Math.toIntExact(totalReviews))
                 .maxRating(5)
                 .build();
     }

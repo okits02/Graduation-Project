@@ -10,7 +10,7 @@ public class kafkaConfig {
     @Bean
     public NewTopic productsTopic(){return TopicBuilder.name("rating-event")
             .partitions(3)
-            .replicas(2)
+            .replicas(1)
             .build();
     }
 }

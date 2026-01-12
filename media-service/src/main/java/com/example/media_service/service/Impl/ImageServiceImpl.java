@@ -140,17 +140,15 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public List<BannerResponse> createBanner(BannerCreationRequest request) throws IOException {
-        List<BannerResponse> responses = new ArrayList<>();
-        for(MultipartFile file : request.getImageBanner()){
-            Media image = uploadAndSave(file, "", MediaOwnerType.BANNER, MediaPurpose.BANNER);
-            Media saveMedia = mediaRepository.save(image);
-            responses.add(BannerResponse.builder()
-                            .id(saveMedia.getId())
-                            .bannerUrl(saveMedia.getUrl())
-                    .build());
-        }
-        return responses;
+    public BannerResponse createBanner(BannerCreationRequest request) throws IOException {
+        Media image = uploadAndSave(request.getImageBanner(), request.getOwnerId(),
+                MediaOwnerType.BANNER, MediaPurpose.BANNER);
+        Media saveMedia = mediaRepository.save(image);
+        return BannerResponse.builder()
+                .id(saveMedia.getId())
+                .ownerId(saveMedia.getOwnerId())
+                .bannerUrl(saveMedia.getUrl())
+                .build();
     }
 
     @Override
@@ -179,6 +177,7 @@ public class ImageServiceImpl implements ImageService {
         return medias.stream()
                 .map(media -> BannerResponse.builder()
                         .id(media.getId())
+                        .ownerId(media.getOwnerId())
                         .bannerUrl(media.getUrl())
                         .build())
                 .toList();

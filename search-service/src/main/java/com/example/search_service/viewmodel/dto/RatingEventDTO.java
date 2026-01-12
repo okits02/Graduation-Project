@@ -10,5 +10,5 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class RatingEventDTO {
     String productId;
-    private Double avgRating;
+    Double avgRating;
 }

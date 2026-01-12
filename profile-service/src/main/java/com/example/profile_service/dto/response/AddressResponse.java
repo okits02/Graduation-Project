@@ -11,7 +11,8 @@ import lombok.experimental.FieldDefaults;
 public class AddressResponse {
     String id;
     String street;
+    String ward;
+    String district;
     String city;
     String postalCode;
-    String addressType;
 }

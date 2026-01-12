@@ -1,5 +1,6 @@
 package com.example.profile_service.entity;
 
+import com.example.profile_service.enums.Sex;
 import jakarta.persistence.GenerationType;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -22,6 +23,8 @@ public class UserProfile {
     String id;
     @Property("userId")
     String userId;
+    @Property("sex")
+    Sex sex;
     String avatarUrl;
     String firstName;
     String lastName;

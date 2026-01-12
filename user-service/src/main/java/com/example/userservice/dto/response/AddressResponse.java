@@ -1,6 +1,5 @@
-package com.example.profile_service.dto.request;
+package com.example.userservice.dto.response;
 
-import com.example.profile_service.validator.UserPhoneConstraint;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -9,11 +8,8 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class AddressRequest {
-    String receiverName;
-    @UserPhoneConstraint(min = 10, message = "INVALID_PHONE")
-    String receiverPhone;
-    String addressLine;
+public class AddressResponse {
+    String id;
     String street;
     String ward;
     String district;

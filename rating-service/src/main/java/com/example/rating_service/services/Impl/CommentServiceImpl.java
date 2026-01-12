@@ -34,6 +34,7 @@ public class CommentServiceImpl implements CommentService {
         String userId = getUserId();
         Comments comments = commentMapper.toComments(request);
         comments.setUserId(userId);
+        commentsRepository.save(comments);
         return commentMapper.toResponse(comments);
     }
 

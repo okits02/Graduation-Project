@@ -126,7 +126,7 @@ public class OrderController {
                 .build();
     }
 
-    @GetMapping("/internal/rating/check")
+    @GetMapping("/internal/rating")
     public ApiResponse<CheckVerifiedPurchase> checkVerifiedPurchase(
             @RequestParam("userId") String userId,
             @RequestParam("productId") String productId

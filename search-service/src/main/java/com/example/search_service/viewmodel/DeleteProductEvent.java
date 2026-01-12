@@ -1,4 +1,4 @@
-package com.example.product_service.kafka;
+package com.example.search_service.viewmodel;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;

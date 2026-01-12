@@ -13,8 +13,6 @@ import lombok.experimental.FieldDefaults;
 public class CommentCreationRequest {
     String content;
     String productId;
-
     String userId;
-
     String parentId;
 }

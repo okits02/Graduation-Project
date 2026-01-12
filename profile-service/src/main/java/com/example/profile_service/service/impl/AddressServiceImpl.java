@@ -1,6 +1,7 @@
 package com.example.profile_service.service.impl;
 
 import com.example.profile_service.dto.request.AddressRequest;
+import com.example.profile_service.dto.request.AddressUpdateRequest;
 import com.example.profile_service.dto.response.AddressResponse;
 import com.example.profile_service.entity.UserAddress;
 import com.example.profile_service.entity.UserProfile;
@@ -50,7 +51,7 @@ public class AddressServiceImpl implements AddressService {
     }
 
     @Override
-    public AddressResponse updateMyAddress(AddressRequest request) {
+    public AddressResponse updateMyAddress(AddressUpdateRequest request) {
         String userId = profileService.getUserId();
         UserProfile userProfile = profileRepository.findByUserId(userId);
         if (userProfile == null) {

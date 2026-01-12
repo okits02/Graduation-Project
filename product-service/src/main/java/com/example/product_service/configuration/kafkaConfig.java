@@ -10,13 +10,29 @@ public class kafkaConfig {
     @Bean
     public NewTopic productsTopic(){return TopicBuilder.name("product-event")
             .partitions(3)
-            .replicas(2)
+            .replicas(1)
             .build();
     }
     @Bean
     public NewTopic categoryTopic(){return TopicBuilder.name("category-event")
-            .replicas(2)
+            .replicas(1)
             .partitions(3)
             .build();
+    }
+
+    @Bean
+    NewTopic deleteProductTopic(){
+        return TopicBuilder.name("product-delete-topics")
+                .partitions(3)
+                .replicas(1)
+                .build();
+    }
+
+    @Bean
+    NewTopic deleteCateTopics(){
+        return TopicBuilder.name("category-event-topics")
+                .partitions(3)
+                .replicas(1)
+                .build();
     }
 }

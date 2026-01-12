@@ -126,7 +126,7 @@ public class ProfileController {
 
     @GetMapping("/internal/rating/getProfile")
     public ResponseEntity<ApiResponse<CustomerVM>> getProfileForRating(
-            @RequestHeader("userI") String userId
+            @RequestParam("userId") String userId
     ){
         return ResponseEntity.ok(ApiResponse.<CustomerVM>builder()
                         .result(profileService.getProfileForRating(userId))

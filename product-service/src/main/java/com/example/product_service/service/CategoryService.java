@@ -18,5 +18,7 @@ public interface CategoryService {
     public CategoryResponse updateCate(CategoryRequest request);
     public List<String> getCategoryHierarchy(Set<String> categoryId);
     public void deleteCateById(String categoryId);
+    public void deleteCateByListId(List<String> categoryIds);
+    public void deleteAll();
     public CategoryLevelValidateResponse validateSameLevel(List<String> categoryIds);
 }
