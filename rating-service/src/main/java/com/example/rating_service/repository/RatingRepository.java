@@ -1,5 +1,6 @@
 package com.example.rating_service.repository;
 
+import com.example.rating_service.dto.projector.RatingSummaryProjection;
 import com.example.rating_service.model.Rating;
 import feign.Param;
 import org.springframework.data.domain.Page;
@@ -29,13 +30,13 @@ public interface RatingRepository extends JpaRepository<Rating, String> {
     );
 
     @Query(value = """
-        SELECT
-            ROUND(AVG(r.rating_score), 1),
-            COUNT(*)
-        FROM rating r
-        WHERE r.product_id = :productId
+    SELECT
+        COALESCE(ROUND(AVG(r.rating_score)::numeric, 1), 0) AS average,
+        COUNT(*) AS total
+    FROM rating r
+    WHERE r.product_id = :productId
     """, nativeQuery = true)
-    Object[] getRatingSummary(@Param("productId") String productId);
+    RatingSummaryProjection getRatingSummary(@Param("productId") String productId);
 
     @Query("""
         SELECT AVG(r.ratingScore)
