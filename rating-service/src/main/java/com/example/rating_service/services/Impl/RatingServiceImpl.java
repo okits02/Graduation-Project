@@ -55,6 +55,7 @@ public class RatingServiceImpl implements RatingService {
         }
         Rating rating = ratingMapper.toRating(request);
         rating.setUserId(userId);
+        log.info("userId: {}", userId);
         var responseOrder = orderClient.checkVerifiedPurchase(userId, request.getProductId());
         rating.setVerifiedPurchase(responseOrder.getResult().getIsVerifiedPurchase());
         var ratingResponse = ratingMapper.toRatingResponse(ratingRepository.save(rating));

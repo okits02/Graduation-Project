@@ -21,7 +21,7 @@ public interface OrderRepository extends JpaRepository<Orders, String> {
             SELECT DISTINCT o
             FROM Orders o
             JOIN FETCH o.items i
-            WHERE o.userId =: userId
+            WHERE o.userId = :userId
             ORDER BY o.orderDate DESC
             """, countQuery = """
             SELECT COUNT(DISTINCT o)
@@ -40,7 +40,7 @@ public interface OrderRepository extends JpaRepository<Orders, String> {
             """, countQuery = """
             SELECT COUNT(DISTINCT o)
             FROM Orders o
-            WHERE o.userId =: userId
+            WHERE o.userId = :userId
             AND (:status IS NULL OR o.orderStatus = :status)
             """)
     public Page<Orders> findAllByUserIdAndStatus(@Param("userId") String userId,
@@ -50,7 +50,7 @@ public interface OrderRepository extends JpaRepository<Orders, String> {
             SELECT DISTINCT o
             FROM Orders o
             JOIN FETCH o.items i
-            WHERE o.userId =: userId
+            WHERE o.userId = :userId
             AND(:status IS NULL OR o.orderStatus = :status)
             ORDER BY o.orderDate DESC
             """)

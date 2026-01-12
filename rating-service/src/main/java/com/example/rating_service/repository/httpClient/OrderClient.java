@@ -11,7 +11,7 @@ import javax.print.attribute.standard.Media;
 
 @FeignClient(name = "order-service")
 public interface OrderClient {
-    @GetMapping(value = "/order-serivce/order/internal/rating/check",
+    @GetMapping(value = "/order-service/order/internal/rating",
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse<CheckVerifiedPurchase> checkVerifiedPurchase(
             @RequestParam("userId") String userId,
