@@ -5,7 +5,6 @@ import com.example.userservice.model.Role;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.util.Date;
 import java.util.List;
 
 @Data
@@ -13,8 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserResponse {
-    String id;
+public class UserInfoResponse {
     String username;
     String firstName;
     String lastName;
@@ -23,4 +21,5 @@ public class UserResponse {
     String phone;
     String dob;
     Role role;
+    List<UserAddressResponse> address;
 }

@@ -18,8 +18,9 @@ public class UserAddress {
     @Id
     @GeneratedValue(generatorClass = UUIDStringGenerator.class)
     String id;
-
     String street;
+    String ward;
+    String district;
     String city;
     String postalCode;
     String addressType;

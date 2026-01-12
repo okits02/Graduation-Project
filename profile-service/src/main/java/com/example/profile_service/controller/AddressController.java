@@ -1,6 +1,7 @@
 package com.example.profile_service.controller;
 
 import com.example.profile_service.dto.request.AddressRequest;
+import com.example.profile_service.dto.request.AddressUpdateRequest;
 import com.example.profile_service.dto.response.AddressResponse;
 import com.example.profile_service.dto.response.ProfileResponse;
 import com.okits02.common_lib.dto.ApiResponse;
@@ -28,7 +29,6 @@ public class AddressController {
             security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping
     ApiResponse<AddressResponse> createAddress(
-            @PathVariable String userId,
             @RequestBody @Valid AddressRequest request)
     {
         return ApiResponse.<AddressResponse>builder()
@@ -41,7 +41,7 @@ public class AddressController {
     @Operation(summary = "get all my address",
             description = "Api used to get all user's address",
             security = @SecurityRequirement(name = "bearerAuth"))
-    @GetMapping()
+    @GetMapping
     public ResponseEntity<ApiResponse<List<AddressResponse>>> getAllMyAddress() {
         List<AddressResponse> list = addressService.getAllMyAddress();
         ApiResponse<List<AddressResponse>> response = ApiResponse.<List<AddressResponse>>builder()
@@ -52,12 +52,23 @@ public class AddressController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/get-by-id")
+    public ApiResponse<AddressResponse> getAddressById(
+            @RequestParam("id") String id
+    ){
+        return ApiResponse.<AddressResponse>builder()
+                .code(200)
+                .message("get delivery successfully")
+                .result(addressService.getAddressByAddressId(id))
+                .build();
+    }
+
     @Operation(summary = "update my address",
             description = "Api used to update user's address",
             security = @SecurityRequirement(name = "bearerAuth"))
     @PutMapping
     public ResponseEntity<ApiResponse<AddressResponse>> updateAddress(
-            @RequestBody AddressRequest request
+            @RequestBody AddressUpdateRequest request
     ) {
         AddressResponse updated = addressService.updateMyAddress(request);
         ApiResponse<AddressResponse> response = ApiResponse.<AddressResponse>builder()

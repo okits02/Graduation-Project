@@ -131,6 +131,26 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public void DeleteListProduct(List<String> productIds) {
+        sendDeleteProductEvent(productIds, "DELETE_LIST");
+        for(String id : productIds){
+            Optional<Products> product = productRepository.findById(id);
+            if(product.get() == null ){
+                throw new AppException(ProductErrorCode.PRODUCT_NOT_EXISTS);
+            }
+            productRepository.delete(product.get());
+            productVariantsService.deleteByProductId(id);
+        }
+    }
+
+    @Override
+    public void DeleteAll() {
+        sendDeleteProductEvent(List.of(), "DELETE_ALL");
+        productRepository.deleteAll();
+    }
+
+
+    @Override
     public void changeStatusInStock(String sku, Boolean inStock) {
         productVariantsService.changeStock(sku, inStock);
     }
@@ -169,6 +189,42 @@ public class ProductServiceImpl implements ProductService {
             case "DELETED" -> {
                 ProductEvent productEvent = createEventProduct(product, typeEvent);
                 kafkaTemplate.send("product-event", productEvent).whenComplete(
+                        (result, ex) -> {
+                            if(ex != null)
+                            {
+                                System.err.println("Failed to send message" + ex.getMessage());
+                            }else
+                            {
+                                System.err.println("send message successfully" + result.getProducerRecord());
+                            }
+                        });
+            }
+        }
+    }
+
+    private void sendDeleteProductEvent(List<String> productIds, String deleteEventType){
+        switch (deleteEventType){
+            case "DELETE_LIST" -> {
+                DeleteProductEvent deleteProductEvent = DeleteProductEvent.builder()
+                        .deleteEventType("DELETE_LIST")
+                        .productId(productIds)
+                        .build();
+                kafkaTemplate.send("product-delete-topics", deleteProductEvent).whenComplete(
+                        (result, ex) -> {
+                            if(ex != null)
+                            {
+                                System.err.println("Failed to send message" + ex.getMessage());
+                            }else
+                            {
+                                System.err.println("send message successfully" + result.getProducerRecord());
+                            }
+                        });
+            }
+            case "DELETE_ALL" -> {
+                DeleteProductEvent deleteProductEvent = DeleteProductEvent.builder()
+                        .deleteEventType("DELETE_ALL")
+                        .build();
+                kafkaTemplate.send("product-delete-topics", deleteProductEvent).whenComplete(
                         (result, ex) -> {
                             if(ex != null)
                             {

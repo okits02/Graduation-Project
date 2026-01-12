@@ -161,28 +161,24 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public CartResponse removeItem(CartDeleteItemRequest request) {
+    public void removeItem(CartDeleteItemRequest request) {
         String userId = getUserId();
+
         Cart cart = cartRepository.findByUserId(userId);
-        if(cart == null){
+        if (cart == null) {
             throw new AppException(CartErrorCode.USER_DOES_NOT_HAVE_CART);
         }
-        cart.getItems().removeIf(item -> request.getCartItemId().contains(item.getCartItemId()));
-        cart = cartRepository.save(cart);
-        List<CartItemResponse> cartItemResponses = cart.getItems().stream()
-                .map(item -> CartItemResponse.builder()
-                        .cartItemId(item.getCartItemId())
-                        .quantity(item.getQuantity())
-                        .listPrice(item.getListPrice())
-                        .sellPrice(item.getSellPrice())
-                        .addedAt(item.getAddedAt())
-                        .build()
-                )
-                .collect(Collectors.toList());
-        return CartResponse.builder()
-                .cartId(cart.getCartId())
-                .items(cartItemResponses)
-                .build();
+
+        Iterator<CartItem> iterator = cart.getItems().iterator();
+        while (iterator.hasNext()) {
+            CartItem item = iterator.next();
+            if (request.getCartItemId().contains(item.getCartItemId())) {
+                iterator.remove();
+                item.setCart(null);
+            }
+        }
+
+        cartRepository.save(cart);
     }
 
     @Override

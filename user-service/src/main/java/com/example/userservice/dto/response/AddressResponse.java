@@ -1,4 +1,4 @@
-package com.example.profile_service.dto.response;
+package com.example.userservice.dto.response;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -15,4 +15,5 @@ public class AddressResponse {
     String district;
     String city;
     String postalCode;
+    String addressType;
 }

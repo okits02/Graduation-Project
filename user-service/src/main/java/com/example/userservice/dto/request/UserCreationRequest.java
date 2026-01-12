@@ -1,5 +1,6 @@
 package com.example.userservice.dto.request;
 
+import com.example.userservice.enums.Sex;
 import com.example.userservice.validator.EmailConstraint;
 import com.example.userservice.validator.UserPhoneConstraint;
 import jakarta.validation.constraints.Size;
@@ -18,6 +19,7 @@ public class UserCreationRequest {
     String username;
     @Size(min = 8, message = "USER_PASSWORD_INVALID")
     String password;
+    Sex sex;
     String firstName;
     String lastName;
     @EmailConstraint(message = "INVALID_EMAIL")

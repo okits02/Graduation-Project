@@ -19,20 +19,26 @@ import java.time.LocalDateTime;
 public class CartItem {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @EqualsAndHashCode.Include
+    @ToString.Include
     private String cartItemId;
 
-    @Column(name = "sku")
+    @Column(name = "sku", nullable = false)
     private String sku;
-    @Column(name = "quantity")
+
+    @Column(name = "quantity", nullable = false)
     private Integer quantity;
-    @Column(name = "list_price")
+
+    @Column(name = "list_price", nullable = false)
     private BigDecimal listPrice;
-    @Column(name = "sell_price")
+
+    @Column(name = "sell_price", nullable = false)
     private BigDecimal sellPrice;
-    @Column(name = "added_at")
+
+    @Column(name = "added_at", nullable = false)
     private LocalDateTime addedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cart_id", nullable = false)
     private Cart cart;
 }

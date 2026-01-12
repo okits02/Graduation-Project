@@ -1,6 +1,7 @@
 package com.example.userservice.controller;
 
 import com.example.userservice.dto.response.ListEmailResponse;
+import com.example.userservice.dto.response.UserInfoResponse;
 import com.example.userservice.exception.UserErrorCode;
 import com.okits02.common_lib.dto.PageResponse;
 import com.example.userservice.dto.request.*;
@@ -212,8 +213,8 @@ public class UserController {
     }
 
     @GetMapping("/myInfo")
-    ApiResponse<UserResponse> getMyInfo(){
-        return ApiResponse.<UserResponse>builder()
+    ApiResponse<UserInfoResponse> getMyInfo(){
+        return ApiResponse.<UserInfoResponse>builder()
                 .code(200)
                 .message("get my info successfully")
                 .result(userService.getMyInfo())

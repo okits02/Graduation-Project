@@ -1,6 +1,7 @@
 package com.example.profile_service.dto.response;
 
 import com.example.profile_service.entity.UserAddress;
+import com.example.profile_service.enums.Sex;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -15,6 +16,7 @@ import java.util.List;
 public class ProfileResponse {
     String userId;
     String avatarUrl;
+    Sex sex;
     String firstName;
     String lastName;
     String phone;
