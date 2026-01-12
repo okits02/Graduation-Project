@@ -180,7 +180,9 @@ public class UserServiceImpl implements UserService {
                 -> new AppException(UserErrorCode.USER_NOT_EXISTS));
         return UserResponse.builder()
                 .username(users.getUsername())
-                .phone(users.getEmail())
+                .id(users.getId())
+                .email(users.getEmail())
+                .isVerified(users.getIsVerified())
                 .build();
     }
 
