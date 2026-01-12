@@ -2,6 +2,7 @@ package com.example.search_service.consumer;
 
 
 import com.example.search_service.service.ProductService;
+import com.example.search_service.viewmodel.DeleteProductEvent;
 import com.example.search_service.viewmodel.dto.ProductEventDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -57,6 +58,21 @@ public class ProductConsumer {
                     log.error("Error processing DELETED event: {}", e.getMessage());
                 }
             }
+        }
+    }
+
+    @KafkaListener(topics = "product-delete-topics",
+            containerFactory = "deleteProductKafkaListenerContainerFactory")
+    public void consumerDeleteProduct(String deleteEvent){
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        DeleteProductEvent deleteProductEvent;
+        try {
+            deleteProductEvent = objectMapper.readValue(deleteEvent, DeleteProductEvent.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Cannot deserialize ProductEvent: " + e.getMessage(), e);
         }
     }
 
