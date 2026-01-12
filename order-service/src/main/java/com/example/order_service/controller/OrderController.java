@@ -104,7 +104,6 @@ public class OrderController {
 
     @GetMapping("/get-my-order")
     public ApiResponse<PageResponse<OrderSummaryResponse>> getByUserIdAndStatus(
-            @RequestParam("userId") String userId,
             @RequestParam("status") Status status,
             @RequestParam(value = "page", defaultValue = "1") Integer page,
             @RequestParam(value = "size", defaultValue = "10") Integer size
