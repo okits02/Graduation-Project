@@ -22,4 +22,6 @@ public class UserInfoResponse {
     String dob;
     Role role;
     List<UserAddressResponse> address;
+    Boolean isActive;
+    Boolean isVerified;
 }

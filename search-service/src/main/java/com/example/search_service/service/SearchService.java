@@ -9,6 +9,7 @@
     import com.example.search_service.exceptions.SearchErrorCode;
     import com.example.search_service.model.ProductVariants;
     import com.example.search_service.repository.httpClient.MediaClient;
+    import com.example.search_service.repository.httpClient.PromotionClient;
     import com.example.search_service.viewmodel.dto.AutoCompletedResponse;
     import com.example.search_service.viewmodel.dto.response.MediaResponse;
     import com.okits02.common_lib.exception.AppException;
@@ -40,6 +41,7 @@
         private final ElasticsearchOperations elasticsearchOperations;
         private final CategoryService categoryService;
         private final MediaClient mediaClient;
+        private final PromotionClient promotionClient;
 
         public ProductGetListVM searchProductAdvance(String keyword,
                                                      Integer page,
@@ -130,6 +132,40 @@
                     .build();
         }
 
+        public ProductGetListVM getListProductFlashSale(){
+            var responsePromotion = promotionClient.getListPromotionFlashSaleIds();
+            if(responsePromotion == null || responsePromotion.getCode() != 200){
+                throw new AppException(SearchErrorCode.DID_NOT_HAVE_PRODUCT_FLASH_SALE);
+            }
+            List<String> promotionIds = responsePromotion.getResult();
+            if (promotionIds == null || promotionIds.isEmpty()) {
+                throw new AppException(SearchErrorCode.DID_NOT_HAVE_PRODUCT_FLASH_SALE);
+            }
+            NativeQuery query = NativeQuery.builder()
+                    .withQuery(q -> q
+                            .terms(t -> t
+                                    .field("promotions.id")
+                                    .terms(v -> v.value(
+                                            promotionIds.stream()
+                                                    .map(FieldValue::of)
+                                                    .toList()
+                                    ))
+                            )
+                    )
+                    .build();
+            SearchHits<Products> hits = elasticsearchOperations.search(query, Products.class);
+            SearchPage<Products> productsSearchPage = SearchHitSupport.searchPageFor(
+                    hits, query.getPageable());
+            List<ProductSummariseVM> productGetVMList = productsSearchPage.stream().map(i -> ProductSummariseVM
+                    .fromEntity(i.getContent())).toList();
+            return ProductGetListVM.<ProductSummariseVM>builder()
+                    .productGetVMList(productGetVMList)
+                    .currentPages(productsSearchPage.getNumber())
+                    .totalPage(productsSearchPage.getTotalPages())
+                    .pageSize(productsSearchPage.getSize())
+                    .totalElements(productsSearchPage.getTotalElements())
+                    .build();
+        }
 
 
         public ProductGetVM getProductById(String id){

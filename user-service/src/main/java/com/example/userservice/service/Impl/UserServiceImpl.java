@@ -173,6 +173,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public String getEmailByUserId(String userId) {
+        Users users = userRepository.findById(userId).orElseThrow(()
+                -> new AppException(UserErrorCode.USER_NOT_EXISTS));
+        return users.getEmail();
+    }
+
+    @Override
     public UserInfoResponse getMyInfo() {
         var contex = SecurityContextHolder.getContext();
         String currentUsername = contex.getAuthentication().getName();
@@ -195,6 +202,8 @@ public class UserServiceImpl implements UserService {
                 .sex(profileResponse.getResult().getSex())
                 .dob(profileResponse.getResult().getDob())
                 .address(profileResponse.getResult().getAddress())
+                .isActive(users.getIsActive())
+                .isVerified(users.getIsVerified())
                 .build();
     }
 

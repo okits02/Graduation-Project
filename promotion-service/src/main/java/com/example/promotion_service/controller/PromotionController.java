@@ -165,4 +165,13 @@ public class PromotionController {
                 .message("Roll back voucher successfully")
                 .build();
     }
+
+    @GetMapping("/internal/flashSale")
+    ApiResponse<List<String>> getListPromotionIdsFlashSale(){
+        return ApiResponse.<List<String>>builder()
+                .code(200)
+                .message("get list promotion flash salle successfully!")
+                .result(promotionService.getListPromotionFlashSaleIds())
+                .build();
+    }
 }

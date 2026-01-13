@@ -1,5 +1,6 @@
 package com.example.notification_service.service;
 
+import com.example.notification_service.dto.NotificationEvent;
 import com.example.notification_service.model.Notification;
 import com.example.notification_service.repository.NotificationRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -39,12 +40,14 @@ public class NotificationConsumer {
         repository.save(notification);
     }
 
-    @KafkaListener(topics = "notification")
+    @KafkaListener(topics = "order-notification-event",
+            containerFactory = "orderNotificationKafkaListenerContainerFactory")
     public void consumerNotification(String notificationEvent) throws MessagingException, UnsupportedEncodingException {
         ObjectMapper objectMapper = new ObjectMapper();
         Notification notification = null;
+        NotificationEvent OrderNotificationEvent;
         try{
-            notification = objectMapper.readValue(notificationEvent, Notification.class);
+            OrderNotificationEvent = objectMapper.readValue(notificationEvent, NotificationEvent.class);
         } catch (JsonMappingException e) {
             throw new RuntimeException(e);
         } catch (JsonProcessingException e) {

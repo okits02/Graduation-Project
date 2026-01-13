@@ -21,6 +21,7 @@ public interface UserService {
     public UserResponse getUserById(String userId);
     public UserResponse getUserByUserName(String userName);
     public UserResponse getUserByEmail(String email);
+    public String getEmailByUserId(String userId);
     public UserInfoResponse getMyInfo();
     public PageResponse<UserResponse> getAll(int page, int size);
 

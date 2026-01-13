@@ -22,6 +22,7 @@ public interface PromotionRepository extends JpaRepository<Promotion, String> {
     void deleteById(String promotionId);
     boolean existsByVoucherCode(String voucherCode);
     Page<Promotion> findAllByPromotionKind(PromotionKind promotionKind, Pageable pageable);
+    List<Promotion> findAllByPromotionKind(PromotionKind promotionKind);
     @Query(value = """
     SELECT p.*
     FROM promotion p

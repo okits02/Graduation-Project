@@ -2,5 +2,6 @@ package com.example.promotion_service.enums;
 
 public enum PromotionKind {
     AUTO,
-    VOUCHER
+    VOUCHER,
+    FLASH_SALE
 }

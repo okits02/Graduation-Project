@@ -18,4 +18,8 @@ public interface UserClient {
             @RequestHeader("Authorization") String auth,
             @RequestParam("userIds") List<String> userIds
     );
+    @GetMapping(value = "/user-service/users/internal/email", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse<String> getEmailById(
+            @RequestParam("userId") String userId
+    );
 }

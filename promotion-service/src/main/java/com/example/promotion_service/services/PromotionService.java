@@ -17,6 +17,7 @@ public interface PromotionService {
     public List<PromotionResponse> getPromotionByCategoryIds(List<String> categoryIds);
     public PageResponse<PromotionResponse> getAllPromotionAuto(int page, int size);
     public List<PromotionResponse> getPromotionForOrder(List<String> skus, Double totalAmount, Date today);
+    public List<String> getListPromotionFlashSaleIds();
     public PromotionResponse checkValidVoucher(CheckValidVoucherRequest request);
     public void applyVoucherToOrder(String voucherCode, String orderId);
     public void rollbackVoucher(String orderId);

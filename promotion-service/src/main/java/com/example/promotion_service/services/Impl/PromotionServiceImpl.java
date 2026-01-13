@@ -317,6 +317,16 @@ public class PromotionServiceImpl implements PromotionService {
     }
 
     @Override
+    public List<String> getListPromotionFlashSaleIds() {
+        var promotions = promotionRepository.findAllByPromotionKind(PromotionKind.FLASH_SALE);
+        if(promotions == null){
+            throw new AppException(PROMOTION_NOT_EXISTS);
+        }
+        List<String> promotionIds = promotions.stream().map(Promotion::getId).toList();
+        return promotionIds;
+    }
+
+    @Override
     public PromotionResponse checkValidVoucher(CheckValidVoucherRequest request) {
         String userId = getUserId();
 

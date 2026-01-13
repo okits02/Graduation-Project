@@ -1,12 +1,19 @@
 package com.example.notification_service.service;
 
+import com.example.notification_service.dto.CustomerVM;
+import com.example.notification_service.dto.NotificationEvent;
+import com.example.notification_service.dto.ProductSkuVM;
 import com.example.notification_service.dto.request.SendEmailRequest;
+import com.example.notification_service.enums.Status;
 import com.example.notification_service.repository.NotificationRepository;
 import com.example.notification_service.repository.httpClient.OrderClient;
+import com.example.notification_service.repository.httpClient.ProfileClient;
+import com.example.notification_service.repository.httpClient.SearchClient;
 import com.example.notification_service.repository.httpClient.UserClient;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.MailException;
 import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -16,15 +23,20 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class EmailService {
     private final NotificationRepository notificationRepository;
     private final JavaMailSender mailSender;
     private final OrderClient orderClient;
     private final UserClient userClient;
+    private final ProfileClient profileClient;
+    private final SearchClient searchClient;
 
     public void sendVerificationOtpEmail( String email, String otp)
             throws UnsupportedEncodingException, MessagingException {
@@ -87,6 +99,52 @@ public class EmailService {
         }
     }
 
+    public void sendEmailForOrder(NotificationEvent notificationEvent) throws MessagingException,
+            UnsupportedEncodingException {
+        if(notificationEvent == null) return;
+        var response = userClient.getEmailById(notificationEvent.getUserId());
+        if(response == null || response.getCode() != 200){
+            log.info("userid or email must be failed");
+        }
+        var productResponse = searchClient.getProductDetails(notificationEvent.getSkus());
+        if(response == null || response.getCode() != 200){
+            log.info("skus or product must be failed");
+        }
+        var profileResponse = profileClient.getProfileForRating(notificationEvent.getUserId());
+        if(response == null || response.getCode() != 200){
+            log.info("profile or userId must be failed");
+        }
+        sendOrderEmail(profileResponse.getBody().getResult(), productResponse.getResult(),
+                notificationEvent.getTotalPrice(), notificationEvent.getStatus(),
+                response.getResult());
+    }
+
+    public void sendOrderEmail(
+            CustomerVM customer,
+            List<ProductSkuVM> products,
+            BigDecimal totalPrice,
+            Status status,
+            String email
+    ) throws MessagingException, UnsupportedEncodingException {
+
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message);
+
+        helper.setFrom("AnhTu13@gmail.com", "Shop Support");
+        helper.setTo(email);
+        helper.setSubject(buildSubject(status));
+
+        String content = buildOrderEmailContent(
+                customer,
+                products,
+                totalPrice,
+                status
+        );
+
+        helper.setText(content, true);
+        mailSender.send(message);
+    }
+
     public void sendMarketingEmailToTopBuyers(SendEmailRequest request) {
         ServletRequestAttributes servletRequestAttributes =
                 (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
@@ -105,6 +163,8 @@ public class EmailService {
         }
         sendBulkMarketingEmail(emails, request);
     }
+
+
 
     private void sendBulkMarketingEmail(
             List<String> emails,
@@ -139,6 +199,84 @@ public class EmailService {
         helper.setText(content, true);
 
         mailSender.send(message);
+    }
+
+    private String buildSubject(Status status) {
+        return status == Status.COMPLETED
+                ? "🎉 Đặt hàng thành công"
+                : "📦 Giao hàng thành công";
+    }
+
+    private String renderProductList(List<ProductSkuVM> products) {
+        return products.stream()
+                .map(this::renderProductItem)
+                .collect(Collectors.joining());
+    }
+
+    private String renderProductItem(ProductSkuVM p) {
+        return """
+        <tr>
+            <td style="padding: 10px;">
+                <img src="%s" width="80" style="border-radius: 8px;" />
+            </td>
+            <td style="padding: 10px;">
+                <div style="font-weight: bold;">%s</div>
+                <div style="color: #777;">SKU: %s</div>
+                <div style="color: #777;">Giá: %s VND</div>
+            </td>
+        </tr>
+        """.formatted(
+                p.getThumbnailUrl(),
+                p.getVariantName(),
+                p.getSku(),
+                p.getSellPrice()
+        );
+    }
+    private String buildOrderEmailContent(
+            CustomerVM customer,
+            List<ProductSkuVM> products,
+            BigDecimal totalPrice,
+            Status status
+    ) {
+
+        String title = status == Status.COMPLETED
+                ? "Đơn hàng của bạn đã được đặt thành công 🎉"
+                : "Đơn hàng của bạn đã được giao thành công 📦";
+
+        String productHtml = renderProductList(products);
+
+        return """
+        <div style="font-family: Arial, sans-serif; background-color: #f6f6f6; padding: 20px;">
+            <div style="max-width: 650px; margin: auto; background: #ffffff; border-radius: 12px; overflow: hidden;">
+                
+                <div style="padding: 20px;">
+                    <h2 style="color: #2c3e50;">Xin chào %s %s,</h2>
+                    <p>%s</p>
+
+                    <table width="100%%" style="border-collapse: collapse;">
+                        %s
+                    </table>
+
+                    <hr style="margin: 20px 0;" />
+
+                    <p style="font-size: 16px;">
+                        <strong>Tổng giá trị đơn hàng:</strong>
+                        <span style="color: #e74c3c;">%s VND</span>
+                    </p>
+
+                    <p style="margin-top: 30px; font-size: 14px; color: #999;">
+                        Cảm ơn bạn đã mua sắm tại Shop ❤️
+                    </p>
+                </div>
+            </div>
+        </div>
+        """.formatted(
+                customer.getFirstName(),
+                customer.getLastName(),
+                title,
+                productHtml,
+                totalPrice
+        );
     }
 
 

@@ -2,6 +2,7 @@ package com.example.media_service.repository;
 
 import com.example.media_service.enums.MediaOwnerType;
 import com.example.media_service.enums.MediaPurpose;
+import com.example.media_service.enums.MediaType;
 import com.example.media_service.model.Media;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -79,5 +80,12 @@ public interface MediaRepository extends JpaRepository<Media, String> {
             @Param("ownerId") String productId,
             @Param("purpose") String mediaPurpose);
 
+    @Query(value = """
+            SELECT * FROM media 
+            WHERE media_type = :type
+            """, nativeQuery = true)
+    List<Media> findAllByMediaType(
+            @Param("type") MediaType mediaType
+    );
 
 }

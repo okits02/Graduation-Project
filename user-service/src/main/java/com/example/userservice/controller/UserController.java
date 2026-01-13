@@ -358,6 +358,16 @@ public class UserController {
                 .build();
     }
 
+    @GetMapping("/internal/email")
+    public ApiResponse<String> getEmailById(
+            @RequestParam("userId") String userId
+    ){
+        return ApiResponse.<String>builder()
+                .code(200)
+                .result(userService.getEmailByUserId(userId))
+                .build();
+    }
+
     @PutMapping("/admin/reset-password")
     @PreAuthorize("hasRole('ADMIN')")
     ResponseEntity<ApiResponse<?>> updatePasswordForAdmin(@RequestBody ResetPasswordRequest request) {

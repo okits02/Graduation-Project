@@ -10,7 +10,15 @@ public class kafkaConfig {
     @Bean
     public NewTopic ordersAnalysisTopic(){return TopicBuilder.name("order-analysis-event")
             .partitions(3)
-            .replicas(2)
+            .replicas(1)
             .build();
+    }
+
+    @Bean
+    public NewTopic notificationTopics(){
+        return TopicBuilder.name("order-notification-event")
+                .partitions(3)
+                .replicas(1)
+                .build();
     }
 }

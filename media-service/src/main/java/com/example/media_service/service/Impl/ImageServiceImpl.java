@@ -141,8 +141,14 @@ public class ImageServiceImpl implements ImageService {
 
     @Override
     public BannerResponse createBanner(BannerCreationRequest request) throws IOException {
-        Media image = uploadAndSave(request.getImageBanner(), request.getOwnerId(),
-                MediaOwnerType.BANNER, MediaPurpose.BANNER);
+        Media image = null;
+        if(request.getMediaPurpose().equals(MediaPurpose.BANNER_FLASH_SAE))
+        {
+            image = uploadAndSave(request.getImageBanner(), "",
+                    MediaOwnerType.PROMOTION, request.getMediaPurpose());
+        }
+        image = uploadAndSave(request.getImageBanner(), request.getOwnerId(),
+                MediaOwnerType.PROMOTION, request.getMediaPurpose());
         Media saveMedia = mediaRepository.save(image);
         return BannerResponse.builder()
                 .id(saveMedia.getId())
@@ -169,7 +175,7 @@ public class ImageServiceImpl implements ImageService {
 
     @Override
     public List<BannerResponse> getAllBanner() {
-        List<Media> medias = mediaRepository.findAllByMediaPurpose(MediaPurpose.BANNER);
+        List<Media> medias = mediaRepository.findAllByMediaType(MediaType.BANNER);
         if(medias == null || medias.isEmpty()){
             throw new AppException(MediaErrorCode.BANNER_IS_NOT_EXISTS);
         }
@@ -179,6 +185,7 @@ public class ImageServiceImpl implements ImageService {
                         .id(media.getId())
                         .ownerId(media.getOwnerId())
                         .bannerUrl(media.getUrl())
+                        .mediaPurpose(media.getMediaPurpose())
                         .build())
                 .toList();
     }

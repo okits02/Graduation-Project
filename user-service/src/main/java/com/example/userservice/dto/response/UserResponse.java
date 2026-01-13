@@ -23,4 +23,6 @@ public class UserResponse {
     String phone;
     String dob;
     Role role;
+    Boolean isActive;
+    Boolean isVerified;
 }

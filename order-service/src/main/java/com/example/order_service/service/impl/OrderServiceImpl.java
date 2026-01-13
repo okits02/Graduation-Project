@@ -4,6 +4,7 @@
     import com.example.order_service.dto.request.*;
     import com.example.order_service.dto.response.*;
     import com.example.order_service.enums.Status;
+    import com.example.order_service.kafka.NotificationEvent;
     import com.example.order_service.kafka.OrderAnalysisEvent;
     import com.example.order_service.kafka.OrderItemEvent;
     import com.example.order_service.mapper.OrderItemMapper;
@@ -420,6 +421,7 @@
             }
             if(status.equals(Status.COMPLETED)){
                 sendKafkaEventToAnalysis(orders);
+                sendNotificationEvent(orders);
             }
             orderRepository.save(orders);
             List<String> skus = orders.getItems()
@@ -491,6 +493,7 @@
             orders.setOrderStatus(status);
             orders.setPaymentId(paymentId);
             decreaseInventory(orders);
+            sendNotificationEvent(orders);
             orderRepository.save(orders);
         }
 
@@ -810,6 +813,26 @@
                     .build();
 
             kafkaTemplate.send("order-analysis-event", orderAnalysisEvent).whenComplete(
+                    (result, ex) -> {
+                        if(ex != null)
+                        {
+                            System.err.println("Failed to send message" + ex.getMessage());
+                        }else
+                        {
+                            System.err.println("send message successfully" + result.getProducerRecord());
+                        }
+                    });
+        }
+
+        private void sendNotificationEvent(Orders orders){
+            if(orders == null) return;
+            NotificationEvent notificationEvent = NotificationEvent.builder()
+                    .userId(orders.getUserId())
+                    .status(orders.getOrderStatus())
+                    .totalPrice(orders.getTotalPrice())
+                    .skus(orders.getItems().stream().map(OrderItem::getSku).toList())
+                    .build();
+            kafkaTemplate.send("order-notification-event", notificationEvent).whenComplete(
                     (result, ex) -> {
                         if(ex != null)
                         {

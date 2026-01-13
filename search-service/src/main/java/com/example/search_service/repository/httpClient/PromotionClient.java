@@ -14,4 +14,8 @@ public interface PromotionClient {
     @GetMapping(value = "/promotion-service/promotion/internal/get-promotion-by-cate",
             produces = MediaType.APPLICATION_JSON_VALUE)
     ApiResponse<List<Promotion>> getByCategoryIds(@RequestParam List<String> categoryIds);
+
+    @GetMapping(value = "/promotion-service/promotion/internal/flashSale",
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    ApiResponse<List<String>> getListPromotionFlashSaleIds();
 }
