@@ -38,19 +38,11 @@ public class ProductController {
     ApiResponse<ProductResponse> createProduct(
             @RequestBody ProductRequest request)
     {
-        try{
             Products product = productService.createProduct(request);
             return ApiResponse.<ProductResponse>builder()
                     .code(200)
                     .result(productMappingHelper.map(product))
                     .build();
-        }catch (AppException e)
-        {
-            return ApiResponse.<ProductResponse>builder()
-                    .code(e.getErrorCode().getCode())
-                    .message(e.getMessage())
-                    .build();
-        }
     }
 
     @Operation(summary = "admin update product", security = @SecurityRequirement(name = "bearerAuth"))

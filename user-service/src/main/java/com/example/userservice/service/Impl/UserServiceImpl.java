@@ -199,6 +199,7 @@ public class UserServiceImpl implements UserService {
                 .phone(profileResponse.getResult().getPhone())
                 .firstName(profileResponse.getResult().getFirstName())
                 .lastName(profileResponse.getResult().getLastName())
+                .avatarUrl(profileResponse.getResult().getAvatarUrl())
                 .sex(profileResponse.getResult().getSex())
                 .dob(profileResponse.getResult().getDob())
                 .address(profileResponse.getResult().getAddress())

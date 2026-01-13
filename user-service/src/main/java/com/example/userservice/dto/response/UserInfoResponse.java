@@ -16,6 +16,7 @@ public class UserInfoResponse {
     String username;
     String firstName;
     String lastName;
+    String avatarUrl;
     Sex sex;
     String email;
     String phone;
