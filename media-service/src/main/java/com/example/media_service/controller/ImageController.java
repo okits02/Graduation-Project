@@ -132,7 +132,7 @@ public class ImageController {
 
     @PostMapping("/user/avatar")
     public ApiResponse<MediaResponse> creationAvatar(
-            @RequestBody AvatarUserCreationRequest request
+            @ModelAttribute AvatarUserCreationRequest request
     ) throws IOException {
         return ApiResponse.<MediaResponse>builder()
                 .code(200)
