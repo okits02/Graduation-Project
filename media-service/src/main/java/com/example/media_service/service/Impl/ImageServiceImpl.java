@@ -167,9 +167,13 @@ public class ImageServiceImpl implements ImageService {
         {
             throw new RuntimeException("call to user-client failed");
         }
+        List<Media> media = mediaRepository.findByOwnerIdAndOwnerType(userResponse.getResult().getUserId(),
+                MediaOwnerType.USER.toString());
+        if(!media.isEmpty()){
+            deleteByUrl(media.get(0).getUrl());
+        }
         Media image = uploadAndSave(request.getAvatarFile(), userResponse.getResult().getUserId(),
                 MediaOwnerType.USER, MediaPurpose.GALLERY);
-        profileClient.creationAvatar(userResponse.getResult().getUserId(), image.getUrl());
         return mediaMapper.toMediaResponse(image);
     }
 
