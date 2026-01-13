@@ -136,9 +136,10 @@ public class ProfileController {
 
     @PostMapping("/internal/avatar")
     public ApiResponse<?> creationAvatar(
-            @RequestParam(value = "avatarUrl") String avatarUrl
+            @RequestParam(value = "avatarUrl") String avatarUrl,
+            @RequestParam(value = "userId") String userId
     ){
-        profileService.creationAvatar(avatarUrl);
+        profileService.creationAvatar(userId, avatarUrl);
         return ApiResponse.builder()
                 .code(200)
                 .message("creation avatar for user successfully!")

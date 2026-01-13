@@ -107,8 +107,7 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
-    public void creationAvatar(String avatarUrl) {
-        String userId = getUserId();
+    public void creationAvatar(String avatarUrl, String userId) {
         UserProfile userProfile = profileRepository.findByUserId(userId);
         if(userProfile == null)
         {

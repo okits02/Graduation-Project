@@ -169,7 +169,7 @@ public class ImageServiceImpl implements ImageService {
         }
         Media image = uploadAndSave(request.getAvatarFile(), userResponse.getResult().getUserId(),
                 MediaOwnerType.USER, MediaPurpose.GALLERY);
-        profileClient.creationAvatar(authHeader, image.getUrl());
+        profileClient.creationAvatar(userResponse.getResult().getUserId(), image.getUrl());
         return mediaMapper.toMediaResponse(image);
     }
 
