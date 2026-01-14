@@ -32,6 +32,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -67,6 +68,7 @@ public class RatingServiceImpl implements RatingService {
 
         Rating rating = ratingMapper.toRating(request);
         rating.setUserId(user.getUserId());
+        rating.setCreatedAt(LocalDate.now());
 
         log.info("[RATING][CREATE] userId={}, productId={}", user.getUserId(), request.getProductId());
 
@@ -79,7 +81,7 @@ public class RatingServiceImpl implements RatingService {
         ratingResponse.setAvatarUrl(response.getResult().getAvatarUrl());
         ratingResponse.setFirstName(response.getResult().getFirstName());
         ratingResponse.setLastName(response.getResult().getLastName());
-        ratingResponse.setCreatedAt(LocalDateTime.now());
+        ratingResponse.setCreatedAt(LocalDate.now());
 
         publishRatingEvent(ratingResponse.getProductId());
         return ratingResponse;

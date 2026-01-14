@@ -21,5 +21,5 @@ public class RatingResponse {
     Double ratingScore;
     String productId;
     boolean isVerifiedPurchase;
-    LocalDateTime createdAt;
+    LocalDate createdAt;
 }

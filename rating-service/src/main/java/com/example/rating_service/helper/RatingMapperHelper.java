@@ -24,6 +24,7 @@ public class RatingMapperHelper {
         ratingResponse.setLastName(response.getBody().getResult().getLastName());
         ratingResponse.setFirstName(response.getBody().getResult().getFirstName());
         ratingResponse.setAvatarUrl(response.getBody().getResult().getAvatarUrl());
+        ratingResponse.setCreatedAt(rating.getCreatedAt());
         return ratingResponse;
     }
 }

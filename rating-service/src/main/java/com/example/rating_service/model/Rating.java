@@ -3,6 +3,7 @@ package com.example.rating_service.model;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
 
@@ -24,5 +25,6 @@ public class Rating {
     String productId;
     String userId;
     boolean isVerifiedPurchase;
+    @CreationTimestamp
     LocalDate createdAt;
 }

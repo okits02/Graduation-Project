@@ -12,6 +12,7 @@ import java.util.Date;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProfileUpdateRequest {
+    String avatarUrl;
     String firstName;
     String lastName;
     Sex sex;
