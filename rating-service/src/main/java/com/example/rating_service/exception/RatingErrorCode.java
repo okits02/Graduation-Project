@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatusCode;
 public enum RatingErrorCode implements ErrorCode {
     UNAUTHENTICATED(HttpStatus.BAD_REQUEST, 4001, "Unauthenticate in promotion-service!"),
     RATING_EXISTS(HttpStatus.BAD_REQUEST, 4020, "You have rated of product"),
+    USER_CAN_NOT_DELETE_COMMENT(HttpStatus.BAD_REQUEST, 40206, "You can not delete comments that are not yours"),
     COMMENT_NOT_EXISTS(HttpStatus.BAD_REQUEST, 4021, "Comment not exists!"),
     PROFILE_NOT_EXISTS(HttpStatus.BAD_REQUEST, 4022, "Failed to call profile form profile-service"),
     ADMIN_ONLY_REPLY_COMMENT(HttpStatus.BAD_REQUEST,403, "Admin is only allowed to reply to existing comments"),

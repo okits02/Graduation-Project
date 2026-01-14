@@ -11,5 +11,7 @@ public interface CommentService {
 
     public PageResponse<CommentResponse> getAllForProduct(int page, int size, String productId);
     public void delete(String id);
+
+    public void deleteMyComment(String id);
     public void deleteForProductId(String productId);
 }
