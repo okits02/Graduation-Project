@@ -101,6 +101,16 @@ public class BrandServiceImpl implements BrandService {
     }
 
     @Override
+    public void deleteAll() {
+        brandRepository.deleteAll();
+    }
+
+    @Override
+    public void deleteList(List<String> brandIds) {
+        brandRepository.deleteAllById(brandIds);
+    }
+
+    @Override
     public void removeCategoryFromBrand(String categoryId) {
         List<Brand> brands = brandRepository.findByCategoryId(categoryId);
 

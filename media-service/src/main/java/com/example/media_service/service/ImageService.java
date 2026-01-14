@@ -22,6 +22,8 @@ public interface ImageService {
     public BannerResponse createBanner(BannerCreationRequest request) throws IOException;
     public MediaResponse createAvatarUser(AvatarUserCreationRequest request) throws IOException;
     public List<BannerResponse> getAllBanner();
+    public void updateImageForRating(List<MultipartFile> multipartFiles, String ratingId) throws IOException;
+    public void updateImageForComment(List<MultipartFile> multipartFiles, String commentId) throws IOException;
     public void changePosition(String mediaId, Integer newPosition);
     public void deleteByUrl(String url);
 }

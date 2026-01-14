@@ -21,6 +21,7 @@ public class CommentResponse {
     String content;
     String productId;
     String parentId;
+    List<String> imageUrl;
     List<CommentResponse> childrent;
     LocalDateTime createdAt;
 }

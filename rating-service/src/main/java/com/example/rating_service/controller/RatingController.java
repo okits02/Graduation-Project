@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/rating")
@@ -38,6 +40,16 @@ public class RatingController {
                 .code(200)
                 .message("creation rating successfully!")
                 .result(ratingService.modifyRating(request))
+                .build();
+    }
+
+    @PutMapping("/image")
+    public ApiResponse<?> uploadImageComment(
+            @RequestParam("imageUrl") List<String> imageUrl,
+            @RequestParam(value = "id") String id){
+        ratingService.createImage(imageUrl, id);
+        return ApiResponse.builder()
+                .code(200)
                 .build();
     }
 

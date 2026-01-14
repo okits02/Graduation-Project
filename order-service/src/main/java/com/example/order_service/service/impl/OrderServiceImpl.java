@@ -135,24 +135,14 @@
             if (voucherCode == null || voucherCode.isBlank()) {
                 return;
             }
-
-            try {
-                promotionClient.applyForOrder(
+            promotionClient.applyForOrder(
                         orderId,
                         voucherCode,
-                        authHeader
-                );
-            } catch (FeignException.BadRequest e) {
-                throw new AppException(
-                        OrderErrorCode.VOUCHER_APPLY_FAILED);
-            } catch (FeignException e) {
-                throw new AppException(
-                        OrderErrorCode.PROMOTION_SERVICE_UNAVAILABLE);
-            }
+                        authHeader);
         }
         private BigDecimal calculateDiscount(BigDecimal totalPrice, PromotionResponse promo) {
             BigDecimal discount = BigDecimal.ZERO;
-            if(promo.getDiscountPercent() != null){
+            if(promo.getDiscountPercent() != null && promo.getDiscountPercent() > 0){
                 discount = totalPrice.multiply(
                         BigDecimal.valueOf(promo.getDiscountPercent())
                 ).divide(BigDecimal.valueOf(100), 0, RoundingMode.HALF_UP);
@@ -162,7 +152,7 @@
                     );
                 }
             }
-            if (promo.getFixedAmount() != null) {
+            if (promo.getFixedAmount() != null && promo.getFixedAmount() > 0) {
                 discount = BigDecimal.valueOf(promo.getFixedAmount())
                         .min(totalPrice);
             }

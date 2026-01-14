@@ -23,6 +23,8 @@ public class ProductEvent {
     Integer quantity;
     double avgRating;
     String videoUrl;
+    LocalDate warrantyStartDate;
+    LocalDate warrantyEndDate;
     List<String> categoriesId;
     List<Specifications> specifications;
     List<ProductVariants> productVariants;

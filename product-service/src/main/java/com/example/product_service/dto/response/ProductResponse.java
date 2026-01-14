@@ -20,6 +20,8 @@ public class  ProductResponse {
     String brandName;
     String description;
     String videoUrl;
+    LocalDate warrantyStartDate;
+    LocalDate warrantyEndDate;
     List<MediaResponse> mediaList;
     List<ProductVariantsResponse> variantsResponses;
     List<CategoryResponse> listCategory;

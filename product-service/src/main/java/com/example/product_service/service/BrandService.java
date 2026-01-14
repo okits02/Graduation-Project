@@ -11,6 +11,8 @@ public interface BrandService {
     public List<BrandResponse> getList();
     public void delete(String name);
 
+    public void deleteAll();
+    public void deleteList(List<String> brandIds);
     public void removeCategoryFromBrand(String categoryId);
 
 }

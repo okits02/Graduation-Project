@@ -161,9 +161,9 @@ public class PromotionController {
     }
     @PostMapping("/internal/voucher/applyForOrder")
     ApiResponse<?> applyForOrder(
-                    @RequestParam String orderId,
-                    @RequestParam String voucherCode){
-        promotionService.applyVoucherToOrder(orderId, voucherCode);
+                    @RequestParam(value = "orderId") String orderId,
+                    @RequestParam(value = "voucherCode") String voucherCode){
+        promotionService.applyVoucherToOrder(voucherCode, orderId);
         return ApiResponse.builder()
                 .code(200)
                 .message("apply voucher for order is successfully")
@@ -172,8 +172,9 @@ public class PromotionController {
 
     @PostMapping("/internal/voucher/rollBack")
     ApiResponse<?> rollBackVoucher(
-            @RequestParam String orderId
+            @RequestParam("orderId") String orderId
     ){
+        promotionService.rollbackVoucher(orderId);
         return ApiResponse.builder()
                 .code(200)
                 .message("Roll back voucher successfully")

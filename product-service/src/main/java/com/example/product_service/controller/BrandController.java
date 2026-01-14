@@ -54,4 +54,27 @@ public class BrandController {
                 .message("delete brand successfully")
                 .build();
     }
+
+    @DeleteMapping("/list")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<?> deleteListBrand(
+            @RequestParam(value = "brands") List<String> brands
+    ){
+        brandService.deleteList(brands);
+        return ApiResponse.builder()
+                .code(200)
+                .message("delete list brands successfully")
+                .build();
+    }
+
+    @DeleteMapping("/all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<?> deleteAllProduct(
+    ){
+        brandService.deleteAll();
+        return ApiResponse.builder()
+                .code(200)
+                .message("delete all brands successfully")
+                .build();
+    }
 }

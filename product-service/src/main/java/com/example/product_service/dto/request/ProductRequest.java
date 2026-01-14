@@ -6,6 +6,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,6 +23,8 @@ public class ProductRequest {
     String videoUrl;
     double avgRating;
     Set<String> categoryId;
+    LocalDate warrantyStartDate;
+    LocalDate warrantyEndDate;
     List<SpecificationRequest> specifications;
     List<ProductVariantsRequest> productVariants;
 }

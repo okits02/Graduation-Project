@@ -72,6 +72,8 @@ public class ProductServiceImpl implements ProductService {
                 .description(request.getDescription())
                 .videoUrl(request.getVideoUrl())
                 .categoryId(request.getCategoryId())
+                .warrantyStartDate(request.getWarrantyStartDate())
+                .warrantyEndDate(request.getWarrantyEndDate())
                 .brandName(request.getBrandName())
                 .createAt(LocalDate.now())
                 .build();
@@ -256,6 +258,8 @@ public class ProductServiceImpl implements ProductService {
                 .videoUrl(product.getVideoUrl())
                 .categoriesId(categoryList)
                 .specifications(product.getSpecifications())
+                .warrantyStartDate(product.getWarrantyStartDate())
+                .warrantyEndDate(product.getWarrantyEndDate())
                 .productVariants(productVariantsService.getVariantForKafkaEvent(product.getId()))
                 .createAt(product.getCreateAt())
                 .updateAt(product.getUpdateAt())

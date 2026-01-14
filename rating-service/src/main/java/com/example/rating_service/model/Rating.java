@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Getter
@@ -25,6 +26,7 @@ public class Rating {
     String productId;
     String userId;
     boolean isVerifiedPurchase;
+    List<String> imageUrl;
     @CreationTimestamp
     LocalDate createdAt;
 }

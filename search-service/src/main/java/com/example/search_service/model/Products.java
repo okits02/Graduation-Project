@@ -40,6 +40,14 @@ public class Products {
     @Field(type = FieldType.Date,
             format = DateFormat.date,
             pattern = "yyyy-MM-dd")
+    LocalDate warrantyStartDate;
+    @Field(type = FieldType.Date,
+            format = DateFormat.date,
+            pattern = "yyyy-MM-dd")
+    LocalDate warrantyEndDate;
+    @Field(type = FieldType.Date,
+            format = DateFormat.date,
+            pattern = "yyyy-MM-dd")
     LocalDate createAt;
     @Field(type = FieldType.Date,
             format = DateFormat.date,

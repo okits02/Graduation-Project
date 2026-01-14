@@ -11,6 +11,7 @@ import com.example.media_service.enums.MediaOwnerType;
 import com.example.media_service.enums.MediaPurpose;
 import com.example.media_service.enums.MediaType;
 import com.example.media_service.repository.httpClient.ProfileClient;
+import com.example.media_service.repository.httpClient.RatingClient;
 import com.example.media_service.repository.httpClient.UserClient;
 import com.okits02.common_lib.exception.AppException;
 import com.example.media_service.exception.MediaErrorCode;
@@ -38,7 +39,7 @@ public class ImageServiceImpl implements ImageService {
     private final MediaRepository mediaRepository;
     private final MediaMapper mediaMapper;
     private final UserClient userClient;
-    private final ProfileClient profileClient;
+    private final RatingClient ratingClient;
 
     @Override
     public ListMediaResponse imageProduct(List<MultipartFile> imageProductFile,
@@ -192,6 +193,28 @@ public class ImageServiceImpl implements ImageService {
                         .mediaPurpose(media.getMediaPurpose())
                         .build())
                 .toList();
+    }
+
+    @Override
+    public void updateImageForRating(List<MultipartFile> multipartFiles, String ratingId) throws IOException {
+        if(multipartFiles == null || ratingId == null) return;
+        List<String> ratingImageUrl = new ArrayList<>();
+        for (MultipartFile file : multipartFiles) {
+            Media image = uploadAndSave(file, ratingId, MediaOwnerType.RATING, MediaPurpose.GALLERY);
+            ratingImageUrl.add(image.getUrl());
+        }
+        ratingClient.updateImageForRating(ratingImageUrl, ratingId);
+    }
+
+    @Override
+    public void updateImageForComment(List<MultipartFile> multipartFiles, String commentId) throws IOException {
+        if(multipartFiles == null || commentId == null) return;
+        List<String> commentImageUrl = new ArrayList<>();
+        for (MultipartFile file : multipartFiles) {
+            Media image = uploadAndSave(file, commentId, MediaOwnerType.RATING, MediaPurpose.GALLERY);
+            commentImageUrl.add(image.getUrl());
+        }
+        ratingClient.updateImageForComment(commentImageUrl, commentId);
     }
 
     @Override

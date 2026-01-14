@@ -63,6 +63,8 @@ public class ProductMappingHelper {
                 .listCategory(listCategory)
                 .videoUrl(products.getVideoUrl())
                 .mediaList(listMedia)
+                .warrantyStartDate(products.getWarrantyStartDate())
+                .warrantyEndDate(products.getWarrantyEndDate())
                 .specifications(products.getSpecifications())
                 .variantsResponses(variantsResponses)
                 .createAt(products.getCreateAt())

@@ -15,6 +15,7 @@ import com.example.rating_service.repository.httpClient.UserClient;
 import com.example.rating_service.services.CommentService;
 import com.okits02.common_lib.dto.PageResponse;
 import com.okits02.common_lib.exception.AppException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -25,8 +26,10 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.LocalDateTime;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.stream.Collectors;
 
 @Service
@@ -122,6 +125,7 @@ public class CommentServiceImpl implements CommentService {
                         .firstName(root.getFirstName())
                         .lastName(root.getLastName())
                         .avatarUrl(root.getAvatarUrl())
+                        .imageUrl(root.getImageUrl())
                         .userId(root.getUserId())
                         .createdAt(root.getCreatedAt())
                         .childrent(
@@ -135,6 +139,7 @@ public class CommentServiceImpl implements CommentService {
                                                 .firstName(reply.getFirstName())
                                                 .lastName(reply.getLastName())
                                                 .avatarUrl(reply.getAvatarUrl())
+                                                .imageUrl(reply.getImageUrl())
                                                 .userId(reply.getUserId())
                                                 .createdAt(reply.getCreatedAt())
                                                 .childrent(List.of())
@@ -157,10 +162,52 @@ public class CommentServiceImpl implements CommentService {
 
 
     @Override
+    @Transactional
     public void delete(String id) {
+        Comments comments = commentsRepository.findById(id)
+                .orElseThrow(() ->
+                        new AppException(RatingErrorCode.COMMENT_NOT_EXISTS));
+
+        deleteCommentTree(comments.getId());
+    }
+    @Override
+    @Transactional
+    public void deleteMyComment(String id) {
+        UserIdResponse user = getUserId();
+
+        Comments comments = commentsRepository.findById(id)
+                .orElseThrow(() ->
+                        new AppException(RatingErrorCode.COMMENT_NOT_EXISTS));
+
+        if (!comments.getUserId().equals(user.getUserId())) {
+            throw new AppException(RatingErrorCode.USER_CAN_NOT_DELETE_COMMENT);
+        }
+
+        deleteCommentTree(comments.getId());
+    }
+
+    @Override
+    public void createImageUrl(List<String> imageUrl, String id) {
         Comments comments = commentsRepository.findById(id).orElseThrow(() ->
                 new AppException(RatingErrorCode.COMMENT_NOT_EXISTS));
-        commentsRepository.delete(comments);
+
+        comments.setImageUrl(imageUrl);
+    }
+
+    @Transactional
+    public void deleteCommentTree(String commentId){
+        Queue<String> queue = new LinkedList<>();
+        queue.add(commentId);
+        while (!queue.isEmpty()){
+            String currentId = queue.poll();
+            List<Comments> children = commentsRepository.findAllByParentId(currentId);
+
+            children.forEach(child -> queue.add(child.getParentId()));
+            commentsRepository.findById(currentId).ifPresent(c -> {
+                c.setIsDeleted(true);
+                commentsRepository.save(c);
+            });
+        }
     }
 
     @Override

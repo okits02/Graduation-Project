@@ -98,6 +98,29 @@ public class CategoryController {
                 .build();
     }
 
+    @DeleteMapping("/list")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<?> deleteListCate(
+            @RequestParam(value = "categories") List<String> categories
+    ){
+        categoryService.deleteCateByListId(categories);
+        return ApiResponse.builder()
+                .code(200)
+                .message("delete list cate successfully")
+                .build();
+    }
+
+    @DeleteMapping("/all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<?> deleteAllCate(
+    ){
+        categoryService.deleteAll();
+        return ApiResponse.builder()
+                .code(200)
+                .message("delete alll cate successfully")
+                .build();
+    }
+
     @PostMapping("internal/validate-same-level")
     ApiResponse<CategoryLevelValidateResponse> CategoryValidateSameLevel(
             @RequestBody CategoryLevelValidateRequest request

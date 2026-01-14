@@ -6,5 +6,6 @@ public enum MediaOwnerType {
     PRODUCT_VARIANT,
     BRAND,
     USER,
-    PROMOTION
+    PROMOTION,
+    RATING
 }

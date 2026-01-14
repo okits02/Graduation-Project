@@ -23,6 +23,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/product")
@@ -125,4 +127,26 @@ public class ProductController {
         }
     }
 
+    @DeleteMapping("/list")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<?> deleteListProduct(
+            @RequestParam(value = "productIds") List<String> productIds
+    ){
+        productService.DeleteListProduct(productIds);
+        return ApiResponse.builder()
+                .code(200)
+                .message("delete list product successfully")
+                .build();
+    }
+
+    @DeleteMapping("/all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<?> deleteAllProduct(
+    ){
+        productService.DeleteAll();
+        return ApiResponse.builder()
+                .code(200)
+                .message("delete all product successfully")
+                .build();
+    }
 }

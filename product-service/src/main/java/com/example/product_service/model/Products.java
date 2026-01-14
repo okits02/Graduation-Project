@@ -33,6 +33,8 @@ public class Products {
     String brandName;
     List<String> variants;
     List<Specifications> specifications;
+    LocalDate warrantyStartDate;
+    LocalDate warrantyEndDate;
     @CreatedDate
     @Field("create_at")
     LocalDate createAt;

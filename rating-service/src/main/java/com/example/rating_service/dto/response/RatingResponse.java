@@ -5,6 +5,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -21,5 +22,6 @@ public class RatingResponse {
     Double ratingScore;
     String productId;
     boolean isVerifiedPurchase;
+    List<String> imageUrl;
     LocalDate createdAt;
 }

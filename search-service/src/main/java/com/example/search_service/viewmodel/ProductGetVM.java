@@ -25,6 +25,8 @@ public class ProductGetVM {
     Integer sold;
     String videoUrl;
     String thumbnailUrl;
+    LocalDate warrantyStartDate;
+    LocalDate warrantyEndDate;
     List<String> imageList;
     List<ProductVariants> variants;
     List<CategoryGetVM> categories;
@@ -47,6 +49,8 @@ public class ProductGetVM {
                 .videoUrl(products.getVideoUrl())
                 .variants(products.getProductVariants())
                 .specifications(products.getSpecifications())
+                .warrantyStartDate(products.getWarrantyStartDate())
+                .warrantyEndDate(products.getWarrantyEndDate())
                 .createAt(products.getCreateAt())
                 .updateAt(products.getUpdateAt())
                 .build();

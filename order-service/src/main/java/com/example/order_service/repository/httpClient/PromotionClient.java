@@ -21,14 +21,14 @@ public interface PromotionClient {
     @PostMapping(value = "/promotion-service/promotion/internal/voucher/rollBack",
             produces = MediaType.APPLICATION_JSON_VALUE)
     ApiResponse<?> rollBackPromotion(
-            @RequestParam String orderId,
+            @RequestParam("orderId") String orderId,
             @RequestHeader("Authorization") String token
     );
     @PostMapping(value = "/promotion-service/promotion/internal/voucher/applyForOrder",
             produces = MediaType.APPLICATION_JSON_VALUE)
     ApiResponse<?> applyForOrder(
-            @RequestParam String orderId,
-            @RequestParam String voucherCode,
+            @RequestParam(value = "orderId") String orderId,
+            @RequestParam(value = "voucherCode") String voucherCode,
             @RequestHeader("Authorization") String token
     );
 }

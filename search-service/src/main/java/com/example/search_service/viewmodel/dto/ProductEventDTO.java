@@ -22,6 +22,8 @@ public class ProductEventDTO {
     Integer quantity;
     Double avgRating;
     String videoUrl;
+    LocalDate warrantyStartDate;
+    LocalDate warrantyEndDate;
     List<String> categoriesId;
     List<Specification> specifications;
     List<ProductVariants> productVariants;

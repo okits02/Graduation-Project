@@ -163,6 +163,14 @@ public class RatingServiceImpl implements RatingService {
     }
 
     @Override
+    public void createImage(List<String> imageUrl, String id) {
+        Rating rating = ratingRepository.findById(id).orElseThrow(() ->
+                new AppException(RatingErrorCode.RATING_NOT_EXISTS));
+
+        rating.setImageUrl(imageUrl);
+    }
+
+    @Override
     public void deleteRating(String id) {
         Rating rating = ratingRepository.findById(id).orElseThrow(() ->
                 new AppException(RatingErrorCode.RATING_EXISTS));

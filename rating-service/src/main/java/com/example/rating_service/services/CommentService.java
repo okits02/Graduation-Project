@@ -5,6 +5,8 @@ import com.example.rating_service.dto.request.CommentUpdateRequest;
 import com.example.rating_service.dto.response.CommentResponse;
 import com.okits02.common_lib.dto.PageResponse;
 
+import java.util.List;
+
 public interface CommentService {
     public CommentResponse save(CommentCreationRequest request);
     public CommentResponse update(CommentUpdateRequest request);
@@ -13,5 +15,6 @@ public interface CommentService {
     public void delete(String id);
 
     public void deleteMyComment(String id);
+    public void createImageUrl(List<String> imageUrl, String id);
     public void deleteForProductId(String productId);
 }

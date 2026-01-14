@@ -11,6 +11,8 @@ import org.hibernate.query.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/comment")
 @RequiredArgsConstructor
@@ -25,6 +27,25 @@ public class CommentController {
                 .code(200)
                 .message("creation comment successfully!")
                 .result(commentService.save(request))
+                .build();
+    }
+
+    @DeleteMapping("/users/delete")
+    public ApiResponse<?> deleteMyComment(@RequestParam(value = "id") String id){
+        return ApiResponse.builder()
+                .code(200)
+                .message("delete my comment successfully!")
+                .build();
+    }
+
+
+    @PutMapping("/image")
+    public ApiResponse<?> uploadImageRating(
+            @RequestParam("imageUrl") List<String> imageUrl,
+            @RequestParam(value = "id") String id){
+        commentService.createImageUrl(imageUrl, id);
+        return ApiResponse.builder()
+                .code(200)
                 .build();
     }
 

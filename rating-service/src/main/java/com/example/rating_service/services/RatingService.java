@@ -8,10 +8,13 @@ import com.example.rating_service.enums.RatingFilterType;
 import com.example.rating_service.model.Rating;
 import com.okits02.common_lib.dto.PageResponse;
 
+import java.util.List;
+
 public interface RatingService {
     public RatingResponse createRating(RatingRequest request);
     public RatingResponse modifyRating(ModifyRatingRequest request);
     public PageResponse<RatingResponse> getAllByFilter(int page, int size, RatingFilterType type, String productId);
     public RatingSummaryResponse getRatingSummary(String productId);
+    public void createImage(List<String> imageUrl, String id);
     public void deleteRating(String id );
 }

@@ -34,6 +34,7 @@ public class Comments {
     String lastName;
     String avatarUrl;
     String parentId;
+    List<String> imageUrl;
     @CreationTimestamp
     LocalDateTime createdAt;
 
