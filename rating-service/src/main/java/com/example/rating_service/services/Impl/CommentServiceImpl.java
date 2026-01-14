@@ -81,8 +81,8 @@ public class CommentServiceImpl implements CommentService {
             comments.setAvatarUrl(customerVM.getAvatarUrl());
         }
 
-        commentsRepository.save(comments);
         comments.setCreatedAt(LocalDateTime.now());
+        commentsRepository.save(comments);
         return commentMapper.toResponse(comments);
     }
 
@@ -122,6 +122,8 @@ public class CommentServiceImpl implements CommentService {
                         .firstName(root.getFirstName())
                         .lastName(root.getLastName())
                         .avatarUrl(root.getAvatarUrl())
+                        .userId(root.getUserId())
+                        .createdAt(root.getCreatedAt())
                         .childrent(
                                 childrenMap.getOrDefault(root.getId(), List.of())
                                         .stream()
@@ -133,6 +135,8 @@ public class CommentServiceImpl implements CommentService {
                                                 .firstName(reply.getFirstName())
                                                 .lastName(reply.getLastName())
                                                 .avatarUrl(reply.getAvatarUrl())
+                                                .userId(reply.getUserId())
+                                                .createdAt(reply.getCreatedAt())
                                                 .childrent(List.of())
                                                 .build()
                                         )
