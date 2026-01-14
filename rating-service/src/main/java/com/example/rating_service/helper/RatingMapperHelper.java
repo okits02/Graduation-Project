@@ -16,7 +16,7 @@ public class RatingMapperHelper {
     private final RatingMapper ratingMapper;
     public RatingResponse toResponse(Rating rating, String userId){
         var response = profileClient.getProfileForRating(userId);
-        if(response != null || response.getBody().getCode() != 200)
+        if(response == null || response.getBody().getCode() != 200)
         {
             throw new AppException(RatingErrorCode.PROFILE_NOT_EXISTS);
         }

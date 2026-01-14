@@ -6,6 +6,7 @@ import com.example.rating_service.dto.request.ModifyRatingRequest;
 import com.example.rating_service.dto.request.RatingRequest;
 import com.example.rating_service.dto.response.RatingResponse;
 import com.example.rating_service.dto.response.RatingSummaryResponse;
+import com.example.rating_service.dto.response.UserIdResponse;
 import com.example.rating_service.enums.RatingFilterType;
 import com.example.rating_service.helper.RatingMapperHelper;
 import com.example.rating_service.repository.httpClient.OrderClient;
@@ -50,24 +51,36 @@ public class RatingServiceImpl implements RatingService {
 
     @Override
     public RatingResponse createRating(RatingRequest request) {
-        String userId = getUserId();
-        if(ratingRepository.existsByUserIdAndProductId(userId, request.getProductId())){
-            throw new AppException(RatingErrorCode.RATING_EXISTS);
-        };
-        var response = profileClient.getProfileForRating(userId).getBody();
-        if (response == null || response.getCode() != 200) {
-            throw new RuntimeException("Failed to delete profile from Profile-service");
+        UserIdResponse user = getUserId();
+        if ("ADMIN".equals(user.getRole())) {
+            throw new AppException(RatingErrorCode.ADMIN_CANNOT_RATE);
         }
+
+        if (ratingRepository.existsByUserIdAndProductId(user.getUserId(), request.getProductId())) {
+            throw new AppException(RatingErrorCode.RATING_EXISTS);
+        }
+
+        var response = profileClient.getProfileForRating(user.getUserId()).getBody();
+        if (response == null || response.getCode() != 200) {
+            throw new AppException(RatingErrorCode.PROFILE_NOT_EXISTS);
+        }
+
         Rating rating = ratingMapper.toRating(request);
-        rating.setUserId(userId);
-        log.info("userId: {}", userId);
-        var responseOrder = orderClient.checkVerifiedPurchase(userId, request.getProductId());
+        rating.setUserId(user.getUserId());
+
+        log.info("[RATING][CREATE] userId={}, productId={}", user.getUserId(), request.getProductId());
+
+        var responseOrder = orderClient.checkVerifiedPurchase(user.getUserId(), request.getProductId());
         rating.setVerifiedPurchase(responseOrder.getResult().getIsVerifiedPurchase());
-        var ratingResponse = ratingMapper.toRatingResponse(ratingRepository.save(rating));
+
+        var saved = ratingRepository.save(rating);
+        var ratingResponse = ratingMapper.toRatingResponse(saved);
+
         ratingResponse.setAvatarUrl(response.getResult().getAvatarUrl());
         ratingResponse.setFirstName(response.getResult().getFirstName());
         ratingResponse.setLastName(response.getResult().getLastName());
         ratingResponse.setCreatedAt(LocalDateTime.now());
+
         publishRatingEvent(ratingResponse.getProductId());
         return ratingResponse;
     }
@@ -154,12 +167,12 @@ public class RatingServiceImpl implements RatingService {
         ratingRepository.delete(rating);
         publishRatingEvent(rating.getProductId());
     }
-    private String getUserId(){
+    private UserIdResponse getUserId(){
         ServletRequestAttributes servletRequestAttributes =
                 (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
         var apiResponse = userClient.getUserId(authHeader);
-        return apiResponse.getResult().getUserId();
+        return apiResponse.getResult();
     }
 
     private void publishRatingEvent(String productId){

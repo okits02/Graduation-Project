@@ -55,15 +55,15 @@ public class CommentServiceImpl implements CommentService {
                 throw new AppException(RatingErrorCode.ADMIN_ONLY_REPLY_COMMENT);
             }
 
-            comments.setFirsName("");
-            comments.setLasName("ADMIN");
+            comments.setFirstName("");
+            comments.setLastName("ADMIN");
             comments.setAvatarUrl(null);
             log.info(
                     "[COMMENT][ADMIN_REPLY] userId={}, parentId={}, firstName='{}', lastName='{}'",
                     user.getUserId(),
                     request.getParentId(),
-                    comments.getFirsName(),
-                    comments.getLasName()
+                    comments.getFirstName(),
+                    comments.getLastName()
             );
         }
         else {
@@ -76,8 +76,8 @@ public class CommentServiceImpl implements CommentService {
 
             CustomerVM customerVM = response.getBody().getResult();
 
-            comments.setFirsName(customerVM.getFirstName());
-            comments.setLasName(customerVM.getLastName());
+            comments.setFirstName(customerVM.getFirstName());
+            comments.setLastName(customerVM.getLastName());
             comments.setAvatarUrl(customerVM.getAvatarUrl());
         }
 
@@ -122,8 +122,8 @@ public class CommentServiceImpl implements CommentService {
                         .content(root.getContent())
                         .productId(root.getProductId())
                         .parentId(root.getParentId())
-                        .firstName(root.getFirsName())
-                        .lastName(root.getLasName())
+                        .firstName(root.getFirstName())
+                        .lastName(root.getLastName())
                         .avatarUrl(root.getAvatarUrl())
                         .childrent(
                                 childrenMap.getOrDefault(root.getId(), List.of())
@@ -133,8 +133,8 @@ public class CommentServiceImpl implements CommentService {
                                                 .content(reply.getContent())
                                                 .productId(reply.getProductId())
                                                 .parentId(reply.getParentId())
-                                                .firstName(reply.getFirsName())
-                                                .lastName(reply.getLasName())
+                                                .firstName(reply.getFirstName())
+                                                .lastName(reply.getLastName())
                                                 .avatarUrl(reply.getAvatarUrl())
                                                 .childrent(List.of())
                                                 .build()

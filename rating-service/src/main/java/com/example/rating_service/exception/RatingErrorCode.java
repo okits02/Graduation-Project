@@ -12,6 +12,7 @@ public enum RatingErrorCode implements ErrorCode {
     COMMENT_NOT_EXISTS(HttpStatus.BAD_REQUEST, 4021, "Comment not exists!"),
     PROFILE_NOT_EXISTS(HttpStatus.BAD_REQUEST, 4022, "Failed to call profile form profile-service"),
     ADMIN_ONLY_REPLY_COMMENT(HttpStatus.BAD_REQUEST,403, "Admin is only allowed to reply to existing comments"),
+    ADMIN_CANNOT_RATE(HttpStatus.BAD_REQUEST,403, "Admin is not allowed to create product ratings"),
     ;
 
     RatingErrorCode(HttpStatus httpStatus, int code, String message) {

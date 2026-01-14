@@ -30,8 +30,8 @@ public class Comments {
 
     @Column(nullable = false)
     String userId;
-    String firsName;
-    String lasName;
+    String firstName;
+    String lastName;
     String avatarUrl;
     String parentId;
     @CreationTimestamp
