@@ -7,6 +7,7 @@ import com.example.rating_service.dto.request.RatingRequest;
 import com.example.rating_service.dto.response.RatingResponse;
 import com.example.rating_service.dto.response.RatingSummaryResponse;
 import com.example.rating_service.enums.RatingFilterType;
+import com.example.rating_service.helper.RatingMapperHelper;
 import com.example.rating_service.repository.httpClient.OrderClient;
 import com.example.rating_service.repository.httpClient.UserClient;
 import com.okits02.common_lib.dto.PageResponse;
@@ -20,6 +21,7 @@ import com.example.rating_service.services.RatingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,6 +31,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -38,6 +41,7 @@ import java.util.List;
 public class RatingServiceImpl implements RatingService {
     private final RatingRepository ratingRepository;
     private final RatingMapper ratingMapper;
+    private final RatingMapperHelper ratingMapperHelper;
     private final ProfileClient profileClient;
     private final UserClient userClient;
     private final OrderClient orderClient;
@@ -60,6 +64,10 @@ public class RatingServiceImpl implements RatingService {
         var responseOrder = orderClient.checkVerifiedPurchase(userId, request.getProductId());
         rating.setVerifiedPurchase(responseOrder.getResult().getIsVerifiedPurchase());
         var ratingResponse = ratingMapper.toRatingResponse(ratingRepository.save(rating));
+        ratingResponse.setAvatarUrl(response.getResult().getAvatarUrl());
+        ratingResponse.setFirstName(response.getResult().getFirstName());
+        ratingResponse.setLastName(response.getResult().getLastName());
+        ratingResponse.setCreatedAt(LocalDateTime.now());
         publishRatingEvent(ratingResponse.getProductId());
         return ratingResponse;
     }
@@ -115,7 +123,7 @@ public class RatingServiceImpl implements RatingService {
         }
         List<RatingResponse> data = ratingPage.getContent()
                 .stream()
-                .map(ratingMapper::toRatingResponse)
+                .map(rating -> ratingMapperHelper.toResponse(rating, rating.getUserId()))
                 .toList();
 
         return PageResponse.<RatingResponse>builder()
@@ -168,7 +176,7 @@ public class RatingServiceImpl implements RatingService {
                 .productId(productId)
                 .avgRating(avgRating)
                 .build();
-
+        sendRatingEvent(event);
     }
 
 
@@ -184,4 +192,5 @@ public class RatingServiceImpl implements RatingService {
                     }
                 });
     }
+
 }

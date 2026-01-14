@@ -14,8 +14,10 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CommentResponse {
     String id;
-    String userName;
+    String firstName;
+    String lastName;
     String avatarUrl;
+    String userId;
     String content;
     String productId;
     String parentId;

@@ -1,12 +1,16 @@
 package com.example.rating_service.services.Impl;
 
+import com.example.rating_service.dto.CustomerVM;
 import com.example.rating_service.dto.request.CommentCreationRequest;
 import com.example.rating_service.dto.request.CommentUpdateRequest;
 import com.example.rating_service.dto.response.CommentResponse;
+import com.example.rating_service.dto.response.UserIdResponse;
 import com.example.rating_service.exception.RatingErrorCode;
+import com.example.rating_service.helper.CommentMapperHelper;
 import com.example.rating_service.mapper.CommentMapper;
 import com.example.rating_service.model.Comments;
 import com.example.rating_service.repository.CommentsRepository;
+import com.example.rating_service.repository.httpClient.ProfileClient;
 import com.example.rating_service.repository.httpClient.UserClient;
 import com.example.rating_service.services.CommentService;
 import com.okits02.common_lib.dto.PageResponse;
@@ -20,7 +24,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -28,13 +35,54 @@ import java.util.List;
 public class CommentServiceImpl implements CommentService {
     private final CommentsRepository commentsRepository;
     private final CommentMapper commentMapper;
+    private final CommentMapperHelper commentMapperHelper;
     private final UserClient userClient;
+    private final ProfileClient profileClient;
     @Override
     public CommentResponse save(CommentCreationRequest request) {
-        String userId = getUserId();
+        UserIdResponse user = getUserId();
+
         Comments comments = commentMapper.toComments(request);
-        comments.setUserId(userId);
+        comments.setUserId(user.getUserId());
+        log.info(
+                "[COMMENT][ADMIN_REPLY] userId={}, parentId={}, firstName='{}', lastName='{}'",
+                user.getUserId(),
+                user.getRole()
+        );
+        if ("ADMIN".equals(user.getRole())) {
+
+            if (request.getParentId() == null) {
+                throw new AppException(RatingErrorCode.ADMIN_ONLY_REPLY_COMMENT);
+            }
+
+            comments.setFirsName("");
+            comments.setLasName("ADMIN");
+            comments.setAvatarUrl(null);
+            log.info(
+                    "[COMMENT][ADMIN_REPLY] userId={}, parentId={}, firstName='{}', lastName='{}'",
+                    user.getUserId(),
+                    request.getParentId(),
+                    comments.getFirsName(),
+                    comments.getLasName()
+            );
+        }
+        else {
+
+            var response = profileClient.getProfileForRating(user.getUserId());
+
+            if (response.getBody() == null || response.getBody().getCode() != 200) {
+                throw new AppException(RatingErrorCode.PROFILE_NOT_EXISTS);
+            }
+
+            CustomerVM customerVM = response.getBody().getResult();
+
+            comments.setFirsName(customerVM.getFirstName());
+            comments.setLasName(customerVM.getLastName());
+            comments.setAvatarUrl(customerVM.getAvatarUrl());
+        }
+
         commentsRepository.save(comments);
+        comments.setCreatedAt(LocalDateTime.now());
         return commentMapper.toResponse(comments);
     }
 
@@ -54,43 +102,54 @@ public class CommentServiceImpl implements CommentService {
 
         Pageable pageable = PageRequest.of(page - 1, size);
 
-        Page<Comments> rootComments =
-                commentsRepository.findAllByProductIdAndParentIdIsNull(
-                        productId,
-                        pageable
-                );
+        Page<Comments> rootPage =
+                commentsRepository.findAllByProductIdAndParentIdIsNull(productId, pageable);
 
-        List<CommentResponse> data = rootComments.getContent()
+        List<Comments> roots = rootPage.getContent();
+
+        List<String> rootIds = roots.stream()
+                .map(Comments::getId)
+                .toList();
+
+        Map<String, List<Comments>> childrenMap = commentsRepository
+                .findAllByParentIdIn(rootIds)
                 .stream()
-                .map(root -> {
-                    List<CommentResponse> children =
-                            commentsRepository.findAllByParentId(root.getId())
-                                    .stream()
-                                    .map(reply -> CommentResponse.builder()
-                                            .id(reply.getId())
-                                            .content(reply.getContent())
-                                            .productId(reply.getProductId())
-                                            .parentId(reply.getParentId())
-                                            .childrent(List.of())
-                                            .build()
-                                    )
-                                    .toList();
+                .collect(Collectors.groupingBy(Comments::getParentId));
 
-                    return CommentResponse.builder()
-                            .id(root.getId())
-                            .content(root.getContent())
-                            .productId(root.getProductId())
-                            .parentId(root.getParentId())
-                            .childrent(children)
-                            .build();
-                })
+        List<CommentResponse> data = roots.stream()
+                .map(root -> CommentResponse.builder()
+                        .id(root.getId())
+                        .content(root.getContent())
+                        .productId(root.getProductId())
+                        .parentId(root.getParentId())
+                        .firstName(root.getFirsName())
+                        .lastName(root.getLasName())
+                        .avatarUrl(root.getAvatarUrl())
+                        .childrent(
+                                childrenMap.getOrDefault(root.getId(), List.of())
+                                        .stream()
+                                        .map(reply -> CommentResponse.builder()
+                                                .id(reply.getId())
+                                                .content(reply.getContent())
+                                                .productId(reply.getProductId())
+                                                .parentId(reply.getParentId())
+                                                .firstName(reply.getFirsName())
+                                                .lastName(reply.getLasName())
+                                                .avatarUrl(reply.getAvatarUrl())
+                                                .childrent(List.of())
+                                                .build()
+                                        )
+                                        .toList()
+                        )
+                        .build()
+                )
                 .toList();
 
         return PageResponse.<CommentResponse>builder()
                 .currentPage(page)
                 .pageSize(size)
-                .totalPage(rootComments.getTotalPages())
-                .totalElements(rootComments.getTotalElements())
+                .totalPage(rootPage.getTotalPages())
+                .totalElements(rootPage.getTotalElements())
                 .data(data)
                 .build();
     }
@@ -107,11 +166,11 @@ public class CommentServiceImpl implements CommentService {
     public void deleteForProductId(String productId) {
         commentsRepository.deleteAllByProductId(productId);
     }
-    private String getUserId(){
+    private UserIdResponse getUserId(){
         ServletRequestAttributes servletRequestAttributes =
                 (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
         var apiResponse = userClient.getUserId(authHeader);
-        return apiResponse.getResult().getUserId();
+        return apiResponse.getResult();
     }
 }

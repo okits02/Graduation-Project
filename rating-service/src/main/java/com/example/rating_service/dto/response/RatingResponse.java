@@ -13,8 +13,10 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class RatingResponse {
     String id;
-    String userName;
+    String firstName;
+    String lastName;
     String avatarUrl;
+    String userId;
     String content;
     Double ratingScore;
     String productId;

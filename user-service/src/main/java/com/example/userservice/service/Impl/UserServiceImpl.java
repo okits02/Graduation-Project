@@ -194,6 +194,7 @@ public class UserServiceImpl implements UserService {
         }
 
         return UserInfoResponse.builder()
+                .userId(users.getId())
                 .username(users.getUsername())
                 .email(users.getEmail())
                 .phone(profileResponse.getResult().getPhone())
@@ -236,6 +237,7 @@ public class UserServiceImpl implements UserService {
                 -> new AppException(UserErrorCode.USER_NOT_EXISTS));
         return UserIdResponse.builder()
                 .userId(users.getId())
+                .role(users.getRole().getName())
                 .build();
     }
 

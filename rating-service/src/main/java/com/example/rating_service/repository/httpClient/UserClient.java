@@ -14,5 +14,4 @@ public interface UserClient {
     @GetMapping(value = "/user-service/users/getUserId", produces = MediaType.APPLICATION_JSON_VALUE)
     ApiResponse<UserIdResponse> getUserId(@RequestHeader("Authorization") String token);
 
-    @GetMapping(value = "/user-service/users/myInfo", produces = MediaType.APPLICATION_JSON_VALUE)
 }

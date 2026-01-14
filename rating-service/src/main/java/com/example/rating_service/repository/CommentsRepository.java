@@ -15,6 +15,9 @@ public interface CommentsRepository extends JpaRepository<Comments, String> {
             String productId,
             Pageable pageable
     );
+
     List<Comments> findAllByParentId(String parentId);
+
+    List<Comments> findAllByParentIdIn(List<String> parentIds);
     void deleteAllByProductId(String productId);
 }

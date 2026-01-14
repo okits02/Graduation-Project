@@ -30,8 +30,9 @@ public class Comments {
 
     @Column(nullable = false)
     String userId;
-
-    // null = comment gốc
+    String firsName;
+    String lasName;
+    String avatarUrl;
     String parentId;
     @CreationTimestamp
     LocalDateTime createdAt;

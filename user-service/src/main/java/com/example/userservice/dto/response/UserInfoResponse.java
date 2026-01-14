@@ -13,6 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserInfoResponse {
+    String userId;
     String username;
     String firstName;
     String lastName;
