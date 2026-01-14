@@ -6,22 +6,25 @@ import com.okits02.common_lib.dto.ApiResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @FeignClient(value = "promotion-service")
 public interface PromotionClient {
-    @PostMapping(value = "/promotion-service/internal/voucher/check", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/promotion-service/promotion/internal/voucher/check",
+            produces = MediaType.APPLICATION_JSON_VALUE)
     ApiResponse<PromotionResponse> checkValidPromotion(
-            @RequestParam CheckValidVoucherRequest request,
+            @RequestBody CheckValidVoucherRequest request,
             @RequestHeader("Authorization") String token
             );
-    @PostMapping(value = "/promotion-service/internal/voucher/rollBack", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/promotion-service/promotion/internal/voucher/rollBack",
+            produces = MediaType.APPLICATION_JSON_VALUE)
     ApiResponse<?> rollBackPromotion(
             @RequestParam String orderId,
             @RequestHeader("Authorization") String token
     );
-    @PostMapping(value = "/promotion-service/internal/voucher/applyForOrder",
+    @PostMapping(value = "/promotion-service/promotion/internal/voucher/applyForOrder",
             produces = MediaType.APPLICATION_JSON_VALUE)
     ApiResponse<?> applyForOrder(
             @RequestParam String orderId,

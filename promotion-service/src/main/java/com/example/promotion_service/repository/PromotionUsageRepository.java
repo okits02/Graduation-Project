@@ -15,18 +15,21 @@ public interface PromotionUsageRepository extends JpaRepository<PromotionUsage, 
     PromotionUsage findByOrderId(String orderId);
 
     @Query(value = """
-            SELECT COUNT(*) 
-            FROM promotion_usage
-            WHERE user_id = :userId
-            AND promotion_id = :promotionId
-            """, nativeQuery = true)
-    long countByPromotionIdAndUserId(String id, String userId);
-
+    SELECT COUNT(*) 
+    FROM promotion_usage
+    WHERE user_id = :userId
+    AND promotion_id = :promotionId
+    """, nativeQuery = true)
+    long countByPromotionIdAndUserId(
+            @Param("promotionId") String promotionId,
+            @Param("userId") String userId
+    );
     @Query(value = """
             SELECT COUNT(*)
             FROM promotion_usage
             WHERE order_id = :orderId
             AND promotion_id = :promotionId
             """, nativeQuery = true)
-    long countByPromotionIdAndOrderId(String id, String orderId);
+    long countByPromotionIdAndOrderId(@Param("promotionId") String promotionId,
+                                      @Param("orderId") String orderId);
 }

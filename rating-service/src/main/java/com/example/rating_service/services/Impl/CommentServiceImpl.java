@@ -97,10 +97,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public PageResponse<CommentResponse> getAllForProduct(int page, int size, String productId) {
-        if (page < 1) page = 1;
-        if (size <= 0) size = 10;
-
-        Pageable pageable = PageRequest.of(page - 1, size);
+        Pageable pageable = PageRequest.of(page, size);
 
         Page<Comments> rootPage =
                 commentsRepository.findAllByProductIdAndParentIdIsNull(productId, pageable);

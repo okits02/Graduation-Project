@@ -61,20 +61,22 @@ public class Orders extends AbstractMappedEntity{
     private LocalDateTime completedAT;
     @OneToMany(mappedBy = "orders", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items;
-
-
     public void calculateTotalPrice() {
         BigDecimal itemTotal = BigDecimal.ZERO;
+
         if (items != null) {
             for (OrderItem item : items) {
-                if (item.getSellPrice() != null) {
-                    itemTotal = itemTotal.add(item.getSellPrice());
+                if (item.getSellPrice() != null && item.getQuantity() != null) {
+                    BigDecimal lineTotal =
+                            item.getSellPrice()
+                                    .multiply(BigDecimal.valueOf(item.getQuantity()));
+
+                    itemTotal = itemTotal.add(lineTotal);
                 }
             }
         }
 
         BigDecimal fee = orderFee != null ? orderFee : BigDecimal.ZERO;
-
         this.totalPrice = itemTotal.add(fee);
     }
 }

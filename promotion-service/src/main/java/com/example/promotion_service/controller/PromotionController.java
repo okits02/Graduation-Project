@@ -152,7 +152,7 @@ public class PromotionController {
 
     @PostMapping("/internal/voucher/check")
     ApiResponse<PromotionResponse> checkValidForOrder(
-            @RequestParam CheckValidVoucherRequest request){
+            @RequestBody CheckValidVoucherRequest request){
         return ApiResponse.<PromotionResponse>builder()
                 .code(200)
                 .message("voucher is valid")
@@ -170,7 +170,7 @@ public class PromotionController {
                 .build();
     }
 
-    @PostMapping("internal/voucher/rollBack")
+    @PostMapping("/internal/voucher/rollBack")
     ApiResponse<?> rollBackVoucher(
             @RequestParam String orderId
     ){

@@ -66,6 +66,9 @@ public class PromotionServiceImpl implements PromotionService {
         if(request.getPromotionKind().equals(PromotionKind.AUTO)) {
             List<PromotionApplyTo> promotionApplyTo = new ArrayList<>();
             switch (request.getApplyTo()) {
+                case ALL -> {
+                    promotion.setPromotionApplyTo(Collections.emptyList());
+                }
                 case Product -> {
                     if (request.getProductId() != null && !request.getProductId().isEmpty()) {
                         for (String id : request.getProductId()) {
@@ -106,6 +109,9 @@ public class PromotionServiceImpl implements PromotionService {
             promotion.setVoucherCode(voucherCode);
             List<PromotionApplyTo> promotionApplyTo = new ArrayList<>();
             switch (request.getApplyTo()) {
+                case ALL -> {
+                    promotion.setPromotionApplyTo(Collections.emptyList());
+                }
                 case Product -> {
                     if (request.getProductId() != null && !request.getProductId().isEmpty()) {
                         for (String id : request.getProductId()) {
@@ -134,6 +140,7 @@ public class PromotionServiceImpl implements PromotionService {
                         throw new AppException(PromotionErrorCode.INVALID_CATEGORY_IDS);
                     }
                 }
+
             }
             promotion.setPromotionApplyTo(promotionApplyTo);
             promotion.setCreateAt(LocalDate.now());
@@ -339,52 +346,89 @@ public class PromotionServiceImpl implements PromotionService {
     }
 
     @Override
-    public PromotionResponse checkValidVoucher(CheckValidVoucherRequest request) {
-        String userId = getUserId();
+        public PromotionResponse checkValidVoucher(CheckValidVoucherRequest request) {
+            String userId = getUserId();
 
-        Promotion promotion = promotionRepository
-                .findByVoucherCode(request.getVoucherCode());
+            Promotion promotion = promotionRepository
+                    .findByVoucherCode(request.getVoucherCode());
 
-        if (promotion == null) {
-            throw new AppException(PromotionErrorCode.PROMOTION_NOT_EXISTS);
+            if (promotion == null) {
+                throw new AppException(PromotionErrorCode.PROMOTION_NOT_EXISTS);
+            }
+
+            Date today = request.getToday();
+            if (today.before(promotion.getStartDate())
+                    || today.after(promotion.getEndDate())) {
+                throw new AppException(PromotionErrorCode.PROMOTION_EXPIRED);
+            }
+
+            if (request.getTotalAmount()
+                    < promotion.getMinimumOrderPurchaseAmount()) {
+                throw new AppException(PromotionErrorCode.PROMOTION_NOT_VALID_FOR_ORDER);
+            }
+
+            switch (promotion.getApplyTo()) {
+                case ALL:
+                    break;
+                case Product:
+                    if (request.getProductId() == null || request.getProductId().isEmpty()) {
+                        throw new AppException(PromotionErrorCode.PROMOTION_NOT_VALID_FOR_ORDER);
+                    }
+                    boolean productMatched = promotion.getPromotionApplyTo()
+                            .stream()
+                            .map(PromotionApplyTo::getProductId)
+                            .filter(Objects::nonNull)
+                            .anyMatch(request.getProductId()::contains);
+
+                    if (!productMatched) {
+                        throw new AppException(PromotionErrorCode.PROMOTION_NOT_VALID_FOR_ORDER);
+                    }
+                    break;
+                case Category:
+                    if (request.getCategoryId() == null || request.getCategoryId().isEmpty()) {
+                        throw new AppException(PromotionErrorCode.PROMOTION_NOT_VALID_FOR_ORDER);
+                    }
+
+                    boolean categoryMatched = promotion.getPromotionApplyTo()
+                            .stream()
+                            .map(PromotionApplyTo::getCategoryId)
+                            .filter(Objects::nonNull)
+                            .anyMatch(request.getCategoryId()::contains);
+
+                    if (!categoryMatched) {
+                        throw new AppException(PromotionErrorCode.PROMOTION_NOT_VALID_FOR_ORDER);
+                    }
+                    break;
+
+                default:
+                    throw new AppException(PromotionErrorCode.PROMOTION_NOT_VALID_FOR_ORDER);
+            }
+
+            long userUsage =
+                    promotionUsageRepository
+                            .countByPromotionIdAndUserId(
+                                    promotion.getId(), userId
+                            );
+
+            if (promotion.getUsageLimitPerUser() > 0
+                    && userUsage >= promotion.getUsageLimitPerUser()) {
+                throw new AppException(PromotionErrorCode.PROMOTION_USED_LIMIT);
+            }
+
+            if (promotion.getUsageCount()
+                    >= promotion.getUsageLimited()) {
+                throw new AppException(PromotionErrorCode.PROMOTION_OUT_OF_QUOTA);
+            }
+
+            return PromotionResponse.builder()
+                    .fixedAmount(promotion.getFixedAmount())
+                    .discountPercent(promotion.getDiscountPercent())
+                    .minimumOrderPurchaseAmount(
+                            promotion.getMinimumOrderPurchaseAmount()
+                    )
+                    .maxDiscountAmount(promotion.getMaxDiscountAmount())
+                    .build();
         }
-
-        Date today = request.getToday();
-        if (today.before(promotion.getStartDate())
-                || today.after(promotion.getEndDate())) {
-            throw new AppException(PromotionErrorCode.PROMOTION_EXPIRED);
-        }
-
-        if (request.getTotalAmount()
-                < promotion.getMinimumOrderPurchaseAmount()) {
-            throw new AppException(PromotionErrorCode.PROMOTION_NOT_VALID_FOR_ORDER);
-        }
-
-        long userUsage =
-                promotionUsageRepository
-                        .countByPromotionIdAndUserId(
-                                promotion.getId(), userId
-                        );
-
-        if (promotion.getUsageLimitPerUser() > 0
-                && userUsage >= promotion.getUsageLimitPerUser()) {
-            throw new AppException(PromotionErrorCode.PROMOTION_USED_LIMIT);
-        }
-
-        if (promotion.getUsageCount()
-                >= promotion.getUsageLimited()) {
-            throw new AppException(PromotionErrorCode.PROMOTION_OUT_OF_QUOTA);
-        }
-
-        return PromotionResponse.builder()
-                .fixedAmount(promotion.getFixedAmount())
-                .discountPercent(promotion.getDiscountPercent())
-                .minimumOrderPurchaseAmount(
-                        promotion.getMinimumOrderPurchaseAmount()
-                )
-                .maxDiscountAmount(promotion.getMaxDiscountAmount())
-                .build();
-    }
 
     public void applyVoucherToOrder(
             String voucherCode,
