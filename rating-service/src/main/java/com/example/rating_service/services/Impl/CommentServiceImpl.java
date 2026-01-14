@@ -70,7 +70,6 @@ public class CommentServiceImpl implements CommentService {
                                             .id(reply.getId())
                                             .content(reply.getContent())
                                             .productId(reply.getProductId())
-                                            .userId(reply.getUserId())
                                             .parentId(reply.getParentId())
                                             .childrent(List.of())
                                             .build()
@@ -81,7 +80,6 @@ public class CommentServiceImpl implements CommentService {
                             .id(root.getId())
                             .content(root.getContent())
                             .productId(root.getProductId())
-                            .userId(root.getUserId())
                             .parentId(root.getParentId())
                             .childrent(children)
                             .build();

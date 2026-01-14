@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
@@ -49,7 +50,7 @@ public interface PromotionRepository extends JpaRepository<Promotion, String> {
     )
     """, nativeQuery = true)
     List<Promotion> findApplicablePromotions(
-            @Param("today") Date today,
+            @Param("today") LocalDate today,
             @Param("totalAmount") Double totalAmount,
             @Param("productIds") List<String> productIds,
             @Param("categoryIds") List<String> categoryIds,

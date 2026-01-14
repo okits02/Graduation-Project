@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.*;
 
 import static com.example.promotion_service.enums.UsageType.LIMITED;
@@ -94,7 +95,7 @@ public class PromotionController {
         return ApiResponse.<PageResponse<PromotionResponse>>builder()
                 .code(200)
                 .message("get all promotion auto and voucher successfully!")
-                .result(promotionService.getAllPromotion(page, size))
+                .result(promotionService.getAllPromotion(page - 1, size))
                 .build();
     }
 
@@ -140,7 +141,7 @@ public class PromotionController {
     ApiResponse<List<PromotionResponse>> getListVoucherForOrder(
             @RequestParam("skus") List<String> skus,
             @RequestParam("totalAmount") Double totalAmount,
-            @RequestParam("today") Date today
+            @RequestParam("today") LocalDate today
     ){
         return ApiResponse.<List<PromotionResponse>>builder()
                 .code(200)

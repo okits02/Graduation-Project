@@ -7,6 +7,7 @@ import com.example.promotion_service.model.Promotion;
 import com.okits02.common_lib.dto.PageResponse;
 import com.example.promotion_service.dto.response.PromotionResponse;
 
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 
@@ -18,7 +19,7 @@ public interface PromotionService {
     public List<PromotionResponse> getPromotionByCategoryIds(List<String> categoryIds);
     public PageResponse<PromotionResponse> getAllPromotionAuto(int page, int size);
     public PageResponse<PromotionResponse> getAllPromotion(int page, int size);
-    public List<PromotionResponse> getPromotionForOrder(List<String> skus, Double totalAmount, Date today);
+    public List<PromotionResponse> getPromotionForOrder(List<String> skus, Double totalAmount, LocalDate today);
     public List<String> getListPromotionFlashSaleIds();
     public PromotionResponse checkValidVoucher(CheckValidVoucherRequest request);
     public void applyVoucherToOrder(String voucherCode, String orderId);

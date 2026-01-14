@@ -301,7 +301,7 @@ public class PromotionServiceImpl implements PromotionService {
     }
 
     @Override
-    public List<PromotionResponse> getPromotionForOrder(List<String> skus, Double totalAmount, Date today) {
+    public List<PromotionResponse> getPromotionForOrder(List<String> skus, Double totalAmount, LocalDate today) {
         String userId = getUserId();
         var productResponse = searchClient.getProductDetails(skus);
         if (productResponse == null || productResponse.getCode() != 200 || productResponse.getResult() == null) {

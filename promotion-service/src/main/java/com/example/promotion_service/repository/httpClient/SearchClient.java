@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
-@FeignClient(name = "search-client")
+@FeignClient(name = "search-service")
 public interface SearchClient {
     @GetMapping(value = "/search-service/search/internal/product/sku",
             produces = MediaType.APPLICATION_JSON_VALUE)

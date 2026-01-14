@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -13,10 +14,11 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CommentResponse {
     String id;
+    String userName;
+    String avatarUrl;
     String content;
     String productId;
-    String userId;
     String parentId;
-
     List<CommentResponse> childrent;
+    LocalDateTime createdAt;
 }

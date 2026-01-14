@@ -3,6 +3,9 @@ package com.example.rating_service.dto.response;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 @Setter
@@ -10,9 +13,11 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class RatingResponse {
     String id;
+    String userName;
+    String avatarUrl;
     String content;
     Double ratingScore;
     String productId;
-    String userId;
     boolean isVerifiedPurchase;
+    LocalDateTime createdAt;
 }
