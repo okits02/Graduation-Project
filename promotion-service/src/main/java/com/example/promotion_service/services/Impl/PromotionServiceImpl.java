@@ -289,6 +289,18 @@ public class PromotionServiceImpl implements PromotionService {
     }
 
     @Override
+    public PageResponse<PromotionResponse> getAllPromotion(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        var pageData = promotionRepository.findAll(pageable);
+        return PageResponse.<PromotionResponse>builder()
+                .currentPage(page)
+                .pageSize(pageData.getSize())
+                .totalElements(pageData.getTotalElements())
+                .data(pageData.getContent().stream().map(promotionMapper::toPromotionResponse).toList())
+                .build();
+    }
+
+    @Override
     public List<PromotionResponse> getPromotionForOrder(List<String> skus, Double totalAmount, Date today) {
         String userId = getUserId();
         var productResponse = searchClient.getProductDetails(skus);

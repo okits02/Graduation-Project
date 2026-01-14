@@ -11,6 +11,7 @@ import com.example.promotion_service.exception.PromotionErrorCode;
 import com.example.promotion_service.services.PromotionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.query.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -72,7 +73,7 @@ public class PromotionController {
                         .build());
     }
 
-    @GetMapping("/getAll")
+    @GetMapping("/auto/getAll")
     @PreAuthorize("hasRole('ADMIN')")
     ResponseEntity<ApiResponse<PageResponse<PromotionResponse>>> getAllPromotionAuto(
             @RequestParam(defaultValue = "1") int page,
@@ -83,6 +84,18 @@ public class PromotionController {
                         .message("Get all promotion successfully!")
                         .result(promotionService.getAllPromotionAuto(page - 1, size))
                 .build());
+    }
+
+    @GetMapping("/getAll")
+    ApiResponse<PageResponse<PromotionResponse>> getAllPromotion(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size
+    ){
+        return ApiResponse.<PageResponse<PromotionResponse>>builder()
+                .code(200)
+                .message("get all promotion auto and voucher successfully!")
+                .result(promotionService.getAllPromotion(page, size))
+                .build();
     }
 
     @GetMapping("/voucher/getAll")

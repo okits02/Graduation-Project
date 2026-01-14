@@ -3,6 +3,7 @@ package com.example.promotion_service.services;
 import com.example.promotion_service.dto.request.CheckValidVoucherRequest;
 import com.example.promotion_service.dto.request.PromotionCreationRequest;
 import com.example.promotion_service.dto.request.PromotionUpdateRequest;
+import com.example.promotion_service.model.Promotion;
 import com.okits02.common_lib.dto.PageResponse;
 import com.example.promotion_service.dto.response.PromotionResponse;
 
@@ -16,6 +17,7 @@ public interface PromotionService {
     public PageResponse<PromotionResponse> getPromotionVoucher(int page, int size);
     public List<PromotionResponse> getPromotionByCategoryIds(List<String> categoryIds);
     public PageResponse<PromotionResponse> getAllPromotionAuto(int page, int size);
+    public PageResponse<PromotionResponse> getAllPromotion(int page, int size);
     public List<PromotionResponse> getPromotionForOrder(List<String> skus, Double totalAmount, Date today);
     public List<String> getListPromotionFlashSaleIds();
     public PromotionResponse checkValidVoucher(CheckValidVoucherRequest request);
