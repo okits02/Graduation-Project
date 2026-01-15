@@ -27,7 +27,8 @@ public class PaymentController {
     public ResponseEntity<ApiResponse<?>> createPayment(
             @RequestParam(value = "orderId") String orderId,
             @RequestParam(value = "amount") BigDecimal amount,
-            @RequestParam(value = "PaymentMethod") PaymentMethod paymentMethod) throws UnsupportedEncodingException, JsonProcessingException {
+            @RequestParam(value = "PaymentMethod") PaymentMethod paymentMethod)
+            throws UnsupportedEncodingException, JsonProcessingException {
         return ResponseEntity.ok(ApiResponse.<Object>builder()
                         .code(200)
                         .message("create payment successfully!")

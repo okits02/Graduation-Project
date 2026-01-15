@@ -20,7 +20,7 @@ public class OrderItem {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String orderItemId;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")
     private Orders orders;
     @Column(name = "sku")
