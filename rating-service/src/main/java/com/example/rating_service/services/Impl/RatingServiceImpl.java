@@ -177,6 +177,21 @@ public class RatingServiceImpl implements RatingService {
         ratingRepository.delete(rating);
         publishRatingEvent(rating.getProductId());
     }
+
+    @Override
+    public PageResponse<RatingResponse> getAll(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        var pageRating = ratingRepository.findAll(pageable);
+        List<RatingResponse> responses = pageRating.stream().map(rating
+                -> ratingMapper.toRatingResponse(rating)).toList();
+        return PageResponse.<RatingResponse>builder()
+                .data(responses)
+                .totalPage(pageRating.getTotalPages())
+                .totalElements(pageRating.getTotalElements())
+                .currentPage(page)
+                .build();
+    }
+
     private UserIdResponse getUserId(){
         ServletRequestAttributes servletRequestAttributes =
                 (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();

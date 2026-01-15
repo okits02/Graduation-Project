@@ -10,6 +10,7 @@ import com.example.rating_service.services.RatingService;
 import com.okits02.common_lib.dto.ApiResponse;
 import com.okits02.common_lib.dto.PageResponse;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.query.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -87,6 +88,19 @@ public class RatingController {
         return ApiResponse.builder()
                 .code(200)
                 .message("deleteRating successfully")
+                .build();
+    }
+
+    @GetMapping("/get-all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<PageResponse<RatingResponse>> getAll(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size
+    ){
+        return ApiResponse.<PageResponse<RatingResponse>>builder()
+                .code(200)
+                .message("get all rating successfully")
+                .result(ratingService.getAll(page-1, size))
                 .build();
     }
 }

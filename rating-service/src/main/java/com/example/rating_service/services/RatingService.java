@@ -17,4 +17,6 @@ public interface RatingService {
     public RatingSummaryResponse getRatingSummary(String productId);
     public void createImage(List<String> imageUrl, String id);
     public void deleteRating(String id );
+
+    public PageResponse<RatingResponse> getAll(int page, int size);
 }

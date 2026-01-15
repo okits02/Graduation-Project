@@ -30,9 +30,9 @@ public class Delivery {
     private String receiverAddress;
 
     private BigDecimal shippingFee;
-    private String expectedDeliveryTime; // string là đủ (GHTK trả về dạng text)
+    private String expectedDeliveryTime;
 
-    private String note; // ghi chú khi giao thất bại
+    private String note;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

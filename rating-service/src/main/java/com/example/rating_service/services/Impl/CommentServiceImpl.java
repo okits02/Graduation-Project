@@ -4,6 +4,7 @@ import com.example.rating_service.dto.CustomerVM;
 import com.example.rating_service.dto.request.CommentCreationRequest;
 import com.example.rating_service.dto.request.CommentUpdateRequest;
 import com.example.rating_service.dto.response.CommentResponse;
+import com.example.rating_service.dto.response.RatingResponse;
 import com.example.rating_service.dto.response.UserIdResponse;
 import com.example.rating_service.exception.RatingErrorCode;
 import com.example.rating_service.helper.CommentMapperHelper;
@@ -214,6 +215,20 @@ public class CommentServiceImpl implements CommentService {
     public void deleteForProductId(String productId) {
         commentsRepository.deleteAllByProductId(productId);
     }
+
+    @Override
+    public PageResponse<CommentResponse> getAll(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        var comments = commentsRepository.findAll(pageable);
+        List<CommentResponse> responses = comments.stream().map(commentMapper::toResponse).toList();
+        return PageResponse.<CommentResponse>builder()
+                .data(responses)
+                .currentPage(page)
+                .totalElements(comments.getTotalElements())
+                .totalPage(comments.getTotalPages())
+                .build();
+    }
+
     private UserIdResponse getUserId(){
         ServletRequestAttributes servletRequestAttributes =
                 (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();

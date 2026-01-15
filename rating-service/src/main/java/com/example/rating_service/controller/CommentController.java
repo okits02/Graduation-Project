@@ -3,6 +3,7 @@ package com.example.rating_service.controller;
 import com.example.rating_service.dto.request.CommentCreationRequest;
 import com.example.rating_service.dto.request.CommentUpdateRequest;
 import com.example.rating_service.dto.response.CommentResponse;
+import com.example.rating_service.dto.response.RatingResponse;
 import com.example.rating_service.services.CommentService;
 import com.okits02.common_lib.dto.ApiResponse;
 import com.okits02.common_lib.dto.PageResponse;
@@ -95,6 +96,19 @@ public class CommentController {
         return ApiResponse.builder()
                 .code(200)
                 .message("delete by id successfully!")
+                .build();
+    }
+
+    @GetMapping("/get-all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<PageResponse<CommentResponse>> getAll(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size
+    ){
+        return ApiResponse.<PageResponse<CommentResponse>>builder()
+                .code(200)
+                .message("get all rating successfully")
+                .result(commentService.getAll(page-1, size))
                 .build();
     }
 }
