@@ -193,6 +193,7 @@ public class CommentServiceImpl implements CommentService {
                 new AppException(RatingErrorCode.COMMENT_NOT_EXISTS));
 
         comments.setImageUrl(imageUrl);
+        commentsRepository.save(comments);
     }
 
     @Transactional

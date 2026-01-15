@@ -168,6 +168,7 @@ public class RatingServiceImpl implements RatingService {
                 new AppException(RatingErrorCode.RATING_NOT_EXISTS));
 
         rating.setImageUrl(imageUrl);
+        ratingRepository.save(rating);
     }
 
     @Override
