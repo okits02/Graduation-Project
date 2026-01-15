@@ -1,12 +1,10 @@
 package com.example.promotion_service.services.Impl;
 
 import com.example.promotion_service.dto.ProductSkuVM;
-import com.example.promotion_service.dto.request.CategoryLevelValidateRequest;
-import com.example.promotion_service.dto.request.CheckValidVoucherRequest;
-import com.example.promotion_service.dto.request.PromotionCreationRequest;
-import com.example.promotion_service.dto.request.PromotionUpdateRequest;
+import com.example.promotion_service.dto.request.*;
 import com.example.promotion_service.dto.response.PromotionEndingSoonResponse;
 import com.example.promotion_service.enums.ApplyTo;
+import com.example.promotion_service.enums.DiscountType;
 import com.example.promotion_service.enums.PromotionKind;
 import com.example.promotion_service.kafka.PromotionEvent;
 import com.example.promotion_service.kafka.StatusEvent;
@@ -236,6 +234,32 @@ public class PromotionServiceImpl implements PromotionService {
         sendKafKaEvent(promotion.get(), "UPDATED", request.getDeleteApplyTo());
         promotionRepository.save(promotion.get());
         return promotionMapper.toPromotionResponse(promotion.orElse(null));
+    }
+
+    @Override
+    public List<PromotionResponse> createPromotionFlashSale(FlashSaleCreationRequest request) {
+        Promotion promotion = promotionMapper.toPromotionFlashSale(request);
+        if(request.getPromotionKind() != PromotionKind.FLASH_SALE && request.getApplyTo() != ApplyTo.Product){
+            throw new AppException(CAN_NOT_CREATE_FALHSALE);
+        }
+        List<PromotionResponse> responses = new ArrayList<>();
+        for(FlashSaleItemRequest item : request.getFlashSaleItemRequests()){
+            if(item.getDiscountPercent() > 0.0 ){
+                promotion.setDiscountPercent(item.getDiscountPercent());
+                promotion.setDiscountType(DiscountType.DISCOUNT_PERCENT);
+            }
+            else if(item.getFixedAmount() > 0.0){
+                promotion.setDiscountPercent(item.getDiscountPercent());
+                promotion.setDiscountType(DiscountType.DISCOUNT_PERCENT);
+            }
+            promotion.getPromotionApplyTo().add(PromotionApplyTo.builder()
+                            .promotion(promotion)
+                            .productId(item.getProductId())
+                    .build());
+            promotion.setCreateAt(LocalDate.now());
+            responses.add(promotionMapper.toPromotionResponse(promotionRepository.save(promotion)));
+        }
+        return responses;
     }
 
     @Override

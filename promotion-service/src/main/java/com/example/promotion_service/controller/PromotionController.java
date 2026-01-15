@@ -1,6 +1,7 @@
 package com.example.promotion_service.controller;
 
 import com.example.promotion_service.dto.request.CheckValidVoucherRequest;
+import com.example.promotion_service.dto.request.FlashSaleCreationRequest;
 import com.example.promotion_service.dto.request.PromotionCreationRequest;
 import com.example.promotion_service.dto.request.PromotionUpdateRequest;
 import com.example.promotion_service.dto.response.PromotionEndingSoonResponse;
@@ -12,6 +13,7 @@ import com.example.promotion_service.exception.PromotionErrorCode;
 import com.example.promotion_service.services.PromotionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.shaded.com.google.protobuf.Api;
 import org.hibernate.query.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -44,6 +46,15 @@ public class PromotionController {
                         .message("Create promotion successfully!")
                         .result(promotion)
                         .build());
+    }
+
+    @PostMapping("/flashSale")
+    ApiResponse<List<PromotionResponse>> createFlashSale(@RequestBody FlashSaleCreationRequest request){
+        return ApiResponse.<List<PromotionResponse>>builder()
+                .code(200)
+                .message("creation promotion flashSale successfully")
+                .result(promotionService.createPromotionFlashSale(request))
+                .build();
     }
 
     @PutMapping("/update")

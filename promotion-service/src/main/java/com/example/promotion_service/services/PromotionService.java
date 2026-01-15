@@ -1,6 +1,7 @@
 package com.example.promotion_service.services;
 
 import com.example.promotion_service.dto.request.CheckValidVoucherRequest;
+import com.example.promotion_service.dto.request.FlashSaleCreationRequest;
 import com.example.promotion_service.dto.request.PromotionCreationRequest;
 import com.example.promotion_service.dto.request.PromotionUpdateRequest;
 import com.example.promotion_service.dto.response.PromotionEndingSoonResponse;
@@ -15,6 +16,7 @@ import java.util.List;
 public interface PromotionService {
     public PromotionResponse createPromotion(PromotionCreationRequest request);
     public PromotionResponse updatePromotion(PromotionUpdateRequest request);
+    public List<PromotionResponse> createPromotionFlashSale(FlashSaleCreationRequest request);
     public PromotionResponse getPromotion(String promotionId);
     public PageResponse<PromotionResponse> getPromotionVoucher(int page, int size);
     public List<PromotionResponse> getPromotionByCategoryIds(List<String> categoryIds);

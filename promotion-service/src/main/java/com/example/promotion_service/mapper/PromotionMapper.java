@@ -1,5 +1,6 @@
 package com.example.promotion_service.mapper;
 
+import com.example.promotion_service.dto.request.FlashSaleCreationRequest;
 import com.example.promotion_service.dto.request.PromotionCreationRequest;
 import com.example.promotion_service.dto.request.PromotionUpdateRequest;
 import com.example.promotion_service.dto.response.PromotionResponse;
@@ -16,6 +17,7 @@ import java.util.Objects;
 @Mapper(componentModel = "spring")
 public interface PromotionMapper {
     Promotion toPromotion(PromotionCreationRequest request);
+    Promotion toPromotionFlashSale(FlashSaleCreationRequest request);
     @Mapping(target = "productId", expression = "java(mapProductIds(promotion))")
     @Mapping(target = "categoryId", expression = "java(mapCategoryIds(promotion))")
     PromotionResponse toPromotionResponse(Promotion promotion);

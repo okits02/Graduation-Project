@@ -22,7 +22,8 @@ public enum PromotionErrorCode implements ErrorCode {
     USAGE_LIMITED_NULL(HttpStatus.BAD_REQUEST, 4006, "Usage limited can not null!"),
     PROMOTION_USED_LIMIT(HttpStatus.BAD_REQUEST, 4014, "Promotion is used limited!"),
     PROMOTION_ALREADY_APPLIED(HttpStatus.BAD_REQUEST, 4015, "Promotion is already applied"),
-    PROMOTION_OUT_OF_QUOTA(HttpStatus.BAD_REQUEST, 4016, "promotion is out of quota");
+    PROMOTION_OUT_OF_QUOTA(HttpStatus.BAD_REQUEST, 4016, "promotion is out of quota"),
+    CAN_NOT_CREATE_FALHSALE(HttpStatus.BAD_REQUEST, 4018, "Promotion flash sale only apply to product");
 
     PromotionErrorCode(HttpStatus httpStatus, int code, String message) {
         this.code = code;
