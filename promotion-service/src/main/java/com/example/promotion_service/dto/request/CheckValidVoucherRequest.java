@@ -4,6 +4,7 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
@@ -12,7 +13,7 @@ import java.util.List;
 public class CheckValidVoucherRequest {
     String voucherCode;
     Double totalAmount;
-    Date today;
+    LocalDateTime today;
     List<String> productId;
     List<String> categoryId;
 }

@@ -10,6 +10,8 @@ public enum PromotionErrorCode implements ErrorCode {
     UNAUTHENTICATED(HttpStatus.BAD_REQUEST, 4001, "Unauthenticate in promotion-service!"),
     PROMOTION_EXISTS(HttpStatus.BAD_REQUEST, 4002, "Promotion is exists!"),
     PROMOTION_NOT_EXISTS(HttpStatus.BAD_REQUEST, 4007, "Can not find promotion with promotionId"),
+    PROMOTION_CAN_NOT_CREATE(HttpStatus.BAD_REQUEST, 4020, "Start date mus be after today"),
+    PROMOTION_IS_ACTIVE(HttpStatus.BAD_REQUEST, 4022, "promotion can not update or delete if it's active"),
     PROMOTION_EXPIRED(HttpStatus.BAD_REQUEST, 4011, "Promotion is expired"),
     PROMOTION_NOT_VALID_FOR_ORDER(HttpStatus.BAD_REQUEST, 4012, "Promotion is not valid for order"),
     INVALID_PRODUCT_IDS(HttpStatus.BAD_REQUEST, 4003, "Invalid product id!"),
@@ -23,7 +25,9 @@ public enum PromotionErrorCode implements ErrorCode {
     PROMOTION_USED_LIMIT(HttpStatus.BAD_REQUEST, 4014, "Promotion is used limited!"),
     PROMOTION_ALREADY_APPLIED(HttpStatus.BAD_REQUEST, 4015, "Promotion is already applied"),
     PROMOTION_OUT_OF_QUOTA(HttpStatus.BAD_REQUEST, 4016, "promotion is out of quota"),
-    CAN_NOT_CREATE_FALHSALE(HttpStatus.BAD_REQUEST, 4018, "Promotion flash sale only apply to product");
+    CAN_NOT_CREATE_FALHSALE(HttpStatus.BAD_REQUEST, 4018, "Promotion flash sale only apply to product"),
+    CAMPAIGN_EXISTS(HttpStatus.BAD_REQUEST, 4024, "Campaign is exists"),
+    CAMPAIGN_NOT_EXISTS(HttpStatus.BAD_REQUEST, 4028, "Campaign not exists");
 
     PromotionErrorCode(HttpStatus httpStatus, int code, String message) {
         this.code = code;

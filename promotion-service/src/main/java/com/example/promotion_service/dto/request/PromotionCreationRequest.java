@@ -10,6 +10,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
@@ -24,6 +25,7 @@ public class PromotionCreationRequest {
     String name;
     @NotNull
     String descriptions;
+    String campaignId;
     @NotNull
     DiscountType discountType;
     @NotNull
@@ -38,9 +40,8 @@ public class PromotionCreationRequest {
     int usageLimitPerUser;
     Double minimumOrderPurchaseAmount;
     Double maxDiscountAmount;
-    LocalDate startDate;
-    LocalDate endDate;
-    Boolean active;
+    LocalDateTime startDate;
+    LocalDateTime endDate;
     List<String> productId;
     List<String> categoryId;
 }

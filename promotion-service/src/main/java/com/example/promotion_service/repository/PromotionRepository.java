@@ -70,4 +70,14 @@ public interface PromotionRepository extends JpaRepository<Promotion, String> {
             WHERE p.voucher_code = :voucherCode
             """, nativeQuery = true)
     Promotion findByVoucherCode(@Param("voucherCode") String voucherCode);
+
+    @Query("""
+    SELECT p
+    FROM Promotion p
+    LEFT JOIN FETCH p.promotionApplyTo
+    WHERE p.active = false
+      AND p.startDate <= :now
+      AND p.endDate >= :now
+    """)
+    List<Promotion> findPromotionToActivate(LocalDateTime now);
 }

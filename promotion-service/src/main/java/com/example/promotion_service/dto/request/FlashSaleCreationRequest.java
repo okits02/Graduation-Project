@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -17,6 +18,7 @@ import java.util.List;
 public class FlashSaleCreationRequest {
     @NotNull
     String name;
+    String campaignId;
     @NotNull
     String descriptions;
     @NotNull
@@ -25,8 +27,8 @@ public class FlashSaleCreationRequest {
     ApplyTo applyTo;
     @NotNull
     PromotionKind promotionKind;
-    LocalDate startDate;
-    LocalDate endDate;
+    LocalDateTime startDate;
+    LocalDateTime endDate;
     Boolean active;
     List<FlashSaleItemRequest> flashSaleItemRequests;
 }

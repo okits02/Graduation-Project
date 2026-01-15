@@ -1,6 +1,7 @@
 package com.example.promotion_service.scheduler;
 
 import com.example.promotion_service.controller.PromotionController;
+import com.example.promotion_service.enums.PromotionKind;
 import com.example.promotion_service.model.Promotion;
 import com.example.promotion_service.repository.PromotionRepository;
 import com.example.promotion_service.services.PromotionService;
@@ -24,7 +25,19 @@ public class PromotionStatusScheduler {
         for(Promotion p : promotionList){
             p.setActive(false);
             promotionRepository.save(p);
-            promotionService.UpdatePromotionStatus(p.getId());
+            if(p.getPromotionKind() != PromotionKind.VOUCHER) {
+                promotionService.UpdatePromotionStatus(p);
+            }
+        }
+    }
+
+
+    @Scheduled(fixedRate = 30000)
+    public void  activatePromotionWhenStartDate(){
+        LocalDateTime now = LocalDateTime.now();
+        List<Promotion> promotions = promotionRepository.findPromotionToActivate(now);
+        for(Promotion p : promotions){
+            promotionService.activatePromotion(p);
         }
     }
 }

@@ -11,7 +11,7 @@ public class kafkaConfig {
     public NewTopic changeIsStockStatusEvent(){
         return TopicBuilder.name("change-status-event")
                 .partitions(3)
-                .replicas(2)
+                .replicas(1)
                 .build();
     }
 
@@ -19,14 +19,14 @@ public class kafkaConfig {
     public NewTopic TransactionAnalysisEvent(){
         return TopicBuilder.name("transaction-analysis-event")
                 .partitions(3)
-                .replicas(2)
+                .replicas(1)
                 .build();
     }
 
     @Bean NewTopic StockInAnalysisEvent(){
         return TopicBuilder.name("stockIn-analysis-event")
                 .partitions(3)
-                .replicas(2)
+                .replicas(1)
                 .build();
     }
 }

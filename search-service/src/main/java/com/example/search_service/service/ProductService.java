@@ -218,95 +218,18 @@ public class ProductService {
                 log.info("create promotion successfully");
         }
 
-        public void updatePromotion(UpdatePromotionDTO request) throws IOException {
-                if (request.getApplyTo() != null
-                                && request.getDeleteApplyTo() != null
-                                && !request.getDeleteApplyTo().isEmpty()) {
-                        removePromotionInProduct(request.getId(), request.getDeleteApplyTo(), request.getApplyTo());
-                }
-                if (request.getProductIdList() != null && !request.getProductIdList().isEmpty()) {
-                        Promotion promotion = Promotion.builder()
-                                        .id(request.getId())
-                                        .name(request.getName())
-                                        .descriptions(request.getDescriptions())
-                                        .applyTo(request.getApplyTo())
-                                        .discountPercent(BigDecimal.valueOf(request.getDiscountPercent()))
-                                        .fixedAmount(BigDecimal.valueOf(request.getFixedAmount()))
-                                        .active(request.getActive())
-                                        .createAt(request.getCreateAt())
-                                        .build();
-                        createPromotionByProductId(promotion, request.getProductIdList());
-                } else if (request.getCategoryIdList() != null && !request.getCategoryIdList().isEmpty()) {
-                        Promotion promotion = Promotion.builder()
-                                        .id(request.getId())
-                                        .name(request.getName())
-                                        .descriptions(request.getDescriptions())
-                                        .applyTo(request.getApplyTo())
-                                        .discountPercent(BigDecimal.valueOf(request.getDiscountPercent()))
-                                        .fixedAmount(BigDecimal.valueOf(request.getFixedAmount()))
-                                        .active(request.getActive())
-                                        .createAt(request.getCreateAt())
-                                        .build();
-                        createPromotionByCategoryId(promotion, request.getCategoryIdList());
-                }
-                Query nestedQuery = Query.of(q -> q
-                                .nested(n -> n
-                                                .path("promotions")
-                                                .query(innerQ -> innerQ
-                                                                .term(t -> t
-                                                                                .field("promotions.id")
-                                                                                .value(request.getId())))));
-
-                String scriptSource = """
-                                for(def promo : ctx._source.promotions){
-                                    if (promo.id.equals(params.promotionId)) {
-                                        if(params.newName != null) promo.name = params.newName;
-                                        if(params.newDescriptions != null) promo.descriptions = params.newDescriptions;
-                                        if(params.newDiscountPercent != null) promo.discountPercent = params.newDiscountPercent;
-                                        if(params.newFixedAmount != null) promo.fixedAmount = params.newFixedAmount;
-                                        if(params.newActive != null) promo.active = params.newActive;
-                                        if(params.newUpdateAt != null) promo.updateAt = params.newUpdateAt;
-                                        break;
-                                    }
-                                }
-                                """;
-
-                Map<String, JsonData> params = new HashMap<>();
-                if (request.getId() != null)
-                        params.put("promotionId", JsonData.of(request.getId()));
-                if (request.getName() != null)
-                        params.put("newName", JsonData.of(request.getName()));
-                if (request.getDescriptions() != null)
-                        params.put("newDescriptions", JsonData.of(request.getDescriptions()));
-                if (request.getDiscountPercent() != null)
-                        params.put("newDiscountPercent", JsonData.of(request.getDiscountPercent()));
-                if (request.getFixedAmount() != null)
-                        params.put("newFixedAmount", JsonData.of(request.getFixedAmount()));
-                if (request.getActive() != null)
-                        params.put("newActive", JsonData.of(request.getActive()));
-                if (request.getUpdateAt() != null)
-                        params.put("newUpdateAt", JsonData.of(request.getUpdateAt()));
-
-                Script script = new Script.Builder()
-                                .source(scriptSource)
-                                .lang("painless")
-                                .params(params)
-                                .build();
-
-                UpdateByQueryRequest req = UpdateByQueryRequest.of(b -> b
-                                .index("product")
-                                .query(nestedQuery) // ✅ Đã thêm query
-                                .script(script));
-
-                elasticsearchClient.updateByQuery(req);
-        }
-
         public void createPromotionByProductId(Promotion promotion, Set<String> listProductId) throws IOException {
                 List<BulkOperation> operations = new ArrayList<>();
                 NativeQuery searchQuery = NativeQuery.builder()
-                                .withQuery(q -> q.terms(t -> t.field("id").terms(v -> v.value(
-                                                listProductId.stream().map(FieldValue::of).toList()))))
-                                .build();
+                    .withQuery(q -> q.terms(t -> t
+                            .field("id")
+                            .terms(v -> v.value(
+                                    listProductId.stream()
+                                            .map(FieldValue::of)
+                                            .toList()
+                            ))
+                    ))
+                    .build();
 
                 SearchHits<Products> searchHits = elasticsearchOperations.search(searchQuery, Products.class);
 
@@ -383,119 +306,16 @@ public class ProductService {
                 }
         }
 
-        public void updateStatusPromotion(StatusPromotionDTO request) throws IOException {
-                List<BulkOperation> operations = new LinkedList<>();
-                NativeQuery nativeQuery = NativeQuery.builder()
-                                .withQuery(q -> q
-                                                .term(t -> t
-                                                                .field("promotion.id")
-                                                                .value(request.getId())))
-                                .build();
-                SearchHits<Products> searchHits = elasticsearchOperations.search(nativeQuery, Products.class);
-                for (SearchHit<Products> hit : searchHits) {
-                        Products products = hit.getContent();
-                        if (products.getPromotions() != null) {
-                                products.getPromotions().forEach(promotion -> {
-                                        if (promotion.getId().equals(request.getId())) {
-                                                promotion.setActive(false);
-                                        }
-                                });
-                        }
-                        BulkOperation bulkOperation = BulkOperation.of(b -> b
-                                        .update(u -> u
-                                                        .index("products")
-                                                        .id(products.getId())
-                                                        .action(a -> a.doc(products))));
-                        calculatorListPrice(products);
-                        operations.add(bulkOperation);
-                }
-                if (!operations.isEmpty()) {
-                        BulkRequest bulkRequest = new BulkRequest.Builder()
-                                        .operations(operations)
-                                        .build();
-                        elasticsearchClient.bulk(bulkRequest);
-                }
-        }
-
-        public void removePromotionInProduct(String promotionId, List<String> deleteApplyTo, String applyTo)
-                        throws IOException {
-                Query query;
-                if ("Product".equalsIgnoreCase(applyTo)) {
-                        query = Query.of(q -> q
-                                        .bool(b -> b
-                                                        .must(m -> m
-                                                                        .nested(n -> n
-                                                                                        .path("promotions")
-                                                                                        .query(q1 -> q1
-                                                                                                        .term(t -> t
-                                                                                                                        .field("promotions.id")
-                                                                                                                        .value(promotionId)))))
-                                                        .must(m -> m
-                                                                        .terms(t -> t
-                                                                                        .field("id")
-                                                                                        .terms(v -> v.value(
-                                                                                                        deleteApplyTo.stream()
-                                                                                                                        .map(FieldValue::of)
-                                                                                                                        .toList()))))));
-                } else if ("Category".equalsIgnoreCase(applyTo)) {
-                        query = Query.of(q -> q
-                                        .bool(b -> b
-                                                        .must(m -> m
-                                                                        .nested(n -> n
-                                                                                        .path("promotions")
-                                                                                        .query(q1 -> q1
-                                                                                                        .term(t -> t
-                                                                                                                        .field("promotions.id")
-                                                                                                                        .value(promotionId)))))
-                                                        .must(m -> m
-                                                                        .terms(t -> t
-                                                                                        .field("categoriesId")
-                                                                                        .terms(v -> v.value(
-                                                                                                        deleteApplyTo.stream()
-                                                                                                                        .map(FieldValue::of)
-                                                                                                                        .toList()))))));
-                } else {
-                        return;
-                }
-
-                NativeQuery searchQuery = NativeQuery.builder()
-                                .withQuery(query)
-                                .build();
-
-                SearchHits<Products> hits = elasticsearchOperations.search(searchQuery, Products.class);
-
-                List<BulkOperation> bulkOperations = new ArrayList<>();
-
-                for (SearchHit<Products> hit : hits) {
-                        Products product = hit.getContent();
-                        if (product.getPromotions() == null)
-                                continue;
-                        product.getPromotions().removeIf(p -> promotionId.equals(p.getId()));
-                        calculatorListPrice(product);
-                        bulkOperations.add(BulkOperation.of(b -> b
-                                        .update(u -> u
-                                                        .index("product")
-                                                        .id(product.getId())
-                                                        .action(a -> a.doc(product)))));
-                }
-
-                if (!bulkOperations.isEmpty()) {
-                        elasticsearchClient.bulk(b -> b.operations(bulkOperations));
-                }
-        }
-
-        public void deletePromotion(ApplyPromotionEventDTO request) throws IOException {
-                String promotionId = request.getId();
+        public void deletePromotion(String promotionId) throws IOException {
                 if (promotionId == null) {
                         throw new AppException(SearchErrorCode.ID_OF_PROMOTION_NOT_VALID);
                 }
                 Query query = Query.of(q -> q
-                                .nested(n -> n
-                                                .path("promotions")
-                                                .query(q1 -> q1
-                                                                .term(t -> t
-                                                                                .field("promotions.id")
-                                                                                .value(promotionId)))));
+                    .term(t -> t
+                            .field("promotions.id")
+                            .value(promotionId)
+                    )
+                );
 
                 NativeQuery searchQuery = NativeQuery.builder()
                                 .withQuery(query)

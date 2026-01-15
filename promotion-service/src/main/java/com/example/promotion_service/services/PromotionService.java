@@ -27,6 +27,7 @@ public interface PromotionService {
     public PromotionResponse checkValidVoucher(CheckValidVoucherRequest request);
     public void applyVoucherToOrder(String voucherCode, String orderId);
     public void rollbackVoucher(String orderId);
-    public void UpdatePromotionStatus(String id);
+    public void UpdatePromotionStatus(Promotion promotion);
+    public void activatePromotion(Promotion promotion);
     public void deletePromotion(String promotionId);
 }

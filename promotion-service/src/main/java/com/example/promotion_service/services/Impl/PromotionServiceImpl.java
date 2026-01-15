@@ -9,7 +9,9 @@ import com.example.promotion_service.enums.PromotionKind;
 import com.example.promotion_service.kafka.PromotionEvent;
 import com.example.promotion_service.kafka.StatusEvent;
 import com.example.promotion_service.kafka.UpdatePromotionEvent;
+import com.example.promotion_service.model.PromotionCampaign;
 import com.example.promotion_service.model.PromotionUsage;
+import com.example.promotion_service.repository.PromotionCampaignRepository;
 import com.example.promotion_service.repository.PromotionUsageRepository;
 import com.example.promotion_service.repository.httpClient.ProductClient;
 import com.example.promotion_service.repository.httpClient.SearchClient;
@@ -48,6 +50,7 @@ import static com.example.promotion_service.exception.PromotionErrorCode.*;
 @RequiredArgsConstructor
 public class PromotionServiceImpl implements PromotionService {
     private final PromotionRepository promotionRepository;
+    private final PromotionCampaignRepository promotionCampaignRepository;
     private final PromotionUsageRepository promotionUsageRepository;
     private final PromotionApplyToRepository applyToRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
@@ -62,7 +65,14 @@ public class PromotionServiceImpl implements PromotionService {
         {
             throw new AppException(PromotionErrorCode.PROMOTION_EXISTS);
         }
+        if (request.getStartDate().isBefore(LocalDateTime.now())) {
+            throw new AppException(PROMOTION_CAN_NOT_CREATE);
+        }
+        PromotionCampaign promotionCampaign = promotionCampaignRepository.findById(request.getCampaignId())
+                .orElseThrow(() -> new AppException(CAMPAIGN_NOT_EXISTS));
         Promotion promotion = promotionMapper.toPromotion(request);
+        promotion.setActive(false);
+        promotion.setCampaign(promotionCampaign);
         if(request.getPromotionKind().equals(PromotionKind.AUTO)) {
             List<PromotionApplyTo> promotionApplyTo = new ArrayList<>();
             switch (request.getApplyTo()) {
@@ -100,7 +110,6 @@ public class PromotionServiceImpl implements PromotionService {
             }
             promotion.setPromotionApplyTo(promotionApplyTo);
             promotion.setCreateAt(LocalDate.now());
-            sendKafKaEvent(promotion, "CREATED", new ArrayList<>());
         }else if(request.getPromotionKind().equals(PromotionKind.VOUCHER)){
             String voucherCode = VoucherCodeUtils.generateVoucherCode();
             while (promotionRepository.existsByVoucherCode(voucherCode)){
@@ -156,6 +165,11 @@ public class PromotionServiceImpl implements PromotionService {
         if(promotion.isEmpty()){
             throw new AppException(PromotionErrorCode.PROMOTION_NOT_EXISTS);
         }
+        if (Boolean.TRUE.equals(promotion.get().getActive())) {
+            throw new AppException(PROMOTION_IS_ACTIVE);
+        }
+        PromotionCampaign promotionCampaign = promotionCampaignRepository.findById(request.getCampaignId())
+                .orElseThrow(() -> new AppException(CAMPAIGN_NOT_EXISTS));
         List<PromotionApplyTo> promotionApplyTos =
                 new ArrayList<>(promotion.get().getPromotionApplyTo());
         if(request.getDeleteApplyTo() != null && !request.getDeleteApplyTo().isEmpty()){
@@ -229,16 +243,20 @@ public class PromotionServiceImpl implements PromotionService {
             }
         }
         promotionMapper.updatePromotion(promotion.orElse(null), request);
+        promotion.get().setCampaign(promotionCampaign);
         promotion.get().getPromotionApplyTo().clear();
         promotion.get().getPromotionApplyTo().addAll(promotionApplyTos);
-        sendKafKaEvent(promotion.get(), "UPDATED", request.getDeleteApplyTo());
         promotionRepository.save(promotion.get());
         return promotionMapper.toPromotionResponse(promotion.orElse(null));
     }
 
     @Override
     public List<PromotionResponse> createPromotionFlashSale(FlashSaleCreationRequest request) {
+        PromotionCampaign promotionCampaign = promotionCampaignRepository.findById(request.getCampaignId())
+                .orElseThrow(() -> new AppException(CAMPAIGN_NOT_EXISTS));
         Promotion promotion = promotionMapper.toPromotionFlashSale(request);
+        promotion.setActive(false);
+        promotion.setCampaign(promotionCampaign);
         if(request.getPromotionKind() != PromotionKind.FLASH_SALE && request.getApplyTo() != ApplyTo.Product){
             throw new AppException(CAN_NOT_CREATE_FALHSALE);
         }
@@ -388,9 +406,10 @@ public class PromotionServiceImpl implements PromotionService {
                 throw new AppException(PromotionErrorCode.PROMOTION_NOT_EXISTS);
             }
 
-            Date today = request.getToday();
-            if (today.before(promotion.getStartDate())
-                    || today.after(promotion.getEndDate())) {
+            LocalDateTime now = request.getToday();
+
+            if (now.isBefore(promotion.getStartDate())
+                    || now.isAfter(promotion.getEndDate())) {
                 throw new AppException(PromotionErrorCode.PROMOTION_EXPIRED);
             }
 
@@ -520,7 +539,9 @@ public class PromotionServiceImpl implements PromotionService {
     public void deletePromotion(String promotionId) {
         Promotion promotion = promotionRepository.findById(promotionId).orElseThrow(() ->
                 new AppException(PromotionErrorCode.PROMOTION_NOT_EXISTS));
-        sendKafKaEvent(promotion, "DELETED", new ArrayList<>());
+        if (Boolean.TRUE.equals(promotion.getActive())) {
+            throw new AppException(PROMOTION_IS_ACTIVE);
+        }
         promotionRepository.deleteById(promotionId);
     }
 
@@ -537,9 +558,9 @@ public class PromotionServiceImpl implements PromotionService {
     }
 
     @Override
-    public void UpdatePromotionStatus(String id){
+    public void UpdatePromotionStatus(Promotion promotion){
         StatusEvent statusEvent = StatusEvent.builder()
-                .id(id)
+                .id(promotion.getId())
                 .build();
         kafkaTemplate.send("promotion-status-event", statusEvent).whenComplete(
                 (result, ex) -> {
@@ -552,7 +573,18 @@ public class PromotionServiceImpl implements PromotionService {
                 });
     }
 
-    private void sendKafKaEvent(Promotion promotion, String eventType, List<String> DeleteApplyTo){
+    @Override
+    public void activatePromotion(Promotion promotion) {
+        promotion.setActive(true);
+        promotion.setUpdateAt(LocalDate.now());
+
+        promotionRepository.save(promotion);
+        if(promotion.getPromotionKind() != PromotionKind.VOUCHER) {
+            sendKafKaEvent(promotion, "CREATED");
+        }
+    }
+
+    private void sendKafKaEvent(Promotion promotion, String eventType){
         Set<String> categoryIds = new HashSet<>();
         Set<String> productIds = new HashSet<>();
         if(promotion.getApplyTo().equals(ApplyTo.Category)){
@@ -590,47 +622,6 @@ public class PromotionServiceImpl implements PromotionService {
                             }
                         });
 
-            }
-
-            case "UPDATED" -> {
-                UpdatePromotionEvent updatePromotionEvent = UpdatePromotionEvent.builder()
-                        .id(promotion.getId())
-                        .name(promotion.getName())
-                        .descriptions(promotion.getDescriptions())
-                        .active(promotion.getActive())
-                        .applyTo(String.valueOf(promotion.getApplyTo()))
-                        .discountPercent(promotion.getDiscountPercent())
-                        .fixedAmount(promotion.getFixedAmount())
-                        .productIdList(productIds)
-                        .categoryIdList(categoryIds)
-                        .deleteApplyTo(DeleteApplyTo)
-                        .createAt(promotion.getCreateAt())
-                        .updateAt(LocalDate.now())
-                        .build();
-                kafkaTemplate.send("promotion-update-event", updatePromotionEvent).whenComplete(
-                        (result, ex) -> {
-                            if(ex != null)
-                            {
-                                System.err.println("Failed to send message" + ex.getMessage());
-                            }else {
-                                System.err.println("send message successfully" + result.getProducerRecord());
-                            }
-                        });
-            }
-
-            case "DELETED" -> {
-                PromotionEvent promotionEvent = PromotionEvent.builder()
-                        .id(promotion.getId())
-                        .build();
-                kafkaTemplate.send("promotion-delete-event", promotionEvent).whenComplete(
-                        (result, ex) -> {
-                            if(ex != null)
-                            {
-                                System.err.println("Failed to send message" + ex.getMessage());
-                            }else {
-                                System.err.println("send message successfully" + result.getProducerRecord());
-                            }
-                        });
             }
         }
     }

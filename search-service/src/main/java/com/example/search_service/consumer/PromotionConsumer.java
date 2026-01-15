@@ -33,7 +33,7 @@ public class PromotionConsumer {
 
     @KafkaListener(topics = "promotion-status-event",
             containerFactory = "updateStatusPromotionKafkaListenerContainerFactory")
-    public void updateStatusPromotionConsumer(String statusEvent) throws JsonProcessingException {
+    public void updateStatusPromotionConsumer(String statusEvent) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         StatusPromotionDTO statusPromotionDTO = null;
         try {
@@ -41,33 +41,7 @@ public class PromotionConsumer {
         }catch (JsonMappingException e) {
             throw new RuntimeException(e);
         }
+        productService.deletePromotion(statusPromotionDTO.getId());
     }
 
-    @KafkaListener(topics = "promotion-update-event",
-            containerFactory = "updatePromotionKafkaListenerContainerFactory")
-    public void updatePromotionConsumer(String updatePromotionEvent) throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        UpdatePromotionDTO updatePromotionDTO = null;
-        try {
-            updatePromotionDTO = objectMapper.readValue(updatePromotionEvent, UpdatePromotionDTO.class);
-        }catch (JsonMappingException e) {
-            throw new RuntimeException(e);
-        }
-        productService.updatePromotion(updatePromotionDTO);
-    }
-
-    @KafkaListener(topics = "promotion-delete-event",
-            containerFactory = "deletePromotionKafkaListenerContainerFactory")
-    public void deletePromotionFactory(String deletePromotionEvent) throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        ApplyPromotionEventDTO applyPromotionEventDTO = null;
-        try{
-            applyPromotionEventDTO = objectMapper.readValue(deletePromotionEvent, ApplyPromotionEventDTO.class);
-        }catch (JsonMappingException e){
-            throw new RuntimeException(e);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-        productService.deletePromotion(applyPromotionEventDTO);
-    }
-    }
+}

@@ -10,6 +10,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.cglib.core.Local;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -25,6 +26,9 @@ public  class Promotion {
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
     String name;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "campaign_id")
+    PromotionCampaign campaign;
     @Enumerated(EnumType.STRING)
     DiscountType discountType;
     @Enumerated(EnumType.STRING)
@@ -37,8 +41,8 @@ public  class Promotion {
     String descriptions;
     Double discountPercent;
     Double fixedAmount;
-    Date startDate;
-    Date endDate;
+    LocalDateTime startDate;
+    LocalDateTime endDate;
     Double minimumOrderPurchaseAmount;
     Double maxDiscountAmount;
     int usageLimited;

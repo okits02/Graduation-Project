@@ -96,7 +96,7 @@
             if (request.getVoucher() != null && !request.getVoucher().isBlank()){
 
                 CheckValidVoucherRequest checkValidVoucherRequest = CheckValidVoucherRequest.builder()
-                        .today(Date.from(Instant.now()))
+                        .today(LocalDateTime.now())
                         .totalAmount(orders.getTotalPrice().doubleValue())
                         .voucherCode(request.getVoucher())
                         .productId(productIds)
@@ -349,7 +349,7 @@
                     throw new AppException(OrderErrorCode.VOUCHER_NOT_ARRIVE);
                 }
                 CheckValidVoucherRequest checkValidVoucherRequest = CheckValidVoucherRequest.builder()
-                        .today(Date.from(Instant.now()))
+                        .today(LocalDateTime.now())
                         .totalAmount(request.getTotalPrice().doubleValue())
                         .voucherCode(request.getVoucher())
                         .productId(productIds)
@@ -618,7 +618,7 @@
                         .distinct()
                         .toList();
                 CheckValidVoucherRequest checkValidVoucherRequest = CheckValidVoucherRequest.builder()
-                        .today(Date.from(Instant.now()))
+                        .today(LocalDateTime.now())
                         .totalAmount(totalPrice.doubleValue())
                         .voucherCode(orders.getVoucherCode())
                         .productId(productIds)
