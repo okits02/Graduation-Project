@@ -141,6 +141,28 @@ public class ImageController {
                 .build();
     }
 
+    @PostMapping("/rating/image")
+    public ApiResponse<?> creationImageForRating(
+        @ModelAttribute ImageRatingRequest request
+    ) throws IOException {
+        imageService.updateImageForRating(request.getMultipartFileList(), request.getRatingId());
+        return ApiResponse.builder()
+                .code(200)
+                .message("creating image for rating successfully")
+                .build();
+    }
+
+    @PostMapping("/comment/image")
+    public ApiResponse<?> creationImageForComment(
+            @ModelAttribute ImageCommentRequest request
+    ) throws IOException {
+        imageService.updateImageForComment(request.getMultipartFileList(), request.getCommentId());
+        return ApiResponse.builder()
+                .code(200)
+                .message("creating image for rating successfully")
+                .build();
+    }
+
     @GetMapping("/banner/get")
     public ApiResponse<List<BannerResponse>> getAllBanner(){
         return ApiResponse.<List<BannerResponse>>builder()

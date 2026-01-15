@@ -9,6 +9,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 
@@ -37,8 +38,8 @@ public class PromotionCreationRequest {
     int usageLimitPerUser;
     Double minimumOrderPurchaseAmount;
     Double maxDiscountAmount;
-    Date startDate;
-    Date endDate;
+    LocalDate startDate;
+    LocalDate endDate;
     Boolean active;
     List<String> productId;
     List<String> categoryId;

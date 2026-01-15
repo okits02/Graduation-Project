@@ -5,6 +5,7 @@ import com.example.promotion_service.dto.request.CategoryLevelValidateRequest;
 import com.example.promotion_service.dto.request.CheckValidVoucherRequest;
 import com.example.promotion_service.dto.request.PromotionCreationRequest;
 import com.example.promotion_service.dto.request.PromotionUpdateRequest;
+import com.example.promotion_service.dto.response.PromotionEndingSoonResponse;
 import com.example.promotion_service.enums.ApplyTo;
 import com.example.promotion_service.enums.PromotionKind;
 import com.example.promotion_service.kafka.PromotionEvent;
@@ -36,6 +37,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -336,13 +338,19 @@ public class PromotionServiceImpl implements PromotionService {
     }
 
     @Override
-    public List<String> getListPromotionFlashSaleIds() {
-        var promotions = promotionRepository.findAllByPromotionKind(PromotionKind.FLASH_SALE);
+    public PromotionEndingSoonResponse getListPromotionEndingSoon() {
+        LocalDate today = LocalDate.now();
+        List<Promotion> promotions = promotionRepository.findExpireToday(today);
         if(promotions == null){
             throw new AppException(PROMOTION_NOT_EXISTS);
         }
+        LocalDateTime expiredAt =
+                today.atTime(23, 59, 59);
         List<String> promotionIds = promotions.stream().map(Promotion::getId).toList();
-        return promotionIds;
+        return PromotionEndingSoonResponse.builder()
+                .promotionId(promotionIds)
+                .expiredAt(expiredAt)
+                .build();
     }
 
     @Override

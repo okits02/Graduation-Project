@@ -183,7 +183,7 @@ public class RatingServiceImpl implements RatingService {
         Pageable pageable = PageRequest.of(page, size);
         var pageRating = ratingRepository.findAll(pageable);
         List<RatingResponse> responses = pageRating.stream().map(rating
-                -> ratingMapper.toRatingResponse(rating)).toList();
+                -> ratingMapperHelper.toResponse(rating, rating.getUserId())).toList();
         return PageResponse.<RatingResponse>builder()
                 .data(responses)
                 .totalPage(pageRating.getTotalPages())

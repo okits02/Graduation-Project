@@ -23,7 +23,14 @@ public interface PromotionRepository extends JpaRepository<Promotion, String> {
     void deleteById(String promotionId);
     boolean existsByVoucherCode(String voucherCode);
     Page<Promotion> findAllByPromotionKind(PromotionKind promotionKind, Pageable pageable);
-    List<Promotion> findAllByPromotionKind(PromotionKind promotionKind);
+    @Query("""
+            SELECT p 
+            FROM Promotion p
+            WHERE FUNCTION('DATE', p.endDate) = :today
+            AND p.active = true
+            AND p.promotionKind = AUTO
+            """)
+    List<Promotion> findExpireToday(LocalDate today);
     @Query(value = """
     SELECT p.*
     FROM promotion p

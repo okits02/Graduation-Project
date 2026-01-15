@@ -132,7 +132,7 @@
                     .build();
         }
 
-        public ProductGetListVM getListProductFlashSale(){
+        public ProductGetListVM getListProductEndingPromotionSoon(){
             var responsePromotion = promotionClient.getListPromotionFlashSaleIds();
             if(responsePromotion == null || responsePromotion.getCode() != 200){
                 throw new AppException(SearchErrorCode.DID_NOT_HAVE_PRODUCT_FLASH_SALE);

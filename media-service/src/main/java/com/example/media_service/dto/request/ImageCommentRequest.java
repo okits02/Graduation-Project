@@ -1,7 +1,5 @@
 package com.example.media_service.dto.request;
 
-import com.example.media_service.enums.MediaOwnerType;
-import com.example.media_service.enums.MediaPurpose;
 import com.example.media_service.validator.ListFileImageConstraint;
 import lombok.AccessLevel;
 import lombok.Data;
@@ -12,10 +10,9 @@ import java.util.List;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class BannerCreationRequest {
-    String ownerId;
-    MediaOwnerType ownerType;
+public class ImageCommentRequest {
+    String commentId;
     @ListFileImageConstraint(allowedTypes = {"image/jpeg", "image/png", "image/gif", "image/webp"},
             message = "File type not allowed. Allowed types are: JPEG, PNG, GIF")
-    MultipartFile imageBanner;
+    List<MultipartFile> multipartFileList;
 }

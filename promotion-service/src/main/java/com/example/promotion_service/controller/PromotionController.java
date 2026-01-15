@@ -3,6 +3,7 @@ package com.example.promotion_service.controller;
 import com.example.promotion_service.dto.request.CheckValidVoucherRequest;
 import com.example.promotion_service.dto.request.PromotionCreationRequest;
 import com.example.promotion_service.dto.request.PromotionUpdateRequest;
+import com.example.promotion_service.dto.response.PromotionEndingSoonResponse;
 import com.okits02.common_lib.dto.ApiResponse;
 import com.okits02.common_lib.dto.PageResponse;
 import com.example.promotion_service.dto.response.PromotionResponse;
@@ -182,11 +183,11 @@ public class PromotionController {
     }
 
     @GetMapping("/internal/flashSale")
-    ApiResponse<List<String>> getListPromotionIdsFlashSale(){
-        return ApiResponse.<List<String>>builder()
+    ApiResponse<PromotionEndingSoonResponse> getListPromotionIdsEndingSoon(){
+        return ApiResponse.<PromotionEndingSoonResponse>builder()
                 .code(200)
                 .message("get list promotion flash salle successfully!")
-                .result(promotionService.getListPromotionFlashSaleIds())
+                .result(promotionService.getListPromotionEndingSoon())
                 .build();
     }
 }

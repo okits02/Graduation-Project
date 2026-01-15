@@ -80,12 +80,4 @@ public interface MediaRepository extends JpaRepository<Media, String> {
             @Param("ownerId") String productId,
             @Param("purpose") String mediaPurpose);
 
-    @Query(value = """
-            SELECT * FROM media 
-            WHERE media_type = :type
-            """, nativeQuery = true)
-    List<Media> findAllByMediaType(
-            @Param("type") MediaType mediaType
-    );
-
 }

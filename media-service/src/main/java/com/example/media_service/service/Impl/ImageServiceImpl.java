@@ -143,17 +143,14 @@ public class ImageServiceImpl implements ImageService {
     @Override
     public BannerResponse createBanner(BannerCreationRequest request) throws IOException {
         Media image = null;
-        if(request.getMediaPurpose().equals(MediaPurpose.BANNER_FLASH_SAE))
-        {
-            image = uploadAndSave(request.getImageBanner(), "",
-                    MediaOwnerType.PROMOTION, request.getMediaPurpose());
-        }
         image = uploadAndSave(request.getImageBanner(), request.getOwnerId(),
-                MediaOwnerType.PROMOTION, request.getMediaPurpose());
+                request.getOwnerType(), MediaPurpose.BANNER);
+        image.setMediaType(MediaType.IMAGE);
         Media saveMedia = mediaRepository.save(image);
         return BannerResponse.builder()
                 .id(saveMedia.getId())
                 .ownerId(saveMedia.getOwnerId())
+                .mediaOwnerType(image.getOwnerType())
                 .bannerUrl(saveMedia.getUrl())
                 .build();
     }
@@ -180,7 +177,7 @@ public class ImageServiceImpl implements ImageService {
 
     @Override
     public List<BannerResponse> getAllBanner() {
-        List<Media> medias = mediaRepository.findAllByMediaType(MediaType.BANNER);
+        List<Media> medias = mediaRepository.findAllByMediaPurpose(MediaPurpose.BANNER);
         if(medias == null || medias.isEmpty()){
             throw new AppException(MediaErrorCode.BANNER_IS_NOT_EXISTS);
         }
@@ -189,6 +186,7 @@ public class ImageServiceImpl implements ImageService {
                 .map(media -> BannerResponse.builder()
                         .id(media.getId())
                         .ownerId(media.getOwnerId())
+                        .mediaOwnerType(media.getOwnerType())
                         .bannerUrl(media.getUrl())
                         .mediaPurpose(media.getMediaPurpose())
                         .build())
