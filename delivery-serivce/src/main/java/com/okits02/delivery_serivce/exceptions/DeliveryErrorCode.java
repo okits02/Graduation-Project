@@ -1,0 +1,35 @@
+package com.okits02.delivery_serivce.exceptions;
+
+import com.okits02.common_lib.exception.ErrorCode;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+
+public enum DeliveryErrorCode implements ErrorCode {
+    INFO_NOT_EXISTS(7401, "Info for store not exists in database", HttpStatus.BAD_REQUEST),
+    STOCK_IN_EXISTS_BY_REFERENCE_CODE(7402, "Stock in already exists by  reference code!", HttpStatus.BAD_REQUEST);
+    ;
+    private final int code;
+    private final String message;
+    private final HttpStatusCode httpStatusCode;
+
+    DeliveryErrorCode(int code, String message, HttpStatusCode httpStatusCode) {
+        this.code = code;
+        this.message = message;
+        this.httpStatusCode = httpStatusCode;
+    }
+
+    @Override
+    public int getCode() {
+        return code;
+    }
+
+    @Override
+    public String getMessage() {
+        return message;
+    }
+
+    @Override
+    public HttpStatusCode getHttpStatusCode() {
+        return httpStatusCode;
+    }
+}

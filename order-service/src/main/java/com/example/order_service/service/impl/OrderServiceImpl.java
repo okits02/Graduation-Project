@@ -222,6 +222,7 @@
         @Override
         public PageResponse<OrderSummaryResponse> getByUserIdAndStatus(int page, int size, Status status) {
             String userId = getUserId();
+            log.info("userId: {}", userId);
             Pageable pageable = PageRequest.of(page, size);
             var pageData = orderRepository.findAllByUserIdAndStatus(userId, status, pageable);
             List<Orders> orders = pageData.getContent();

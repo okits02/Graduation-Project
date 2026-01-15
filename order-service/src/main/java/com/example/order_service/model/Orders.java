@@ -42,6 +42,7 @@ public class Orders extends AbstractMappedEntity{
     @Column(name = "order_fee", columnDefinition = "decimal")
     private BigDecimal orderFee;
     @Column(name = "order_status")
+    @Enumerated(EnumType.STRING)
     private Status orderStatus;
     @Column(name = "voucher")
     private String voucherCode;
