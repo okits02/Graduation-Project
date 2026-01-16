@@ -1,5 +1,6 @@
 package com.example.promotion_service.kafka;
 
+import com.example.promotion_service.enums.PromotionKind;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -14,8 +15,10 @@ import java.util.Set;
 public class PromotionEvent {
     String id;
     String name;
+    String campaignId;
     String descriptions;
     Double discountPercent;
+    PromotionKind promotionKind;
     Double fixedAmount;
     String applyTo;
     Boolean active;

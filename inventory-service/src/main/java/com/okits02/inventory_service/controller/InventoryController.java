@@ -13,6 +13,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/inventory")
 @RequiredArgsConstructor
@@ -87,5 +90,15 @@ public class InventoryController {
             @RequestParam(defaultValue = "10") int size
     ) {
         return inventoryService.getTransactionHistory(sku, page-1, size);
+    }
+
+    @GetMapping("/internal/sold")
+    public ApiResponse<Map<String, Long>> getSoldForProduct(
+            @RequestParam(value = "skus") List<String> skus
+    ){
+     return ApiResponse.<Map<String, Long>>builder()
+             .code(200)
+             .result(inventoryService.getTotalSold(skus))
+             .build();
     }
 }

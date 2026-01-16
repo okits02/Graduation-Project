@@ -11,6 +11,7 @@ import com.okits02.inventory_service.dto.response.InventoryTransactionResponse;
 import com.okits02.inventory_service.model.Inventory;
 
 import java.util.List;
+import java.util.Map;
 
 public interface InventoryService {
     public void save(List<StockInItemRequest> request, String stockInId);
@@ -21,5 +22,6 @@ public interface InventoryService {
     public Inventory decreaseStock(String sku, int quantity, String orderId);
     public Inventory increaseStock(String sku, int quantity, String orderId);
     public PageResponse<InventoryResponse> getAll(int page, int size);
+    public Map<String, Long> getTotalSold(List<String> skus);
     PageResponse<InventoryTransactionResponse> getTransactionHistory(String sku, int page, int size);
 }

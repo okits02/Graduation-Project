@@ -26,6 +26,7 @@ public class ProductSummariseVM {
     String listPrice;
     Double avgRating;
     Double discountPercent;
+    Long sold;
     List<Specification> specifications;
     @JsonFormat(pattern = "yyyy-MM-dd")
     LocalDate createAt;

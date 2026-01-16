@@ -6,8 +6,10 @@
     import co.elastic.clients.elasticsearch._types.aggregations.*;
     import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
     import com.example.search_service.enums.MediaOwnerType;
+    import com.example.search_service.enums.PromotionKind;
     import com.example.search_service.exceptions.SearchErrorCode;
     import com.example.search_service.model.ProductVariants;
+    import com.example.search_service.repository.httpClient.InventoryClient;
     import com.example.search_service.repository.httpClient.MediaClient;
     import com.example.search_service.repository.httpClient.PromotionClient;
     import com.example.search_service.viewmodel.dto.AutoCompletedResponse;
@@ -41,7 +43,7 @@
         private final ElasticsearchOperations elasticsearchOperations;
         private final CategoryService categoryService;
         private final MediaClient mediaClient;
-        private final PromotionClient promotionClient;
+        private final InventoryClient inventoryClient;
 
         public ProductGetListVM searchProductAdvance(String keyword,
                                                      Integer page,
@@ -132,27 +134,16 @@
                     .build();
         }
 
-        public ProductGetListVM getListProductEndingPromotionSoon(){
-            var responsePromotion = promotionClient.getListPromotionFlashSaleIds();
-            if(responsePromotion == null || responsePromotion.getCode() != 200){
-                throw new AppException(SearchErrorCode.DID_NOT_HAVE_PRODUCT_FLASH_SALE);
-            }
-            List<String> promotionIds = responsePromotion.getResult();
-            if (promotionIds == null || promotionIds.isEmpty()) {
-                throw new AppException(SearchErrorCode.DID_NOT_HAVE_PRODUCT_FLASH_SALE);
-            }
+        public ProductGetListVM getProductFlashSale(int page, int size){
             NativeQuery query = NativeQuery.builder()
                     .withQuery(q -> q
-                            .terms(t -> t
-                                    .field("promotions.id")
-                                    .terms(v -> v.value(
-                                            promotionIds.stream()
-                                                    .map(FieldValue::of)
-                                                    .toList()
-                                    ))
+                            .term(t -> t
+                                    .field("promotions.promotionKind")
+                                    .value(PromotionKind.FLASH_SALE.name())
                             )
                     )
                     .build();
+            query.setPageable(PageRequest.of(page, size));
             SearchHits<Products> hits = elasticsearchOperations.search(query, Products.class);
             SearchPage<Products> productsSearchPage = SearchHitSupport.searchPageFor(
                     hits, query.getPageable());
@@ -167,6 +158,41 @@
                     .build();
         }
 
+        public ProductGetListVM getProductForBanner(int page, int size, String ownerId, String ownerType){
+            NativeQueryBuilder queryBuilder = NativeQuery.builder();
+            switch (ownerType){
+                case "CATEGORY" -> {
+                    queryBuilder.withQuery(q -> q
+                            .term(t -> t
+                                    .field("categoriesId")
+                                    .value(ownerId)
+                            )
+                    );
+                }
+
+                case "PROMOTION" -> {
+                    queryBuilder.withQuery(q -> q
+                            .term(t -> t
+                                    .field("promotions.id")
+                                    .value(ownerType)
+                            )
+                    );
+                }
+            }
+            queryBuilder.withPageable(PageRequest.of(page, size));
+            SearchHits<Products> hits = elasticsearchOperations.search(queryBuilder.build(), Products.class);
+            SearchPage<Products> productsSearchPage = SearchHitSupport.searchPageFor(
+                    hits, queryBuilder.getPageable());
+            List<ProductSummariseVM> productGetVMList = productsSearchPage.stream().map(i -> ProductSummariseVM
+                    .fromEntity(i.getContent())).toList();
+            return ProductGetListVM.<ProductSummariseVM>builder()
+                    .productGetVMList(productGetVMList)
+                    .currentPages(productsSearchPage.getNumber())
+                    .totalPage(productsSearchPage.getTotalPages())
+                    .pageSize(productsSearchPage.getSize())
+                    .totalElements(productsSearchPage.getTotalElements())
+                    .build();
+        }
 
         public ProductGetVM getProductById(String id){
             NativeQueryBuilder query = NativeQuery.builder()

@@ -38,6 +38,21 @@ public class ProductController {
                         request.getSortType()));
     }
 
+    @GetMapping("/banner")
+    public ApiResponse<ProductGetListVM> getProductByBanner(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer size,
+            @RequestParam(value = "ownerId") String ownerId,
+            @RequestParam(value = "ownerType") String ownerType
+    ){
+        return ApiResponse.<ProductGetListVM>builder()
+                .code(200)
+                .message("get product by banner successfully")
+                .result(searchService.getProductForBanner(page - 1, size, ownerId, ownerType))
+                .build();
+    }
+
+
     @GetMapping("/autocomplete/quick")
     public ApiResponse<List<AutoCompletedResponse>> autocompleteQuick(
             @RequestParam("q") String keyword,
@@ -47,6 +62,18 @@ public class ProductController {
                 .code(200)
                 .message("get autocompleted quick")
                 .result(searchService.autoCompletedProductQuick(keyword, limit))
+                .build();
+    }
+
+    @GetMapping("/flashSale")
+    public ApiResponse<ProductGetListVM> getProductFlashSale(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer size
+    ){
+        return ApiResponse.<ProductGetListVM>builder()
+                .code(200)
+                .message("get product by banner successfully")
+                .result(searchService.getProductFlashSale(page - 1, size))
                 .build();
     }
 

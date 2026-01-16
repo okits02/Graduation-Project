@@ -1,5 +1,6 @@
 package com.example.search_service.model;
 
+import com.example.search_service.enums.PromotionKind;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -19,10 +20,14 @@ public class Promotion {
     String id;
     @Field(type = FieldType.Text)
     String name;
+    @Field(type = FieldType.Keyword)
+    String campaignId;
     @Field(type = FieldType.Text)
     String descriptions;
     @Field(type = FieldType.Double)
     BigDecimal discountPercent;
+    @Field(type = FieldType.Keyword)
+    PromotionKind promotionKind;
     @Field(type = FieldType.Keyword)
     String applyTo;
     @Field(type = FieldType.Double)

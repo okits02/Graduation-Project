@@ -1,5 +1,6 @@
 package com.example.search_service.viewmodel.dto;
 
+import com.example.search_service.enums.PromotionKind;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -17,9 +18,11 @@ import java.util.Set;
 public class ApplyPromotionEventDTO {
     String id;
     String name;
+    String campaignId;
     String descriptions;
     Double discountPercent;
     Double fixedAmount;
+    PromotionKind promotionKind;
     String applyTo;
     Boolean active;
     Set<String> productIdList;
