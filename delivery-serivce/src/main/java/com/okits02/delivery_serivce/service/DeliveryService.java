@@ -1,5 +1,6 @@
 package com.okits02.delivery_serivce.service;
 
+import com.okits02.delivery_serivce.dto.request.OrderRequest;
 import com.okits02.delivery_serivce.dto.response.ShippingFeeResponse;
 
 public interface DeliveryService {
@@ -12,4 +13,6 @@ public interface DeliveryService {
             Integer weight,
             Long orderValue
     );
+
+    public Object createDeleteShipment(OrderRequest orderRequest);
 }

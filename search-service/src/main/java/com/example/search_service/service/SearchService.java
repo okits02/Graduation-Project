@@ -139,6 +139,7 @@
                                     .value(PromotionKind.FLASH_SALE.name())
                             )
                     )
+                    .withPageable(PageRequest.of(page, size))
                     .build();
             query.setPageable(PageRequest.of(page, size));
             SearchHits<Products> hits = elasticsearchOperations.search(query, Products.class);
@@ -170,8 +171,8 @@
                 case "PROMOTION" -> {
                     queryBuilder.withQuery(q -> q
                             .term(t -> t
-                                    .field("promotions.id")
-                                    .value(ownerType)
+                                    .field("promotions.campaignId")
+                                    .value(ownerId)
                             )
                     );
                 }

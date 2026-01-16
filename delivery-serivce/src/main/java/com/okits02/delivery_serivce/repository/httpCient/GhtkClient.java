@@ -1,10 +1,11 @@
 package com.okits02.delivery_serivce.repository.httpCient;
 
 import com.okits02.delivery_serivce.Configurations.GhtkFeignConfig;
+import com.okits02.delivery_serivce.dto.GhtkCreateOrderRequest;
 import com.okits02.delivery_serivce.dto.response.GhtkFeeResponse;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
 
 @FeignClient(
         name = "ghtk-client",
@@ -21,5 +22,13 @@ public interface GhtkClient {
             @RequestParam("pick_district") String pickDistrict,
             @RequestParam("weight") Integer weight,
             @RequestParam("value") Long value
+    );
+
+    @PostMapping(value = "/services/shipment/order", produces = MediaType.APPLICATION_JSON_VALUE)
+    GhtkCreateOrderRequest createOrder(
+            @RequestHeader("Token") String token,
+            @RequestHeader("X-Client-Source") String clientSource,
+            @RequestParam("ver") String version,
+            @RequestBody GhtkCreateOrderRequest request
     );
 }
