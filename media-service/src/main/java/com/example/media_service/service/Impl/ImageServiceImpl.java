@@ -177,7 +177,7 @@ public class ImageServiceImpl implements ImageService {
 
     @Override
     public List<BannerResponse> getAllBanner() {
-        List<Media> medias = mediaRepository.findAllByMediaPurpose(MediaPurpose.BANNER);
+        List<Media> medias = mediaRepository.findAllByMediaPurpose(MediaPurpose.BANNER.name());
         if(medias == null || medias.isEmpty()){
             throw new AppException(MediaErrorCode.BANNER_IS_NOT_EXISTS);
         }

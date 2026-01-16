@@ -10,7 +10,12 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AddressResponse {
     String id;
+    String receiverName;
+    String receiverPhone;
+    String addressLine;
     String street;
+    String ward;
+    String district;
     String city;
     String postalCode;
     String addressType;

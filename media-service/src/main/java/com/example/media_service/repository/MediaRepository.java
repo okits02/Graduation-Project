@@ -27,7 +27,7 @@ public interface MediaRepository extends JpaRepository<Media, String> {
             WHERE media_purpose = :purPose
             """, nativeQuery = true)
     List<Media> findAllByMediaPurpose(
-            @Param("purPose") MediaPurpose mediaPurpose
+            @Param("purPose") String mediaPurpose
     );
     @Modifying
     @Transactional

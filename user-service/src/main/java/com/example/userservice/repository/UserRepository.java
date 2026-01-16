@@ -36,4 +36,12 @@ public interface UserRepository extends JpaRepository<Users, String> {
     List<String> findEmailsByUserIds(
             @Param("userIds") List<String> userIds
     );
+
+    @Query("""
+    SELECT u
+    FROM Users u
+    JOIN u.role r
+    WHERE r.name = 'ADMIN'
+    """)
+    Users findByRole();
 }

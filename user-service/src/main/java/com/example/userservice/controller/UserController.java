@@ -377,4 +377,5 @@ public class UserController {
                     .message("Password updated successfully")
                     .build());
     }
+
 }

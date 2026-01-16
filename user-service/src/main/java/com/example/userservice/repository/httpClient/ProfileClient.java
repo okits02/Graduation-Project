@@ -23,4 +23,5 @@ public interface ProfileClient {
     ApiResponse<UserInfoResponse> getMyInfoResponse(
             @RequestHeader("Authorization") String token
     );
+
 }

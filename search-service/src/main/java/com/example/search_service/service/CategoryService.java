@@ -317,7 +317,7 @@ public class CategoryService {
             NativeQuery childrenQuery = NativeQuery.builder()
                     .withQuery(q -> q
                             .terms(t -> t
-                                    .field("id")
+                                    .field("_id")
                                     .terms(v -> v.value(
                                             category.getChildrenId()
                                                     .stream()

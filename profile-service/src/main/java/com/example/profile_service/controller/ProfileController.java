@@ -145,15 +145,4 @@ public class ProfileController {
                 .message("creation avatar for user successfully!")
                 .build();
     }
-    @GetMapping("/internal/delivery")
-    public ResponseEntity<ApiResponse<ProfileResponse>> getProfileByUserIdForDelivery(
-            @RequestParam(value = "userId") String userId)
-    {
-        ProfileResponse profileResponse = profileService.getProfileByUserId(userId);
-        return ResponseEntity.ok(ApiResponse.<ProfileResponse>builder()
-                .code(200)
-                .message("Profile retrieved successfully!")
-                .result(profileResponse)
-                .build());
-    }
 }
