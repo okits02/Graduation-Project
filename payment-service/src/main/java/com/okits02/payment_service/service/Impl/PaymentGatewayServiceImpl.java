@@ -288,7 +288,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
             }
 
             default -> {
-                session.setStatus(PaymentStatus.FAILED);
+                    session.setStatus(PaymentStatus.FAILED);
                 payment.setStatus(PaymentStatus.FAILED);
                 OrderStatusEvent(payment.getId(), payment.getOrderId(), PaymentStatus.FAILED);
             }

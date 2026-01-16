@@ -24,7 +24,7 @@ public class SecurityConfig {
             "/swagger-ui/**",
             "/v3/api-docs/**",
             "/bank/vnpay-ipn",
-            "/pay/vnpay-return"};
+            "/payment-service/pay/vnp-return"};
     @Autowired
     private final CustomJwtDecoder customJwtDecoder;
 

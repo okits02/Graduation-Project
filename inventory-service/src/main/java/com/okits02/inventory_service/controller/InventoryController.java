@@ -92,13 +92,4 @@ public class InventoryController {
         return inventoryService.getTransactionHistory(sku, page-1, size);
     }
 
-    @GetMapping("/internal/sold")
-    public ApiResponse<Map<String, Long>> getSoldForProduct(
-            @RequestParam(value = "skus") List<String> skus
-    ){
-     return ApiResponse.<Map<String, Long>>builder()
-             .code(200)
-             .result(inventoryService.getTotalSold(skus))
-             .build();
-    }
 }

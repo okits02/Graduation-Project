@@ -178,7 +178,7 @@ public class InventoryServiceImpl implements InventoryService {
                 "Manual increase");
         applyTransaction(inventory, tx);
         Inventory saved = inventoryRepository.save(inventory);
-
+        searchClient.changeSold(sku, quantity, TransactionType.RETURN.name());
         boolean nowInStock = isProductInStock(sku);
         if (wasInStock != nowInStock) {
             productStockEvent(sku, nowInStock);
@@ -208,7 +208,7 @@ public class InventoryServiceImpl implements InventoryService {
         );
         applyTransaction(inventory, tx);
         Inventory saved = inventoryRepository.save(inventory);
-
+        searchClient.changeSold(sku, quantity, TransactionType.OUT.name());
         boolean nowInStock = isProductInStock(sku);
         if (wasInStock != nowInStock) {
             productStockEvent(sku,nowInStock);
@@ -239,24 +239,6 @@ public class InventoryServiceImpl implements InventoryService {
                 .totalElements(pageData.getTotalElements())
                 .data(responses)
                 .build();
-    }
-
-    @Override
-    public Map<String, Long> getTotalSold(List<String> skus) {
-        if (skus == null || skus.isEmpty()) return Map.of();
-        List<Object[]> rows = inventoryTransactionRepository.sumSoldGroupBySku(
-                skus, TransactionType.OUT, ReferenceType.ORDER
-        );
-
-        Map<String, Long> map = new HashMap<>();
-        for (Object[] r : rows) {
-            String sku = (String) r[0];
-            Long sold = (Long) r[1];
-            map.put(sku, sold == null ? 0L : sold);
-        }
-        for (String sku : skus) map.putIfAbsent(sku, 0L);
-
-        return map;
     }
 
 

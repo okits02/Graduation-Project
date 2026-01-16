@@ -16,5 +16,5 @@ public class NotificationEvent {
     String userId;
     List<String> skus;
     BigDecimal totalPrice;
-    Status status;
+    String status;
 }

@@ -3,6 +3,7 @@
     import com.example.order_service.dto.ProductSkuVM;
     import com.example.order_service.dto.request.*;
     import com.example.order_service.dto.response.*;
+    import com.example.order_service.enums.PaymentStatus;
     import com.example.order_service.enums.Status;
     import com.example.order_service.kafka.NotificationEvent;
     import com.example.order_service.kafka.OrderAnalysisEvent;
@@ -26,6 +27,7 @@
     import org.springframework.data.domain.Pageable;
     import org.springframework.kafka.core.KafkaTemplate;
     import org.springframework.stereotype.Service;
+    import org.springframework.transaction.annotation.Transactional;
     import org.springframework.web.context.request.RequestContextHolder;
     import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -124,6 +126,7 @@
 
             orders.setTotalPrice(finalTotal);
             orders.setOrderStatus(Status.PENDING);
+            decreaseInventory(orders);
             Orders savedOrder = orderRepository.save(orders);
             applyVoucherToOrder(request.getVoucher(), savedOrder.getOrderId(), authHeader);
 
@@ -304,11 +307,9 @@
             }
 
             var refundResponse = paymentClient.refundPayment(authHeader, orders.getPaymentId());
-
-
             orders.setOrderStatus(Status.CANCELLED);
             orders.setCancelledAt(LocalDateTime.now());
-
+            increaseInventory(orders);
             orderRepository.save(orders);
             sendKafkaEventToAnalysis(orders);
             return refundResponse.getResult();
@@ -508,14 +509,20 @@
         }
 
         @Override
+        @Transactional
         public void changStatusOrderForPayment(String paymentId, String orderId, Status status) {
-            Orders orders = orderRepository.findById(orderId).orElseThrow(()
-                    -> new AppException(OrderErrorCode.ORDER_NOT_EXISTS));
-            orders.setOrderStatus(status);
-            orders.setPaymentId(paymentId);
-            decreaseInventory(orders);
-            sendNotificationEvent(orders);
-            orderRepository.save(orders);
+            if (Status.PROCESSING.equals(status)) {
+                Orders orders = orderRepository.findById(orderId).orElseThrow(()
+                        -> new AppException(OrderErrorCode.ORDER_NOT_EXISTS));
+                orders.setOrderStatus(status);
+                orders.setPaymentId(paymentId);
+                sendNotificationEvent(orders);
+                orderRepository.save(orders);
+            }else if(Status.PENDING.equals(status)){
+                Orders orders = orderRepository.findById(orderId).orElseThrow(()
+                        -> new AppException(OrderErrorCode.ORDER_NOT_EXISTS));
+                increaseInventory(orders);
+            }
         }
 
         @Override
@@ -877,7 +884,7 @@
             if(orders == null) return;
             NotificationEvent notificationEvent = NotificationEvent.builder()
                     .userId(orders.getUserId())
-                    .status(orders.getOrderStatus())
+                    .status(orders.getOrderStatus().name())
                     .totalPrice(orders.getTotalPrice())
                     .skus(orders.getItems().stream().map(OrderItem::getSku).toList())
                     .build();

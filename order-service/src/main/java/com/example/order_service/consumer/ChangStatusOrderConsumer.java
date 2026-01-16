@@ -30,6 +30,8 @@ public class ChangStatusOrderConsumer {
         switch (changeStatusOrderDTO.getStatus()){
             case SUCCESS -> orderService.changStatusOrderForPayment(changeStatusOrderDTO.getPaymentId(),
                     changeStatusOrderDTO.getOrderId(), Status.PROCESSING);
+            case CANCELLED, EXPIRED, FAILED -> orderService.changStatusOrderForPayment(changeStatusOrderDTO.getPaymentId(),
+                    changeStatusOrderDTO.getOrderId(), Status.PENDING);
         }
     }
 }

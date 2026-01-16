@@ -43,18 +43,17 @@ public class NotificationConsumer {
     @KafkaListener(topics = "order-notification-event",
             containerFactory = "orderNotificationKafkaListenerContainerFactory")
     public void consumerNotification(String notificationEvent) throws MessagingException, UnsupportedEncodingException {
+        log.info("🔔 [send-to] Received raw event: {}", notificationEvent);
         ObjectMapper objectMapper = new ObjectMapper();
-        Notification notification = null;
-        NotificationEvent OrderNotificationEvent;
+        NotificationEvent OrderNotificationEvent = null;
         try{
             OrderNotificationEvent = objectMapper.readValue(notificationEvent, NotificationEvent.class);
         } catch (JsonMappingException e) {
-            throw new RuntimeException(e);
+            log.error("❌ Failed to process notification: {}", notificationEvent, e);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            log.error("❌ Failed to process notification: {}", notificationEvent, e);
         }
-        emailService.sendUpcomingEventEmail(notification.getRecipient(), notification.getContent());
-        repository.save(notification);
+        emailService.sendEmailForOrder(OrderNotificationEvent);
     }
 
     public List<Notification> getNotificationEvent() {

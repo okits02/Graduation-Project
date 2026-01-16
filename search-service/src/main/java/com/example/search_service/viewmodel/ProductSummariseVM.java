@@ -48,6 +48,7 @@ public class ProductSummariseVM {
                 .name(products.getName())
                 .variantName(bestVariant.getVariantName())
                 .thumbnailUrl(bestVariant.getThumbnail())
+                .sold(products.getSold())
                 .price(bestVariant.getPrice() != null
                         ? bestVariant.getPrice().toString()
                         : null)

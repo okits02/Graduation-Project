@@ -58,6 +58,7 @@ public class ProductService {
           }
 
           Products products = productsMapper.toProducts(request);
+          products.setSold(0L);
           products.setCategoriesId(request.getCategories().stream().map(CateItemDTO::getId).toList());
           try {
             if (request.getCategories() != null && !request.getCategories().isEmpty()) {
@@ -565,4 +566,41 @@ public class ProductService {
                 return !new HashSet<>(newCategory)
                                 .equals(new HashSet<>(oldCategory));
         }
+
+    public void changeSold(String sku, String transaction, Integer quantity) {
+        if (sku == null || transaction == null || quantity == null || quantity <= 0) {
+            return;
+        }
+        NativeQuery query = NativeQuery.builder()
+                .withQuery(q -> q
+                        .nested(n -> n
+                                .path("productVariants")
+                                .query(nq -> nq
+                                        .term(t -> t
+                                                .field("productVariants.sku")
+                                                .value(sku)
+                                        )
+                                )
+                        )
+                )
+                .withMaxResults(1)
+                .build();
+
+        SearchHits<Products> hits =
+                elasticsearchOperations.search(query, Products.class);
+
+        if (hits.isEmpty()) {
+            log.warn("Không tìm thấy product với sku={}", sku);
+            return;
+        }
+        Products product = hits.getSearchHit(0).getContent();
+
+        Long currentSold = product.getSold() == null ? 0L : product.getSold();
+        if ("OUT".equalsIgnoreCase(transaction)) {
+            product.setSold(currentSold + quantity);
+        } else if ("RETURN".equalsIgnoreCase(transaction)) {
+            product.setSold(Math.max(0, currentSold - quantity));
+        }
+        elasticsearchOperations.save(product);
+    }
 }

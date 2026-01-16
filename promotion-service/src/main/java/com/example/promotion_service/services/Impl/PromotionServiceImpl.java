@@ -168,6 +168,7 @@ public class PromotionServiceImpl implements PromotionService {
         if (Boolean.TRUE.equals(promotion.get().getActive())) {
             throw new AppException(PROMOTION_IS_ACTIVE);
         }
+
         PromotionCampaign promotionCampaign = promotionCampaignRepository.findById(request.getCampaignId())
                 .orElseThrow(() -> new AppException(CAMPAIGN_NOT_EXISTS));
         List<PromotionApplyTo> promotionApplyTos =
@@ -260,6 +261,7 @@ public class PromotionServiceImpl implements PromotionService {
         if(request.getPromotionKind() != PromotionKind.FLASH_SALE && request.getApplyTo() != ApplyTo.Product){
             throw new AppException(CAN_NOT_CREATE_FALHSALE);
         }
+        validateFlashSaleCreation(request);
         List<PromotionResponse> responses = new ArrayList<>();
         promotion.setPromotionApplyTo(new ArrayList<>());
         for(FlashSaleItemRequest item : request.getFlashSaleItemRequests()){
@@ -292,6 +294,18 @@ public class PromotionServiceImpl implements PromotionService {
     public PageResponse<PromotionResponse> getPromotionVoucher(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         var pageData = promotionRepository.findAllByPromotionKind(PromotionKind.VOUCHER, pageable);
+        return PageResponse.<PromotionResponse>builder()
+                .currentPage(page)
+                .pageSize(pageData.getTotalPages())
+                .totalElements(pageData.getTotalElements())
+                .data(pageData.getContent().stream().map(promotionMapper::toPromotionResponse).toList())
+                .build();
+    }
+
+    @Override
+    public PageResponse<PromotionResponse> getPromotionFlashSale(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        var pageData = promotionRepository.findAllByPromotionKind(PromotionKind.FLASH_SALE, pageable);
         return PageResponse.<PromotionResponse>builder()
                 .currentPage(page)
                 .pageSize(pageData.getTotalPages())
@@ -582,6 +596,22 @@ public class PromotionServiceImpl implements PromotionService {
         promotionRepository.save(promotion);
         if(promotion.getPromotionKind() != PromotionKind.VOUCHER) {
             sendKafKaEvent(promotion, "CREATED");
+        }
+    }
+
+    private void validateFlashSaleCreation(FlashSaleCreationRequest request) {
+        List<Promotion> activeFlashSales =
+                promotionRepository.findActiveFlashSales();
+
+        if (activeFlashSales.isEmpty()) {
+            return;
+        }
+        boolean matchedTime = activeFlashSales.stream().anyMatch(p ->
+                Objects.equals(p.getStartDate(), request.getStartDate()) &&
+                        Objects.equals(p.getEndDate(), request.getEndDate())
+        );
+        if (!matchedTime) {
+            throw new AppException(CAN_NOT_CREATE_FALHSALE);
         }
     }
 

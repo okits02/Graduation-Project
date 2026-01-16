@@ -24,6 +24,14 @@ public interface PromotionRepository extends JpaRepository<Promotion, String> {
     boolean existsByVoucherCode(String voucherCode);
     Page<Promotion> findAllByPromotionKind(PromotionKind promotionKind, Pageable pageable);
     @Query("""
+    SELECT p
+    FROM Promotion p
+    WHERE p.promotionKind = PromotionKind.FLASH_SALE
+      AND p.active = true
+    """)
+    List<Promotion> findActiveFlashSales();
+
+    @Query("""
             SELECT p 
             FROM Promotion p
             WHERE FUNCTION('DATE', p.endDate) = :today

@@ -124,6 +124,18 @@ public class PromotionController {
                 .build();
     }
 
+    @GetMapping("/flash-sale/getAll")
+    ApiResponse<PageResponse<PromotionResponse>> getAllPromotionFlashSalle(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size
+    ){
+        return ApiResponse.<PageResponse<PromotionResponse>>builder()
+                .code(200)
+                .message("Get all voucher successfully")
+                .result(promotionService.getPromotionFlashSale(page - 1, size))
+                .build();
+    }
+
     @DeleteMapping("/delete/{promotionId}")
     @PreAuthorize("hasRole('ADMIN')")
     ResponseEntity<ApiResponse<?>> deletePromotion(@PathVariable String promotionId){

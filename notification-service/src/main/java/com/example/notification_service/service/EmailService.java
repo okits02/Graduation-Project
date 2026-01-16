@@ -123,7 +123,7 @@ public class EmailService {
             CustomerVM customer,
             List<ProductSkuVM> products,
             BigDecimal totalPrice,
-            Status status,
+            String status,
             String email
     ) throws MessagingException, UnsupportedEncodingException {
 
@@ -201,10 +201,14 @@ public class EmailService {
         mailSender.send(message);
     }
 
-    private String buildSubject(Status status) {
-        return status == Status.COMPLETED
-                ? "🎉 Đặt hàng thành công"
-                : "📦 Giao hàng thành công";
+    private String buildSubject(String status) {
+        Status orderStatus = Status.valueOf(status);
+
+        return switch (orderStatus) {
+            case PROCESSING -> "🎉 Đặt hàng thành công - Đang chờ xử lý";
+            case COMPLETED  -> "📦 Giao hàng thành công";
+            default         -> "Cập nhật trạng thái đơn hàng";
+        };
     }
 
     private String renderProductList(List<ProductSkuVM> products) {
@@ -236,13 +240,17 @@ public class EmailService {
             CustomerVM customer,
             List<ProductSkuVM> products,
             BigDecimal totalPrice,
-            Status status
+            String status
     ) {
 
-        String title = status == Status.COMPLETED
-                ? "Đơn hàng của bạn đã được đặt thành công 🎉"
-                : "Đơn hàng của bạn đã được giao thành công 📦";
 
+        Status orderStatus = Status.valueOf(status);
+
+        String title = switch (orderStatus) {
+            case PROCESSING -> "Đơn hàng của bạn đã được đặt thành công 🎉<br/>Đơn hàng đang chờ xử lý ⏳";
+            case COMPLETED  -> "Đơn hàng của bạn đã được giao thành công 📦";
+            default         -> "Cập nhật trạng thái đơn hàng";
+        };
         String productHtml = renderProductList(products);
 
         return """

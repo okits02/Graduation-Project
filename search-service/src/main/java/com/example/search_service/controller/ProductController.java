@@ -174,4 +174,16 @@ public class ProductController {
                 .result(searchService.getListSkuByProductId(productId))
                 .build();
     }
+
+    @PutMapping("/internal/sold")
+    public ApiResponse<?> changeSold(
+            @RequestParam(value = "sku") String sku,
+            @RequestParam(value = "quantity") Integer quantity,
+            @RequestParam(value = "transaction") String transaction
+    ){
+        productService.changeSold(sku, transaction, quantity);
+        return ApiResponse.builder()
+                .code(200)
+                .build();
+    }
 }

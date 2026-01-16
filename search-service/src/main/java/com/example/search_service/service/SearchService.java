@@ -9,9 +9,7 @@
     import com.example.search_service.enums.PromotionKind;
     import com.example.search_service.exceptions.SearchErrorCode;
     import com.example.search_service.model.ProductVariants;
-    import com.example.search_service.repository.httpClient.InventoryClient;
     import com.example.search_service.repository.httpClient.MediaClient;
-    import com.example.search_service.repository.httpClient.PromotionClient;
     import com.example.search_service.viewmodel.dto.AutoCompletedResponse;
     import com.example.search_service.viewmodel.dto.response.MediaResponse;
     import com.okits02.common_lib.exception.AppException;
@@ -43,7 +41,6 @@
         private final ElasticsearchOperations elasticsearchOperations;
         private final CategoryService categoryService;
         private final MediaClient mediaClient;
-        private final InventoryClient inventoryClient;
 
         public ProductGetListVM searchProductAdvance(String keyword,
                                                      Integer page,

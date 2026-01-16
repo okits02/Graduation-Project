@@ -37,6 +37,8 @@ public class Products {
     List<Specification> specifications;
     @Field(type = FieldType.Nested)
     List<ProductVariants> productVariants;
+    @Field(type = FieldType.Long)
+    Long sold;
     @Field(type = FieldType.Date,
             format = DateFormat.date,
             pattern = "yyyy-MM-dd")

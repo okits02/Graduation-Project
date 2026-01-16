@@ -19,6 +19,7 @@ public interface PromotionService {
     public List<PromotionResponse> createPromotionFlashSale(FlashSaleCreationRequest request);
     public PromotionResponse getPromotion(String promotionId);
     public PageResponse<PromotionResponse> getPromotionVoucher(int page, int size);
+    public PageResponse<PromotionResponse> getPromotionFlashSale(int page, int size);
     public List<PromotionResponse> getPromotionByCategoryIds(List<String> categoryIds);
     public PageResponse<PromotionResponse> getAllPromotionAuto(int page, int size);
     public PageResponse<PromotionResponse> getAllPromotion(int page, int size);
