@@ -1,6 +1,8 @@
 package com.example.media_service.controller;
 
 import com.example.media_service.dto.response.BannerResponse;
+import com.example.media_service.dto.response.EnumsResponse;
+import com.example.media_service.enums.MediaType;
 import com.example.media_service.model.Media;
 import com.okits02.common_lib.dto.ApiResponse;
 import com.example.media_service.dto.request.*;
@@ -21,6 +23,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
@@ -182,6 +185,27 @@ public class ImageController {
                 .message("get media successfully")
                 .result(imageService.getMedia(ownerId, mediaOwnerType))
                 .build());
+    }
+
+    @GetMapping("/media-owner-types")
+    public List<EnumsResponse> mediaOwnerTypes() {
+        return Arrays.stream(MediaOwnerType.values())
+                .map(e -> new EnumsResponse(e.getCode(), e.getLabel()))
+                .toList();
+    }
+
+    @GetMapping("/media-purposes")
+    public List<EnumsResponse> mediaPurposes() {
+        return Arrays.stream(MediaPurpose.values())
+                .map(e -> new EnumsResponse(e.name(), e.name()))
+                .toList();
+    }
+
+    @GetMapping("/media-types")
+    public List<EnumsResponse> mediaTypes() {
+        return Arrays.stream(MediaType.values())
+                .map(e -> new EnumsResponse(e.name(), e.name()))
+                .toList();
     }
 
     @DeleteMapping("/delete/ownerId")

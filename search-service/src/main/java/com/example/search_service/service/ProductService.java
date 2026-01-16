@@ -198,24 +198,34 @@ public class ProductService {
     }
 
         public void createPromotion(ApplyPromotionEventDTO request) throws IOException {
-                Promotion promotion = Promotion.builder()
-                                .id(request.getId())
-                                .name(request.getName())
-                                .descriptions(request.getDescriptions())
-                                .applyTo(request.getApplyTo())
-                                .discountPercent(BigDecimal.valueOf(request.getDiscountPercent()))
-                                .fixedAmount(BigDecimal.valueOf(request.getFixedAmount()))
-                                .active(request.getActive())
-                                .createAt(request.getCreateAt())
-                                .updateAt(request.getUpdateAt())
-                                .build();
-                if (request.getProductIdList() != null) {
-                        createPromotionByProductId(promotion, request.getProductIdList());
-                }
-                if (request.getCategoryIdList() != null) {
-                        createPromotionByCategoryId(promotion, request.getCategoryIdList());
-                }
-                log.info("create promotion successfully");
+            BigDecimal discountPercent = null;
+            BigDecimal fixedAmount = null;
+
+            if (request.getDiscountPercent() != null) {
+                discountPercent = BigDecimal.valueOf(request.getDiscountPercent());
+            }
+
+            if (request.getFixedAmount() != null) {
+                fixedAmount = BigDecimal.valueOf(request.getFixedAmount());
+            }
+            Promotion promotion = Promotion.builder()
+                    .id(request.getId())
+                    .name(request.getName())
+                    .descriptions(request.getDescriptions())
+                    .applyTo(request.getApplyTo())
+                    .discountPercent(BigDecimal.valueOf(request.getDiscountPercent()))
+                    .fixedAmount(BigDecimal.valueOf(request.getFixedAmount()))
+                    .active(request.getActive())
+                    .createAt(request.getCreateAt())
+                    .updateAt(request.getUpdateAt())
+                    .build();
+            if (request.getProductIdList() != null) {
+                createPromotionByProductId(promotion, request.getProductIdList());
+            }
+            if (request.getCategoryIdList() != null) {
+                createPromotionByCategoryId(promotion, request.getCategoryIdList());
+            }
+            log.info("create promotion successfully");
         }
 
         public void createPromotionByProductId(Promotion promotion, Set<String> listProductId) throws IOException {

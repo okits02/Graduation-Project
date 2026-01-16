@@ -387,7 +387,6 @@
                                 .build();
                     }
             ).toList();
-            orderMapper.update(order, request);
             BigDecimal finalTotal =
                     totalPrice.subtract(discountAmount)
                             .max(BigDecimal.ZERO);

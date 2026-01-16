@@ -261,6 +261,7 @@ public class PromotionServiceImpl implements PromotionService {
             throw new AppException(CAN_NOT_CREATE_FALHSALE);
         }
         List<PromotionResponse> responses = new ArrayList<>();
+        promotion.setPromotionApplyTo(new ArrayList<>());
         for(FlashSaleItemRequest item : request.getFlashSaleItemRequests()){
             if(item.getDiscountPercent() > 0.0 ){
                 promotion.setDiscountPercent(item.getDiscountPercent());

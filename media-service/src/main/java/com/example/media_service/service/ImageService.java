@@ -25,5 +25,6 @@ public interface ImageService {
     public void updateImageForRating(List<MultipartFile> multipartFiles, String ratingId) throws IOException;
     public void updateImageForComment(List<MultipartFile> multipartFiles, String commentId) throws IOException;
     public void changePosition(String mediaId, Integer newPosition);
+
     public void deleteByUrl(String url);
 }

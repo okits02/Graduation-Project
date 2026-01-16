@@ -103,7 +103,7 @@ public class ImageServiceImpl implements ImageService {
 
     @Override
     public void deleteByOwnerId(String ownerId, MediaOwnerType mediaOwnerType) {
-        List<Media> medias = mediaRepository.findByOwnerIdAndOwnerType(ownerId, mediaOwnerType.name());
+        List<Media> medias = mediaRepository.findByOwnerIdAndOwnerType(ownerId, mediaOwnerType.getCode());
         if(medias.isEmpty()){
             throw new AppException(MediaErrorCode.CAN_NOT_FIND_MEDIA_BY_PRODUCT);
         }
@@ -123,7 +123,7 @@ public class ImageServiceImpl implements ImageService {
 
     @Override
     public ListMediaResponse getMedia(String ownerId, MediaOwnerType mediaOwnerType) {
-        List<Media> medias = mediaRepository.findByOwnerIdAndOwnerType(ownerId, mediaOwnerType.name());
+        List<Media> medias = mediaRepository.findByOwnerIdAndOwnerType(ownerId, mediaOwnerType.getCode());
         List<MediaResponse> mediaResponses = medias.stream()
                 .map(media -> MediaResponse.builder()
                         .id(media.getId())

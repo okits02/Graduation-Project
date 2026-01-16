@@ -49,6 +49,7 @@ public class PromotionController {
     }
 
     @PostMapping("/flashSale")
+    @PreAuthorize("hasRole('ADMIN')")
     ApiResponse<List<PromotionResponse>> createFlashSale(@RequestBody FlashSaleCreationRequest request){
         return ApiResponse.<List<PromotionResponse>>builder()
                 .code(200)
