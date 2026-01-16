@@ -26,11 +26,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value = AppException.class)
     ResponseEntity<ApiResponse> handlingAppException(AppException e) {
         ErrorCode errorCode = e.getErrorCode();
-        ApiResponse apiResponse = new ApiResponse();
 
+        ApiResponse<Object> apiResponse = new ApiResponse<>();
         apiResponse.setCode(errorCode.getCode());
         apiResponse.setMessage(errorCode.getMessage());
-        return ResponseEntity.status(errorCode.getHttpStatusCode()).body(apiResponse);
+
+        if (e.getData() != null) {
+            apiResponse.setResult(e.getData());
+        }
+
+        return ResponseEntity
+                .status(errorCode.getHttpStatusCode())
+                .body(apiResponse);
     }
 
     @ExceptionHandler(value = AccessDeniedException.class)

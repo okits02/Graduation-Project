@@ -23,7 +23,8 @@ public class SecurityConfig {
     private final String[] END_POINTS = {
             "/swagger-ui/**",
             "/v3/api-docs/**",
-            "/bank/vnpay-ipn"};
+            "/bank/vnpay-ipn",
+            "/pay/vnpay-return"};
     @Autowired
     private final CustomJwtDecoder customJwtDecoder;
 

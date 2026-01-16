@@ -16,7 +16,9 @@ public enum OrderErrorCode implements ErrorCode {
     PROMOTION_SERVICE_UNAVAILABLE(6808, "Không thể kết nối promotion-service", HttpStatus.BAD_REQUEST),
     INSUFFICIENT_STOCK(6810, "Insufficient stock for the requested product", HttpStatus.BAD_REQUEST),
     FORBIDDEN(404, "forbidden", HttpStatus.BAD_REQUEST),
-    ORDER_CANNOT_CANCEL(6812, "order can not  cancel", HttpStatus.BAD_REQUEST);
+    ORDER_CANNOT_CANCEL(6812, "order can not  cancel", HttpStatus.BAD_REQUEST),
+    PRICE_CHANGED( 6814, "Giá sản phẩm đã thay đổi, vui lòng xác nhận lại", HttpStatus.CONFLICT),
+    OUT_OF_STOCK(6816, "out of stock for sku: ", HttpStatus.BAD_REQUEST);;
     private final int code;
     private final String message;
     private final HttpStatusCode httpStatusCode;

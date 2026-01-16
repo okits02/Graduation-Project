@@ -19,6 +19,7 @@
     import com.example.order_service.repository.OrderRepository;
     import com.example.order_service.service.OrderService;
     import feign.FeignException;
+    import io.micrometer.common.util.StringUtils;
     import lombok.RequiredArgsConstructor;
     import lombok.extern.slf4j.Slf4j;
     import org.springframework.data.domain.PageRequest;
@@ -57,6 +58,11 @@
             ServletRequestAttributes servletRequestAttributes =
                     (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
             var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
+            checkInventoryOrThrow(
+                    request.getItems(),
+                    OrderItemRequest::getSku,
+                    OrderItemRequest::getQuantity
+            );
             Orders orders = Orders.builder()
                     .userId(userId)
                     .addressId(request.getAddressId())
@@ -316,8 +322,11 @@
             var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
             Orders order = orderRepository.findById(request.getOrderId()).orElseThrow(() ->
                     new AppException(OrderErrorCode.ORDER_NOT_EXISTS));
-            BigDecimal totalPrice = request.getTotalPrice();
-            BigDecimal discountAmount = BigDecimal.ZERO;
+            checkInventoryOrThrow(
+                    order.getItems(),
+                    OrderItem::getSku,
+                    OrderItem::getQuantity
+            );
             if(!order.getOrderStatus().equals(Status.PENDING)){
                 throw new AppException(OrderErrorCode.ORDER_CAN_NOT_REPAYMENT);
             }
@@ -334,68 +343,90 @@
             Map<String, ProductSkuVM> productMap = productResponse.getResult().stream()
                     .collect(Collectors.toMap(ProductSkuVM::getSku, Function.identity()));
 
-            List<String> productIds = productMap.values().stream()
-                    .map(ProductSkuVM::getId)
-                    .filter(Objects::nonNull)
-                    .distinct()
-                    .toList();
+            List<PriceChangedItem> changedPrices = new ArrayList<>();
 
-            List<String> categoryIds = productMap.values().stream()
-                    .flatMap(p -> p.getCategoriesId() == null ? Stream.empty() : p.getCategoriesId().stream())
-                    .distinct()
-                    .toList();
-            if (request.getVoucher() != null && !request.getVoucher().isBlank()){
-                if(request.getVoucher().equals(order.getVoucherCode())){
+            for (OrderItem item : order.getItems()) {
+                ProductSkuVM product = productMap.get(item.getSku());
+
+                if (product == null) {
+                    throw new RuntimeException("Product not exists: " + item.getSku());
+                }
+
+                if (item.getSellPrice().compareTo(product.getSellPrice()) != 0) {
+                    changedPrices.add(
+                            PriceChangedItem.builder()
+                                    .sku(item.getSku())
+                                    .oldSellPrice(item.getSellPrice())
+                                    .newSellPrice(product.getSellPrice())
+                                    .build()
+                    );
+
+                    item.setSellPrice(product.getSellPrice());
+                    item.setListPrice(product.getListPrice());
+                }
+            }
+
+            if (!changedPrices.isEmpty()) {
+                orderRepository.save(order);
+                throw new AppException(OrderErrorCode.PRICE_CHANGED, changedPrices);
+            }
+
+            BigDecimal totalPrice = order.getItems().stream()
+                    .map(i -> i.getSellPrice().multiply(BigDecimal.valueOf(i.getQuantity())))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal discountAmount = BigDecimal.ZERO;
+            if (StringUtils.isNotBlank(request.getVoucher())) {
+
+                if (request.getVoucher().equals(order.getVoucherCode())) {
                     throw new AppException(OrderErrorCode.VOUCHER_NOT_ARRIVE);
                 }
-                CheckValidVoucherRequest checkValidVoucherRequest = CheckValidVoucherRequest.builder()
+
+                List<String> productIds = productMap.values().stream()
+                        .map(ProductSkuVM::getId)
+                        .filter(Objects::nonNull)
+                        .toList();
+
+                List<String> categoryIds = productMap.values().stream()
+                        .flatMap(p -> p.getCategoriesId() == null
+                                ? Stream.empty()
+                                : p.getCategoriesId().stream())
+                        .distinct()
+                        .toList();
+
+                CheckValidVoucherRequest voucherRequest = CheckValidVoucherRequest.builder()
                         .today(LocalDateTime.now())
-                        .totalAmount(request.getTotalPrice().doubleValue())
+                        .totalAmount(totalPrice.doubleValue())
                         .voucherCode(request.getVoucher())
                         .productId(productIds)
                         .categoryId(categoryIds)
                         .build();
-                var promotionResponse = promotionClient.checkValidPromotion(checkValidVoucherRequest, authHeader);
-                if (promotionResponse == null) {
+
+                var promotionResponse =
+                        promotionClient.checkValidPromotion(voucherRequest, authHeader);
+
+                if (promotionResponse == null || promotionResponse.getResult() == null) {
                     throw new AppException(OrderErrorCode.VOUCHER_APPLY_FAILED);
                 }
-                var promo = promotionResponse.getResult();
 
-                discountAmount = calculateDiscount(order.getTotalPrice(), promo);
+                discountAmount = calculateDiscount(totalPrice, promotionResponse.getResult());
+                order.setVoucherCode(request.getVoucher());
             }
-            List<OrderItemResponse> itemResponses = order.getItems().stream().map(
-                    item -> {
-                        ProductSkuVM product = productMap.get(item.getSku());
-                        if(product == null){
-                            throw new RuntimeException("Product not exists: " + item.getSku());
-                        }
-                        if(item.getListPrice() == null || item.getSellPrice() == null
-                                || product.getListPrice() == null || product.getSellPrice() == null
-                                || item.getListPrice().compareTo(product.getListPrice()) != 0
-                                || item.getSellPrice().compareTo(product.getSellPrice()) != 0){
-                            throw new RuntimeException("Price for sku " + item.getSku() + " not valid");
-                        }
-
-                        return OrderItemResponse.builder()
-                                .sku(item.getSku())
-                                .productName(product.getVariantName())
-                                .thumbnailUrl(product.getThumbnailUrl())
-                                .quantity(item.getQuantity())
-                                .sellPrice(product.getSellPrice())
-                                .listPrice(product.getListPrice())
-                                .addAt(LocalDateTime.now())
-                                .build();
-                    }
-            ).toList();
-            BigDecimal finalTotal =
-                    totalPrice.subtract(discountAmount)
-                            .max(BigDecimal.ZERO);
+            BigDecimal finalTotal = totalPrice.subtract(discountAmount).max(BigDecimal.ZERO);
             order.setTotalPrice(finalTotal);
-            var response = orderMapper.toOrderResponse(orderRepository.save(order));
-            var paymentResponse = paymentClient.createPayment(authHeader, order.getOrderId(),
-                    order.getTotalPrice(), request.getPaymentMethod());
-            response.setPaymentUrl(paymentResponse);
+
+            orderRepository.save(order);
+
+            Object paymentUrl = paymentClient.createPayment(
+                    authHeader,
+                    order.getOrderId(),
+                    finalTotal,
+                    request.getPaymentMethod()
+            );
+
+            OrderResponse response = orderMapper.toOrderResponse(order);
+            response.setPaymentUrl(paymentUrl);
             response.setTotalPrice(finalTotal);
+
             return response;
         }
 
@@ -754,6 +785,33 @@
             return responses;
         }
 
+        private <T> void checkInventoryOrThrow(
+                List<T> items,
+                Function<T, String> skuExtractor,
+                Function<T, Integer> quantityExtractor
+        ) {
+            for (T item : items) {
+                String sku = skuExtractor.apply(item);
+                Integer quantity = quantityExtractor.apply(item);
+
+                ApiResponse<Boolean> response = inventoryClient.checkInStock(
+                        IsInStockRequest.builder()
+                                .sku(sku)
+                                .quantity(quantity)
+                                .build()
+                );
+
+                if (response == null
+                        || response.getResult() == null
+                        || !response.getResult()) {
+                    throw new AppException(
+                            OrderErrorCode.OUT_OF_STOCK,
+                            "Out of stock for SKU: " + sku
+                    );
+                }
+            }
+        }
+
         private void decreaseInventory(Orders orders) {
             for (OrderItem item : orders.getItems()) {
                 ApiResponse<?> response = inventoryClient.decreaseStock(
@@ -781,6 +839,7 @@
                 );
             }
         }
+
 
         private void sendKafkaEventToAnalysis(Orders orders){
             if(orders == null) return;
