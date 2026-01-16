@@ -10,32 +10,16 @@ public class KafkaConfig {
     @Bean
     public NewTopic promotionTopic(){
         return TopicBuilder.name("promotion-create-event")
-                .replicas(3)
-                .partitions(12)
-                .build();
-    }
-
-    @Bean
-    public NewTopic promotionUpdateTopic() {
-        return TopicBuilder.name("promotion-update-event")
-                .replicas(3)
-                .partitions(10)
-                .build();
-    }
-
-    @Bean
-    public NewTopic promotionDeleteTopic(){
-        return TopicBuilder.name("promotion-delete-event")
-                .replicas(3)
-                .partitions(5)
+                .replicas(1)
+                .partitions(3)
                 .build();
     }
 
     @Bean
     public NewTopic promotionStatusTopic() {
         return TopicBuilder.name("promotion-status-event")
-                .replicas(3)
-                .partitions(15)
+                .replicas(1)
+                .partitions(3)
                 .build();
     }
 }

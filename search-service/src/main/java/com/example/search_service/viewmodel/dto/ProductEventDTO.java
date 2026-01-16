@@ -2,6 +2,7 @@ package com.example.search_service.viewmodel.dto;
 
 import com.example.search_service.model.ProductVariants;
 import com.example.search_service.model.Specification;
+import com.example.search_service.viewmodel.CateItemDTO;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -24,7 +25,7 @@ public class ProductEventDTO {
     String videoUrl;
     LocalDate warrantyStartDate;
     LocalDate warrantyEndDate;
-    List<String> categoriesId;
+    List<CateItemDTO> categories;
     List<Specification> specifications;
     List<ProductVariants> productVariants;
     LocalDate createAt;

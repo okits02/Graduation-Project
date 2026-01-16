@@ -1,6 +1,7 @@
 package com.example.product_service.service.Impl;
 
 import com.example.product_service.enums.SpecType;
+import com.example.product_service.kafka.CateItem;
 import com.example.product_service.kafka.ProductEvent;
 import com.example.product_service.kafka.DeleteProductEvent;
 import com.example.product_service.model.Specifications;
@@ -26,10 +27,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -239,31 +237,38 @@ public class ProductServiceImpl implements ProductService {
             }
         }
     }
-    private ProductEvent createEventProduct(Products product, String eventType)
-    {
-        List<String> categoryList = new ArrayList<>();
+    private ProductEvent createEventProduct(Products product, String eventType) {
+
+        List<CateItem> categoryList = new ArrayList<>();
+
         Set<String> currentCateId =
                 Optional.ofNullable(product.getCategoryId())
                         .orElse(Set.of());
 
         if (!currentCateId.isEmpty()) {
-            categoryList = categoryService.getCategoryHierarchy(currentCateId);
+            categoryList = new ArrayList<>(
+                    new LinkedHashSet<>(
+                            categoryService.getCategoryHierarchy(currentCateId)
+                    )
+            );
         }
-        ProductEvent productEvent = ProductEvent.builder()
+
+        return ProductEvent.builder()
                 .eventType(eventType)
                 .id(product.getId())
                 .name(product.getName())
                 .brand(product.getBrandName())
                 .description(product.getDescription())
                 .videoUrl(product.getVideoUrl())
-                .categoriesId(categoryList)
+                .categories(categoryList) // 👈 List<CateItem>
                 .specifications(product.getSpecifications())
                 .warrantyStartDate(product.getWarrantyStartDate())
                 .warrantyEndDate(product.getWarrantyEndDate())
-                .productVariants(productVariantsService.getVariantForKafkaEvent(product.getId()))
+                .productVariants(
+                        productVariantsService.getVariantForKafkaEvent(product.getId())
+                )
                 .createAt(product.getCreateAt())
                 .updateAt(product.getUpdateAt())
                 .build();
-        return productEvent;
     }
 }

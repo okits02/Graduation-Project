@@ -25,7 +25,7 @@ public class ProductEvent {
     String videoUrl;
     LocalDate warrantyStartDate;
     LocalDate warrantyEndDate;
-    List<String> categoriesId;
+    List<CateItem> categories;
     List<Specifications> specifications;
     List<ProductVariants> productVariants;
     LocalDate createAt;

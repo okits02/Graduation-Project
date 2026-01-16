@@ -1,6 +1,7 @@
 package com.example.product_service.service;
 
 import com.example.product_service.dto.response.CategoryLevelValidateResponse;
+import com.example.product_service.kafka.CateItem;
 import com.okits02.common_lib.dto.PageResponse;
 import com.example.product_service.dto.request.CategoryRequest;
 import com.example.product_service.dto.response.CategoryResponse;
@@ -16,7 +17,7 @@ public interface CategoryService {
     public CategoryResponse findById(String categoryId);
     public Category createCate(CategoryRequest request);
     public CategoryResponse updateCate(CategoryRequest request);
-    public List<String> getCategoryHierarchy(Set<String> categoryId);
+    public Set<CateItem> getCategoryHierarchy(Set<String> categoryId);
     public void deleteCateById(String categoryId);
     public void deleteCateByListId(List<String> categoryIds);
     public void deleteAll();

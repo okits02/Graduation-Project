@@ -10,6 +10,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import com.example.search_service.repository.ProductsRepository;
 import com.example.search_service.repository.httpClient.PromotionClient;
 import com.example.search_service.model.ProductVariants;
+import com.example.search_service.viewmodel.CateItemDTO;
 import com.example.search_service.viewmodel.CategoryGetVM;
 import com.example.search_service.viewmodel.ProductGetListVM;
 import com.example.search_service.viewmodel.ProductGetVM;
@@ -57,9 +58,12 @@ public class ProductService {
           }
 
           Products products = productsMapper.toProducts(request);
+          products.setCategoriesId(request.getCategories().stream().map(CateItemDTO::getId).toList());
           try {
-            if (request.getCategoriesId() != null && !request.getCategoriesId().isEmpty()) {
-              var response = promotionClient.getByCategoryIds(request.getCategoriesId());
+            if (request.getCategories() != null && !request.getCategories().isEmpty()) {
+              var response = promotionClient.getByCategoryIds(request.getCategories()
+                      .stream()
+                      .map(CateItemDTO::getId).toList());
               products.setPromotions(
                 response.getResult() != null ?
                 new HashSet < > (response.getResult()) :
@@ -93,10 +97,12 @@ public class ProductService {
           Products product = productsRepository.findById(request.getId())
             .orElseThrow(() -> new AppException(SearchErrorCode.PRODUCT_NOT_EXISTS));
 
-          if (isCategoryChanged(request.getCategoriesId(), product.getCategoriesId())) {
+          if (isCategoryChanged(request.getCategories().stream().map(CateItemDTO::getId).toList()
+                  , product.getCategoriesId())) {
             try {
-              if (request.getCategoriesId() != null && !request.getCategoriesId().isEmpty()) {
-                var response = promotionClient.getByCategoryIds(request.getCategoriesId());
+              if (request.getAvgRating() != null && !request.getCategories().isEmpty()) {
+                var response = promotionClient.getByCategoryIds(request.getCategories().stream()
+                        .map(CateItemDTO::getId).toList());
                 product.setPromotions(
                   response.getResult() != null ?
                   new HashSet < > (response.getResult()) :

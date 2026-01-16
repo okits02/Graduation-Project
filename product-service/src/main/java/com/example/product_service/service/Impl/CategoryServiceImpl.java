@@ -1,6 +1,7 @@
 package com.example.product_service.service.Impl;
 
 import com.example.product_service.dto.response.CategoryLevelValidateResponse;
+import com.example.product_service.kafka.CateItem;
 import com.example.product_service.kafka.CategoryEvent;
 import com.example.product_service.kafka.DeleteCategoryEvent;
 import com.example.product_service.kafka.DeleteProductEvent;
@@ -124,27 +125,32 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public List<String> getCategoryHierarchy(Set<String> categoryId) {
-        List<String> categoryHierarchy = new ArrayList<>();
-        Set<String> categoryList = categoryId;
-        if (categoryList!=null && !categoryList.isEmpty())
-        {
-            for(String id : categoryList) {
-                Category category = categoryRepository.findById(id).orElseThrow(() ->
-                        new AppException(ProductErrorCode.PRODUCT_NOT_EXISTS));
-                categoryHierarchy.add(category.getId());
-                if(category.getParentId() != null){
-                    String parentId = category.getParentId();
-                    while (parentId != null && !parentId.isEmpty()){
-                        Optional<Category> categoryParent = categoryRepository.findById(parentId);
-                        if(categoryParent.isPresent()){
-                            categoryHierarchy.add(categoryParent.get().getId());
-                            parentId = categoryParent.get().getParentId();
-                        }else {
-                            break;
-                        }
-                    }
+    public Set<CateItem> getCategoryHierarchy(Set<String> categoryIds) {
+        Set<CateItem> categoryHierarchy = new HashSet<>();
+
+        if (categoryIds == null || categoryIds.isEmpty()) {
+            return categoryHierarchy;
+        }
+
+        for (String id : categoryIds) {
+            Category category = categoryRepository.findById(id)
+                    .orElseThrow(() -> new AppException(ProductErrorCode.PRODUCT_NOT_EXISTS));
+            String currentId = category.getId();
+            while (currentId != null && !currentId.isEmpty()) {
+
+                Category currentCategory = categoryRepository.findById(currentId).orElse(null);
+                if (currentCategory == null) {
+                    break;
                 }
+
+                CateItem cateItem = CateItem.builder()
+                        .id(currentCategory.getId())
+                        .name(currentCategory.getName())
+                        .build();
+                if (!categoryHierarchy.add(cateItem)) {
+                    break;
+                }
+                currentId = currentCategory.getParentId();
             }
         }
         return categoryHierarchy;
