@@ -11,7 +11,6 @@ import java.time.LocalDate;
 public class ChartQueryRequest {
     PeriodType periodType;
     Integer year;
-    Integer month;
     LocalDate fromDate;
     LocalDate toDate;
 }

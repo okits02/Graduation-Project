@@ -1,7 +1,6 @@
 package com.okits02.analys_service.enums;
 
 public enum PeriodType {
-    WEEK,
-    MONTH,
+    RANGE,
     YEAR
 }

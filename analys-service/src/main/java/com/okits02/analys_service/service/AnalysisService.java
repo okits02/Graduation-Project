@@ -238,30 +238,6 @@ public class AnalysisService {
         return hits.hasSearchHits();
     }
 
-    private CalendarInterval resolveInterval(
-            ChartQueryRequest request,
-            LocalDateTime from,
-            LocalDateTime to
-    ) {
-        if (request.getPeriodType() != null) {
-            return switch (request.getPeriodType()) {
-                case WEEK  -> CalendarInterval.Week;
-                case MONTH -> CalendarInterval.Month;
-                case YEAR  -> CalendarInterval.Year;
-            };
-        }
-
-        long days = java.time.Duration.between(from, to).toDays();
-
-        if (days <= 31) {
-            return CalendarInterval.Day;
-        } else if (days <= 180) {
-            return CalendarInterval.Week;
-        } else {
-            return CalendarInterval.Month;
-        }
-    }
-
     private DateRange resolveDateRange(ChartQueryRequest req) {
         DateRange r = new DateRange();
         ZoneId zone = ZoneId.of("Asia/Ho_Chi_Minh");
@@ -269,36 +245,28 @@ public class AnalysisService {
 
         switch (req.getPeriodType()) {
 
-            case WEEK -> {
+            case RANGE -> {
+                if (req.getFromDate() == null || req.getToDate() == null) {
+                    throw new IllegalArgumentException("fromDate and toDate must not be null");
+                }
+
                 r.from = req.getFromDate()
                         .atStartOfDay(zone)
                         .toInstant();
 
                 r.to = req.getToDate()
-                        .atTime(23,59,59)
+                        .atTime(23, 59, 59)
                         .atZone(zone)
                         .toInstant();
 
                 r.interval = CalendarInterval.Day;
             }
 
-            case MONTH -> {
-                int year = req.getYear();
-                int month = req.getMonth();
-
-                LocalDate start = LocalDate.of(year, month, 1);
-                LocalDate end =
-                        (year == today.getYear() && month == today.getMonthValue())
-                                ? today
-                                : start.withDayOfMonth(start.lengthOfMonth());
-
-                r.from = start.atStartOfDay(zone).toInstant();
-                r.to   = end.atTime(23,59,59).atZone(zone).toInstant();
-                r.interval = CalendarInterval.Day;
-            }
-
             case YEAR -> {
                 int year = req.getYear();
+                if (year <= 0) {
+                    throw new IllegalArgumentException("year must be provided");
+                }
 
                 LocalDate start = LocalDate.of(year, 1, 1);
                 LocalDate end =
@@ -307,10 +275,12 @@ public class AnalysisService {
                                 : LocalDate.of(year, 12, 31);
 
                 r.from = start.atStartOfDay(zone).toInstant();
-                r.to   = end.atTime(23,59,59).atZone(zone).toInstant();
+                r.to   = end.atTime(23, 59, 59).atZone(zone).toInstant();
+
                 r.interval = CalendarInterval.Month;
             }
         }
+
         return r;
     }
 
