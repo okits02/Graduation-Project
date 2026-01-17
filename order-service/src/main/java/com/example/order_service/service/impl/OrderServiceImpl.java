@@ -412,9 +412,24 @@
                 discountAmount = calculateDiscount(totalPrice, promotionResponse.getResult());
                 order.setVoucherCode(request.getVoucher());
             }
+            if (request.getOrderFee() != null
+                    && !request.getOrderFee().equals(order.getOrderFee())) {
+                BigDecimal oldFee = order.getOrderFee() == null
+                        ? BigDecimal.ZERO
+                        : order.getOrderFee();
+                BigDecimal newFee = request.getOrderFee();
+                totalPrice = totalPrice
+                        .subtract(oldFee)
+                        .add(newFee);
+                order.setOrderFee(newFee);
+            }
             BigDecimal finalTotal = totalPrice.subtract(discountAmount).max(BigDecimal.ZERO);
-            order.setTotalPrice(finalTotal);
 
+
+            order.setTotalPrice(finalTotal);
+            if(!order.getAddressId().equals(request.getAddressId())){
+                order.setAddressId(request.getAddressId());
+            }
             orderRepository.save(order);
 
             Object paymentUrl = paymentClient.createPayment(
