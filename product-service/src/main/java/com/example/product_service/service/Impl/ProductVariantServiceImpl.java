@@ -142,6 +142,4 @@ public class ProductVariantServiceImpl implements ProductVariantsService {
         }
         variant.setInStock(inStock);
     }
-
-
 }

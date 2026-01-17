@@ -23,8 +23,7 @@ public class ProductRequest {
     String videoUrl;
     double avgRating;
     Set<String> categoryId;
-    LocalDate warrantyStartDate;
-    LocalDate warrantyEndDate;
+    Integer warranty;
     List<SpecificationRequest> specifications;
     List<ProductVariantsRequest> productVariants;
 }

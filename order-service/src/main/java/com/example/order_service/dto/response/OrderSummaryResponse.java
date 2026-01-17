@@ -7,6 +7,9 @@ import java.util.List;
 
 public record OrderSummaryResponse(
         String orderId,
+        String userId,
+        String firstName,
+        String lastName,
         LocalDateTime orderDate,
         BigDecimal totalPrice,
         List<ItemSummaryResponse> items

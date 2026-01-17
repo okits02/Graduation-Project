@@ -23,8 +23,7 @@ public class ProductEventDTO {
     Integer quantity;
     Double avgRating;
     String videoUrl;
-    LocalDate warrantyStartDate;
-    LocalDate warrantyEndDate;
+    Integer warranty;
     List<CateItemDTO> categories;
     List<Specification> specifications;
     List<ProductVariants> productVariants;

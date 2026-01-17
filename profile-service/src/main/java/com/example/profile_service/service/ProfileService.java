@@ -17,6 +17,7 @@ public interface ProfileService {
    public ProfileResponse getProfileByUserId(String userId);
    public ProfileResponse updateProfileByUserId(String userId, ProfileUpdateRequest request);
    public PageResponse<ProfileResponse> getAllProfile(int page, int size);
+   public List<ProfileResponse> getByListIds(List<String> userIds);
    public void creationAvatar(String userId, String avatarUrl);
    public void DeleteProfile(String userId);
    public CustomerVM getProfileForRating(String userId);

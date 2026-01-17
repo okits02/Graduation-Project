@@ -93,6 +93,11 @@ public class AnalysisService {
                                         .field(dateField)
                                         .calendarInterval(interval)
                                         .timeZone("Asia/Ho_Chi_Minh")
+                                        .minDocCount(0)
+                                        .extendedBounds(ExtendedBounds.of(eb -> eb
+                                                .min(from.toString())
+                                                .max(to.toString())
+                                        ))
                                 )
                                 .aggregations("total", sa -> sa
                                         .sum(s -> s.field(sumField))

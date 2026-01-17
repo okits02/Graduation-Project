@@ -134,6 +134,17 @@ public class ProfileController {
                 .build());
     }
 
+    @GetMapping("/internal/order/getProfile")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<List<ProfileResponse>> getProfileForOrder(
+            @RequestParam(value = "userIds") List<String> userIds
+    ){
+        return ApiResponse.<List<ProfileResponse>>builder()
+                .code(200)
+                .result(profileService.getByListIds(userIds))
+                .build();
+    }
+
     @PostMapping("/internal/avatar")
     public ApiResponse<?> creationAvatar(
             @RequestParam(value = "avatarUrl") String avatarUrl,

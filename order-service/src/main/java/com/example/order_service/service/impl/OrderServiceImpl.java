@@ -51,6 +51,7 @@
         private final SearchClient searchClient;
         private final InventoryClient inventoryClient;
         private final PaymentClient paymentClient;
+        private final ProfileClient profileClient;
         private final KafkaTemplate<String, Object> kafkaTemplate;
 
 
@@ -204,6 +205,9 @@
             List<OrderSummaryResponse> orderSummaries = orders.stream()
                     .map(order -> new OrderSummaryResponse(
                             order.getOrderId(),
+                            "",
+                            "",
+                            "",
                             order.getOrderDate(),
                             order.getTotalPrice(),
                             order.getItems().stream()
@@ -239,7 +243,8 @@
             if(orders == null){
                 return PageResponse.<OrderSummaryResponse>builder()
                         .currentPage(page)
-                        .totalElements(0L)
+                        .totalElements(pageData.getTotalElements())
+                        .totalPage(pageData.getTotalPages())
                         .pageSize(size)
                         .data(List.of())
                         .build();
@@ -264,6 +269,9 @@
             List<OrderSummaryResponse> orderSummaries = orders.stream()
                     .map(order -> new OrderSummaryResponse(
                             order.getOrderId(),
+                            "",
+                            "",
+                            "",
                             order.getOrderDate(),
                             order.getTotalPrice(),
                             order.getItems().stream()
@@ -564,6 +572,22 @@
                         .build();
             }
 
+            List<String> userIds = orders.stream().map(Orders::getUserId).toList();
+            ServletRequestAttributes servletRequestAttributes =
+                    (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
+            var profileResponse = profileClient.getProfileForOrder(authHeader, userIds);
+            if (profileResponse == null || profileResponse.getCode() != 200) {
+                throw new RuntimeException("Cannot fetch product info");
+            }
+            Map<String, ProfileResponse> profileMap = profileResponse
+                    .getResult()
+                    .stream()
+                    .collect(Collectors.toMap(ProfileResponse::getUserId,
+                                    Function.identity()
+                            )
+                    );
+
             List<String> skus = orders.stream()
                     .flatMap(o -> o.getItems().stream())
                     .map(OrderItem::getSku)
@@ -581,23 +605,31 @@
                     ));
 
             List<OrderSummaryResponse> orderSummaries = orders.stream()
-                    .map(order -> new OrderSummaryResponse(
-                            order.getOrderId(),
-                            order.getOrderDate(),
-                            order.getTotalPrice(),
-                            order.getItems().stream()
-                                    .map(i -> {
-                                        ProductSkuVM product = productMap.get(i.getSku());
-                                        return new ItemSummaryResponse(
-                                                product != null ? product.getVariantName() : null,
-                                                product != null ? product.getThumbnailUrl() : null,
-                                                i.getSellPrice(),
-                                                i.getListPrice(),
-                                                i.getQuantity()
-                                        );
-                                    })
-                                    .toList()
-                    ))
+                    .map(order -> {
+
+                        ProfileResponse profile = profileMap.get(order.getUserId());
+
+                        return new OrderSummaryResponse(
+                                order.getOrderId(),
+                                order.getUserId(),
+                                profile != null ? profile.getFirstName() : null,
+                                profile != null ? profile.getLastName() : null,
+                                order.getOrderDate(),
+                                order.getTotalPrice(),
+                                order.getItems().stream()
+                                        .map(i -> {
+                                            ProductSkuVM product = productMap.get(i.getSku());
+                                            return new ItemSummaryResponse(
+                                                    product != null ? product.getVariantName() : null,
+                                                    product != null ? product.getThumbnailUrl() : null,
+                                                    i.getSellPrice(),
+                                                    i.getListPrice(),
+                                                    i.getQuantity()
+                                            );
+                                        })
+                                        .toList()
+                        );
+                    })
                     .toList();
             return PageResponse.<OrderSummaryResponse>builder()
                     .currentPage(page)

@@ -1,7 +1,6 @@
 package com.example.order_service.dto.response;
 
-import com.example.profile_service.entity.UserAddress;
-import com.example.profile_service.enums.Sex;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -13,13 +12,10 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ProfileResponse {
     String userId;
-    String avatarUrl;
-    Sex sex;
     String firstName;
     String lastName;
     String phone;
-    Date dob;
-    List<UserAddress> address;
 }

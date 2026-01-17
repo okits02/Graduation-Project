@@ -19,8 +19,7 @@ public class ProductUpdateRequest {
     String brandName;
     String videoUrl;
     double avgRating;
-    LocalDate warrantyStartDate;
-    LocalDate warrantyEndDate;
+    Integer warranty;
     Set<String> categoryId;
     List<SpecificationRequest> specifications;
     List<ProductVariantsRequest> productVariants;

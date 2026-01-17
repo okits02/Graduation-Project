@@ -31,6 +31,8 @@ public class Products {
     Double avgRating;
     @Field(type = FieldType.Text)
     String videoUrl;
+    @Field(type = FieldType.Integer)
+    Integer warranty;
     @Field(type = FieldType.Keyword)
     List<String> categoriesId;
     @Field(type = FieldType.Nested)
@@ -39,14 +41,6 @@ public class Products {
     List<ProductVariants> productVariants;
     @Field(type = FieldType.Long)
     Long sold;
-    @Field(type = FieldType.Date,
-            format = DateFormat.date,
-            pattern = "yyyy-MM-dd")
-    LocalDate warrantyStartDate;
-    @Field(type = FieldType.Date,
-            format = DateFormat.date,
-            pattern = "yyyy-MM-dd")
-    LocalDate warrantyEndDate;
     @Field(type = FieldType.Date,
             format = DateFormat.date,
             pattern = "yyyy-MM-dd")

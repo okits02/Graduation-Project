@@ -107,6 +107,31 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
+    public List<ProfileResponse> getByListIds(List<String> userIds) {
+        log.info("[getByListIds] userIds size = {}, userIds = {}",
+                userIds == null ? 0 : userIds.size(),
+                userIds);
+
+        List<UserProfile> userProfiles = profileRepository.findByUserIds(userIds);
+
+        log.info("[getByListIds] userProfiles size = {}",
+                userProfiles == null ? 0 : userProfiles.size());
+
+        if (userProfiles == null || userProfiles.isEmpty()) {
+            log.warn("[getByListIds] No profiles found for userIds = {}", userIds);
+            return List.of();
+        }
+
+        List<ProfileResponse> responses = userProfiles.stream()
+                .map(profileMapper::toProfileResponse)
+                .toList();
+
+        log.info("[getByListIds] profileResponses size = {}", responses.size());
+
+        return responses;
+    }
+
+    @Override
     public void creationAvatar(String avatarUrl, String userId) {
         UserProfile userProfile = profileRepository.findByUserId(userId);
         if(userProfile == null)
