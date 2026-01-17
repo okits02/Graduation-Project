@@ -3,10 +3,7 @@ package com.okits02.analys_service.model;
 import com.okits02.analys_service.enums.Status;
 import jakarta.persistence.Column;
 import lombok.*;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.annotations.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -32,7 +29,7 @@ public class OrderAnalysis {
     private BigDecimal orderFee;
     @Field(type = FieldType.Double)
     private BigDecimal totalPrice;
-    @Field(type = FieldType.Date)
+    @Field(type = FieldType.Date, format = DateFormat.date_time,pattern = "yyyy-MM-dd'T'HH:mm:ss")
     LocalDateTime orderDate;
     private List<OrderItem> items;
 }

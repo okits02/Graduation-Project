@@ -1,4 +1,4 @@
-package com.okits02.analys_service.dto;
+package com.okits02.analys_service.viewmodel.dto;
 
 import com.okits02.analys_service.enums.Status;
 import lombok.*;

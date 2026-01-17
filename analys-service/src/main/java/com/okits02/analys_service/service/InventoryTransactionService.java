@@ -1,7 +1,7 @@
 package com.okits02.analys_service.service;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import com.okits02.analys_service.dto.TransactionAnalysisEvent;
+import com.okits02.analys_service.viewmodel.dto.TransactionAnalysisEvent;
 import com.okits02.analys_service.model.InventoryTransactionAnalysis;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

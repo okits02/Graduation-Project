@@ -1,10 +1,8 @@
 package com.okits02.analys_service.model;
 
 import lombok.*;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -17,6 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 public class OrderItem {
+    @Id
     @Field(type = FieldType.Keyword)
     private String orderItemId;
     @Field(type = FieldType.Keyword)
@@ -33,6 +32,6 @@ public class OrderItem {
     private BigDecimal listPrice;
     @Field(type = FieldType.Double)
     private BigDecimal sellPrice;
-    @Field(type = FieldType.Date)
+    @Field(type = FieldType.Date, format = DateFormat.date_time,pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime addAt;
 }

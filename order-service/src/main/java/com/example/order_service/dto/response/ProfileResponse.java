@@ -1,0 +1,25 @@
+package com.example.order_service.dto.response;
+
+import com.example.profile_service.entity.UserAddress;
+import com.example.profile_service.enums.Sex;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
+import java.util.Date;
+import java.util.List;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class ProfileResponse {
+    String userId;
+    String avatarUrl;
+    Sex sex;
+    String firstName;
+    String lastName;
+    String phone;
+    Date dob;
+    List<UserAddress> address;
+}

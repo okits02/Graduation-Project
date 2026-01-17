@@ -1,4 +1,4 @@
-package com.okits02.analys_service.dto;
+package com.okits02.analys_service.viewmodel.dto;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;

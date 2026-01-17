@@ -2,10 +2,7 @@ package com.okits02.analys_service.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.annotations.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -27,16 +24,8 @@ public class StockInAnalysis {
     String referenceCode;
     @Field(type = FieldType.Double)
     BigDecimal totalAmount;
-    @Field(type = FieldType.Date)
-    LocalDateTime createdAt = LocalDateTime.now();
+    @Field(type = FieldType.Date, format = DateFormat.date_time,pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    LocalDateTime createdAt;
+    @Field(type = FieldType.Keyword)
     List<StockInItem> items;
-
-
-    @PrePersist
-    @PreUpdate
-    public void calculateTotal() {
-        this.totalAmount = items == null ? BigDecimal.ZERO : items.stream().map(
-                item -> item.getUnitCost().multiply(BigDecimal.valueOf(item.getQuantity()))
-        ).reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
 }

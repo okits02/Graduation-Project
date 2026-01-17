@@ -2,6 +2,7 @@ package com.okits02.analys_service.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -17,10 +18,13 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @Builder
 public class StockInItem {
+    @Id
     @Field(type = FieldType.Keyword)
     String id;
     @Field(type = FieldType.Keyword)
     String sku;
+    @Field(type = FieldType.Keyword)
+    String stockInId;
     @Field(type = FieldType.Integer)
     Integer quantity;
     @Field(type = FieldType.Keyword)
@@ -31,9 +35,4 @@ public class StockInItem {
     BigDecimal unitCost;
     @Field(type = FieldType.Double)
     BigDecimal totalCost;
-    @PrePersist
-    @PreUpdate
-    public void calculate() {
-        totalCost = unitCost.multiply(BigDecimal.valueOf(quantity));
-    }
 }
