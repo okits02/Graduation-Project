@@ -18,6 +18,8 @@ import java.time.LocalDateTime;
 public class TransactionAnalysisEvent {
     String id;
     String sku;
+    String variantName;
+    String thumbnail;
     @Enumerated(EnumType.STRING)
     TransactionType transactionType;
     Integer quantity;

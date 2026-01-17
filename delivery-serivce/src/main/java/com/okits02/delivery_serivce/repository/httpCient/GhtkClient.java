@@ -3,6 +3,7 @@ package com.okits02.delivery_serivce.repository.httpCient;
 import com.okits02.delivery_serivce.Configurations.GhtkFeignConfig;
 import com.okits02.delivery_serivce.dto.GhtkCreateOrderRequest;
 import com.okits02.delivery_serivce.dto.response.GhtkFeeResponse;
+import com.okits02.delivery_serivce.dto.response.GhtkOrderResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -25,10 +26,9 @@ public interface GhtkClient {
     );
 
     @PostMapping(value = "/services/shipment/order", produces = MediaType.APPLICATION_JSON_VALUE)
-    GhtkCreateOrderRequest createOrder(
+    GhtkOrderResponse createOrder(
             @RequestHeader("Token") String token,
             @RequestHeader("X-Client-Source") String clientSource,
-            @RequestParam("ver") String version,
             @RequestBody GhtkCreateOrderRequest request
     );
 }

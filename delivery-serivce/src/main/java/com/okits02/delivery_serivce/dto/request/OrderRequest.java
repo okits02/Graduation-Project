@@ -13,6 +13,6 @@ public class OrderRequest {
     String orderId;
     String addressId;
     String userId;
-    BigDecimal totalCost;
+    Integer totalCost;
     List<OrderItemRequest> items;
 }

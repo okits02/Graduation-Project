@@ -6,7 +6,8 @@ import org.springframework.http.HttpStatusCode;
 
 public enum DeliveryErrorCode implements ErrorCode {
     INFO_NOT_EXISTS(7401, "Info for store not exists in database", HttpStatus.BAD_REQUEST),
-    STOCK_IN_EXISTS_BY_REFERENCE_CODE(7402, "Stock in already exists by  reference code!", HttpStatus.BAD_REQUEST);
+    STOCK_IN_EXISTS_BY_REFERENCE_CODE(7402, "Stock in already exists by  reference code!", HttpStatus.BAD_REQUEST),
+    PROFILE_NOT_EXISTS(7404, "Address not exists", HttpStatus.BAD_REQUEST)
     ;
     private final int code;
     private final String message;

@@ -14,6 +14,8 @@ import java.math.BigDecimal;
 public class StockInItemEvent {
     String id;
     String sku;
+    String variantName;
+    String thumbnail;
     Integer quantity;
     BigDecimal unitCost;
     BigDecimal totalCost;

@@ -850,6 +850,22 @@
 
         private void sendKafkaEventToAnalysis(Orders orders){
             if(orders == null) return;
+            List<String> skus = orders.getItems()
+                    .stream()
+                    .map(OrderItem::getSku)
+                    .toList();
+
+            var productResponse = searchClient.getProductDetails(skus);
+            if (productResponse == null || productResponse.getCode() != 200) {
+                throw new RuntimeException("Cannot fetch product info");
+            }
+
+            Map<String, ProductSkuVM> productMap = productResponse.getResult().stream()
+                    .collect(Collectors.toMap(
+                            ProductSkuVM::getSku,
+                            Function.identity()
+                    ));
+
             OrderAnalysisEvent orderAnalysisEvent = OrderAnalysisEvent.builder()
                     .id(orders.getOrderId())
                     .userId(orders.getUserId())
@@ -857,15 +873,24 @@
                     .totalPrice(orders.getTotalPrice())
                     .orderStatus(orders.getOrderStatus())
                     .orderDate(orders.getOrderDate())
-                    .items(orders.getItems().stream().map(orderItem -> OrderItemEvent.builder()
-                            .orderItemId(orderItem.getOrderItemId())
-                            .orderId(orders.getOrderId())
-                            .sku(orderItem.getSku())
-                            .quantity(orderItem.getQuantity())
-                            .sellPrice(orderItem.getSellPrice())
-                            .listPrice(orderItem.getListPrice())
-                            .addAt(orderItem.getAddAt())
-                            .build()).toList())
+                    .items(
+                            orders.getItems().stream().map(orderItem -> {
+
+                                ProductSkuVM productSku = productMap.get(orderItem.getSku());
+
+                                return OrderItemEvent.builder()
+                                        .orderItemId(orderItem.getOrderItemId())
+                                        .orderId(orders.getOrderId())
+                                        .sku(orderItem.getSku())
+                                        .variantName(productSku != null ? productSku.getVariantName() : null)
+                                        .thumbnailUrl(productSku != null ? productSku.getThumbnailUrl() : null)
+                                        .quantity(orderItem.getQuantity())
+                                        .sellPrice(orderItem.getSellPrice())
+                                        .listPrice(orderItem.getListPrice())
+                                        .addAt(orderItem.getAddAt())
+                                        .build();
+                            }).toList()
+                    )
                     .build();
 
             kafkaTemplate.send("order-analysis-event", orderAnalysisEvent).whenComplete(

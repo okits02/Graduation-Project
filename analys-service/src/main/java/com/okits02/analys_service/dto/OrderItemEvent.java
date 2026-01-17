@@ -15,6 +15,8 @@ public class OrderItemEvent {
     String orderItemId;
     String orderId;
     String sku;
+    String variantName;
+    String thumbnailUrl;
     Integer quantity;
     BigDecimal listPrice;
     BigDecimal sellPrice;

@@ -1,13 +1,11 @@
 package com.okits02.delivery_serivce.Controller;
 
 import com.okits02.common_lib.dto.ApiResponse;
+import com.okits02.delivery_serivce.dto.request.OrderRequest;
 import com.okits02.delivery_serivce.dto.response.ShippingFeeResponse;
 import com.okits02.delivery_serivce.service.DeliveryService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/deliveries")
@@ -36,6 +34,16 @@ public class DeliveryController {
                         weight,
                         orderValue
                 ))
+                .build();
+    }
+
+    @PostMapping("/create")
+    public ApiResponse<Object> createShipment(
+            @RequestBody OrderRequest orderRequest
+            ){
+        return ApiResponse.builder()
+                .code(200)
+                .result(shippingFeeService.createDeleteShipment(orderRequest))
                 .build();
     }
 }

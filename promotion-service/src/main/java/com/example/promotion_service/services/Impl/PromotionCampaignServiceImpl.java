@@ -4,9 +4,12 @@ import com.example.promotion_service.dto.request.PromotionCampaignRequest;
 import com.example.promotion_service.dto.response.PromotionCampaignResponse;
 import com.example.promotion_service.exception.PromotionErrorCode;
 import com.example.promotion_service.mapper.PromotionCampaignMapper;
+import com.example.promotion_service.model.Promotion;
 import com.example.promotion_service.model.PromotionCampaign;
 import com.example.promotion_service.repository.PromotionCampaignRepository;
+import com.example.promotion_service.repository.PromotionRepository;
 import com.example.promotion_service.services.PromotionCampaignService;
+import com.example.promotion_service.services.PromotionService;
 import com.okits02.common_lib.exception.AppException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -20,6 +23,8 @@ import java.util.List;
 public class PromotionCampaignServiceImpl implements PromotionCampaignService {
     private final PromotionCampaignRepository promotionCampaignRepository;
     private final PromotionCampaignMapper promotionCampaignMapper;
+    private final PromotionRepository promotionRepository;
+    private final PromotionService promotionService;
     @Override
     public PromotionCampaignResponse save(PromotionCampaignRequest request) {
         if(promotionCampaignRepository.existsByName(request.getName()))
@@ -40,6 +45,15 @@ public class PromotionCampaignServiceImpl implements PromotionCampaignService {
 
     @Override
     public void delete(String id) {
+        List<Promotion> promotions =
+                promotionRepository.findByCampaign_Id(id);
+        boolean hasActivePromotion = promotions.stream()
+                .anyMatch(Promotion::getActive);
+
+        if (hasActivePromotion) {
+            throw new AppException(PromotionErrorCode.PROMOTION_IS_ACTIVE);
+        }
+        promotions.forEach(promotionService::UpdatePromotionStatus);
         promotionCampaignRepository.deleteById(id);
     }
 

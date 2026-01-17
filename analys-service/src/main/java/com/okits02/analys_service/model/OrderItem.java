@@ -23,6 +23,10 @@ public class OrderItem {
     private String orderId;
     @Field(type = FieldType.Keyword)
     private String sku;
+    @Field(type = FieldType.Keyword)
+    private String variantName;
+    @Field(type = FieldType.Text)
+    private String thumbnail;
     @Field(type = FieldType.Integer)
     private Integer quantity;
     @Field(type = FieldType.Double)

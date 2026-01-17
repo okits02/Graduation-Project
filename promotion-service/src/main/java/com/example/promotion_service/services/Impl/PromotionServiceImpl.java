@@ -255,6 +255,9 @@ public class PromotionServiceImpl implements PromotionService {
     public List<PromotionResponse> createPromotionFlashSale(FlashSaleCreationRequest request) {
         PromotionCampaign promotionCampaign = promotionCampaignRepository.findById(request.getCampaignId())
                 .orElseThrow(() -> new AppException(CAMPAIGN_NOT_EXISTS));
+        if (request.getStartDate().isBefore(LocalDateTime.now())) {
+            throw new AppException(PROMOTION_CAN_NOT_CREATE);
+        }
         Promotion promotion = promotionMapper.toPromotionFlashSale(request);
         promotion.setActive(false);
         promotion.setCampaign(promotionCampaign);

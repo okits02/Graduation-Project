@@ -212,7 +212,7 @@ public class ProductService {
                 discountPercent = BigDecimal.valueOf(request.getDiscountPercent());
             }
 
-            if (request.getFixedAmount() != null) {
+            if (request.getFixedAmount() != null ) {
                 fixedAmount = BigDecimal.valueOf(request.getFixedAmount());
             }
             Promotion promotion = Promotion.builder()
@@ -221,8 +221,8 @@ public class ProductService {
                     .campaignId(request.getCampaignId())
                     .descriptions(request.getDescriptions())
                     .applyTo(request.getApplyTo())
-                    .discountPercent(BigDecimal.valueOf(request.getDiscountPercent()))
-                    .fixedAmount(BigDecimal.valueOf(request.getFixedAmount()))
+                    .discountPercent(discountPercent)
+                    .fixedAmount(fixedAmount)
                     .promotionKind(request.getPromotionKind())
                     .active(request.getActive())
                     .createAt(request.getCreateAt())

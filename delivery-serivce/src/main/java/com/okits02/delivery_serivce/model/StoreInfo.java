@@ -18,6 +18,7 @@ public class StoreInfo {
     String pickName;
     String pickAddress;
     String pickProvince;
+    String pickWar;
     String pickDistrict;
     String pickTell;
 }

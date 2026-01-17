@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -277,20 +278,33 @@ public class StockInServiceImpl implements StockInService {
             return;
         }
         try {
+            List<String> skus = stockIn.getItems().stream().map(StockInItem::getSku).toList();
+            var response = searchClient.getVariantBySku(skus);
+            Map<String, ProductVariantResponse> variantMap = response.getResult()
+                    .stream()
+                    .collect(Collectors.toMap(
+                            ProductVariantResponse::getSku,
+                            Function.identity()
+                    ));
             StockInAnalysisEvent stockInAnalysisEvent = StockInAnalysisEvent.builder()
                     .id(stockIn.getId())
-                    .createdAt(stockIn.getCreatedAt())
                     .referenceCode(stockIn.getReferenceCode())
                     .totalAmount(stockIn.getTotalAmount())
                     .supplierName(stockIn.getSupplierName())
-                    .items(stockIn.getItems().stream().map(item -> StockInItemEvent.builder()
-                                .id(item.getId())
-                                .sku(item.getSku())
-                                .totalCost(item.getTotalCost())
-                                .unitCost(item.getUnitCost())
-                                .quantity(item.getQuantity())
-                                .build()
-                            )
+                    .items(stockIn.getItems().stream()
+                            .map(item -> {
+                                ProductVariantResponse variant = variantMap.get(item.getSku());
+
+                                return StockInItemEvent.builder()
+                                        .id(item.getId())
+                                        .sku(item.getSku())
+                                        .variantName(variant != null ? variant.getVariantName() : null)
+                                        .thumbnail(variant != null ? variant.getThumbnailUrl() : null)
+                                        .quantity(item.getQuantity())
+                                        .unitCost(item.getUnitCost())
+                                        .totalCost(item.getTotalCost())
+                                        .build();
+                            })
                             .toList()
                     )
                     .createdAt(stockIn.getCreatedAt())

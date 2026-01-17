@@ -11,6 +11,6 @@ import java.util.List;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class GhtkCreateOrderRequest {
-    OrderDTO orderDTO;
-    List<ProductDTO> productDTOList;
+    List<ProductDTO> products;
+    OrderDTO order;
 }

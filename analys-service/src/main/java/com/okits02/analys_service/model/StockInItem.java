@@ -23,6 +23,10 @@ public class StockInItem {
     String sku;
     @Field(type = FieldType.Integer)
     Integer quantity;
+    @Field(type = FieldType.Keyword)
+    private String variantName;
+    @Field(type = FieldType.Text)
+    private String thumbnail;
     @Field(type = FieldType.Double)
     BigDecimal unitCost;
     @Field(type = FieldType.Double)

@@ -88,4 +88,6 @@ public interface PromotionRepository extends JpaRepository<Promotion, String> {
       AND p.endDate >= :now
     """)
     List<Promotion> findPromotionToActivate(LocalDateTime now);
+
+    List<Promotion> findByCampaign_Id(String campaignId);
 }

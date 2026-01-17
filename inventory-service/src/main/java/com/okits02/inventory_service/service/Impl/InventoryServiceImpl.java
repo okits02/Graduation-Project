@@ -348,12 +348,16 @@ public class InventoryServiceImpl implements InventoryService {
             log.warn("InventoryTransaction is null, skip sending analysis event");
             return;
         }
-
+        List<String> skus = new ArrayList<>();
+        skus.add(transaction.getSku());
+        var response = searchClient.getVariantBySku(skus);
         try {
             TransactionAnalysisEvent transactionAnalysisEvent =
                     TransactionAnalysisEvent.builder()
                             .id(transaction.getId())
                             .sku(transaction.getSku())
+                            .variantName(response.getResult().get(0).getVariantName())
+                            .thumbnail(response.getResult().get(0).getThumbnailUrl())
                             .quantity(transaction.getQuantity())
                             .referenceId(transaction.getReferenceId())
                             .referenceType(transaction.getReferenceType())

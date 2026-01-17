@@ -26,6 +26,10 @@ public class InventoryTransactionAnalysis {
     @Field(type = FieldType.Keyword)
     String sku;
     @Field(type = FieldType.Keyword)
+    private String variantName;
+    @Field(type = FieldType.Text)
+    private String thumbnail;
+    @Field(type = FieldType.Keyword)
     @Enumerated(EnumType.STRING)
     TransactionType transactionType;
 

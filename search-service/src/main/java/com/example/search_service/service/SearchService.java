@@ -135,13 +135,12 @@
             NativeQuery query = NativeQuery.builder()
                     .withQuery(q -> q
                             .term(t -> t
-                                    .field("promotions.promotionKind")
-                                    .value(PromotionKind.FLASH_SALE.name())
+                                    .field("promotions.promotionKind.keyword")
+                                    .value("FLASH_SALE")
                             )
                     )
                     .withPageable(PageRequest.of(page, size))
                     .build();
-            query.setPageable(PageRequest.of(page, size));
             SearchHits<Products> hits = elasticsearchOperations.search(query, Products.class);
             SearchPage<Products> productsSearchPage = SearchHitSupport.searchPageFor(
                     hits, query.getPageable());
