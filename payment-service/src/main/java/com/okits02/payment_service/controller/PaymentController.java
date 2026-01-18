@@ -43,7 +43,7 @@ public class PaymentController {
                 .build());
     }
 
-    @GetMapping("/vnpay-return")
+    @GetMapping("/vnp-return")
     public ResponseEntity<String> vnpayReturn(HttpServletRequest request) {
         request.getParameterMap().forEach((k, v) ->
                 System.out.println(k + " = " + String.join(",", v)));
