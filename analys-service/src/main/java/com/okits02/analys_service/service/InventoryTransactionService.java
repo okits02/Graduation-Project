@@ -1,6 +1,7 @@
 package com.okits02.analys_service.service;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import com.okits02.analys_service.enums.TransactionType;
 import com.okits02.analys_service.viewmodel.dto.TransactionAnalysisEvent;
 import com.okits02.analys_service.model.InventoryTransactionAnalysis;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,9 @@ public class InventoryTransactionService {
 
     public void create(TransactionAnalysisEvent request) throws IOException {
         if (request == null) return;
+        TransactionType transactionType =
+                TransactionType.valueOf(request.getTransactionType());
+
 
         InventoryTransactionAnalysis inventoryTransactionAnalysis = InventoryTransactionAnalysis.builder()
                 .id(request.getId())
@@ -23,7 +27,7 @@ public class InventoryTransactionService {
                 .sku(request.getSku())
                 .variantName(request.getVariantName())
                 .thumbnail(request.getThumbnail())
-                .referenceType(request.getReferenceType())
+                .transactionType(transactionType)
                 .createdAt(request.getCreatedAt().withNano(0))
                 .build();
 

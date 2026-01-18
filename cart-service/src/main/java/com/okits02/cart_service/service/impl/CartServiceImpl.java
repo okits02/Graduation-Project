@@ -37,7 +37,6 @@ public class CartServiceImpl implements CartService {
     private final CartItemRepository cartItemRepository;
     private final UserClient userClient;
     private final SearchClient searchClient;
-    private final CartItemMapper cartItemMapper;
 
     @Override
     public CartResponse save(CartItemRequest request) {
@@ -263,6 +262,22 @@ public class CartServiceImpl implements CartService {
                 .sellPrice(cartItem.getSellPrice())
                 .addedAt(cartItem.getAddedAt())
                 .build();
+    }
+
+    @Override
+    public void removeItemByUserId(String userId, String sku) {
+        Cart cart = cartRepository.findByUserId(userId);
+        if (cart == null) {
+            throw new AppException(CartErrorCode.USER_DOES_NOT_HAVE_CART);
+        }
+        boolean removed = cart.getItems()
+                .removeIf(item -> sku.equals(item.getSku()));
+
+        if (!removed) {
+            throw new AppException(CartErrorCode.CART_ITEM_NOT_EXISTS);
+        }
+
+        cartRepository.save(cart);
     }
 
     private String getUserId(){

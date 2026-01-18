@@ -15,4 +15,5 @@ public interface CartService {
     public void removeItem(CartDeleteItemRequest request);
     public CartResponse getCart();
     public CartItemResponse getCartItem(String cartItemId);
+    public void removeItemByUserId(String userId, String sku);
 }

@@ -19,12 +19,9 @@ public class TransactionAnalysisEvent {
     String sku;
     String variantName;
     String thumbnail;
-    @Enumerated(EnumType.STRING)
-    TransactionType transactionType;
+    String  transactionType;
     Integer quantity;
     String referenceId;
-
-    @Enumerated(EnumType.STRING)
-    ReferenceType referenceType;
+    String referenceType;
     LocalDateTime createdAt;
 }

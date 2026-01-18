@@ -367,8 +367,8 @@ public class InventoryServiceImpl implements InventoryService {
                             .thumbnail(response.getResult().get(0).getThumbnailUrl())
                             .quantity(transaction.getQuantity())
                             .referenceId(transaction.getReferenceId())
-                            .referenceType(transaction.getReferenceType())
-                            .transactionType(transaction.getTransactionType())
+                            .referenceType(transaction.getReferenceType().toString())
+                            .transactionType(transaction.getTransactionType().toString())
                             .createdAt(transaction.getCreatedAt())
                             .build();
 

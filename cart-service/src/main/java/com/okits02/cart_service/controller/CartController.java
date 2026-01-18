@@ -66,4 +66,15 @@ public class CartController {
                 .result(cartService.getCartItem(cartItemId))
                 .build();
     }
+
+    @PutMapping("/internal/remove")
+    public ApiResponse<?> returnItem(
+            @RequestParam String sku,
+            @RequestParam String userId
+    ){
+        cartService.removeItemByUserId(userId, sku);
+        return ApiResponse.builder()
+                .code(200)
+                .build();
+    }
 }
