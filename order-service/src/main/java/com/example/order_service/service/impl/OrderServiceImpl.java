@@ -292,6 +292,7 @@
             return PageResponse.<OrderSummaryResponse>builder()
                     .currentPage(page)
                     .totalElements(pageData.getTotalElements())
+                    .totalPage(pageData.getTotalPages())
                     .pageSize(pageData.getSize())
                     .data(orderSummaries)
                     .build();
