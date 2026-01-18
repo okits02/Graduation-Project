@@ -9,8 +9,12 @@ import com.okits02.delivery_serivce.dto.response.AddressResponse;
 import com.okits02.delivery_serivce.dto.response.GhtkFeeResponse;
 import com.okits02.delivery_serivce.dto.response.GhtkOrderResponse;
 import com.okits02.delivery_serivce.dto.response.ShippingFeeResponse;
+import com.okits02.delivery_serivce.enums.DeliveryStatus;
+import com.okits02.delivery_serivce.enums.Status;
 import com.okits02.delivery_serivce.exceptions.DeliveryErrorCode;
+import com.okits02.delivery_serivce.model.Delivery;
 import com.okits02.delivery_serivce.model.StoreInfo;
+import com.okits02.delivery_serivce.repository.DeliveryRepository;
 import com.okits02.delivery_serivce.repository.StoreInfoRepository;
 import com.okits02.delivery_serivce.repository.httpCient.GhtkClient;
 import com.okits02.delivery_serivce.repository.httpCient.ProfileClient;
@@ -22,6 +26,8 @@ import lombok.experimental.NonFinal;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -30,6 +36,7 @@ public class DeliveryServiceImpl implements DeliveryService {
 
     private final GhtkClient ghtkClient;
     private final StoreInfoRepository storeInfoRepository;
+    private final DeliveryRepository deliveryRepository;
     private final ProfileClient profileClient;
 
 
@@ -42,8 +49,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     private String ghtkPartnerCode;
 
     @Override
-    public ShippingFeeResponse calculate(String toAddress, String toProvince, String toDistrict,
-                                         String fromProvince, String fromDistrict, Integer weight, Long orderValue) {
+    public ShippingFeeResponse calculate(String toAddress, String toProvince, String toDistrict, Long orderValue) {
         StoreInfo storeInfo = getStoreInfo();
         GhtkFeeResponse response = ghtkClient.getShippingFee(
                 toAddress,
@@ -70,6 +76,25 @@ public class DeliveryServiceImpl implements DeliveryService {
         }
         GhtkCreateOrderRequest ghtkCreateOrderRequest = ghtkCreateOrderRequest(orderRequest, addressUser.getResult());
         GhtkOrderResponse ghtkOrderResponse = ghtkClient.createOrder(ghtkToken, ghtkPartnerCode, ghtkCreateOrderRequest);
+        DeliveryStatus status = null;
+        if(ghtkOrderResponse.isSuccess()){
+            status = DeliveryStatus.CREATED;
+        }else {
+            status = DeliveryStatus.FAILED;
+        }
+        Delivery delivery = Delivery.builder()
+                .userId(orderRequest.getUserId())
+                .orderId(orderRequest.getOrderId())
+                .addressId(orderRequest.getAddressId())
+                .status(status)
+                .receiverName(addressUser.getResult().getReceiverName())
+                .receiverPhone(addressUser.getResult().getReceiverPhone())
+                .receiverAddress(addressUser.getResult().getAddressLine())
+                .expectedDeliveryTime(ghtkOrderResponse.getOrder().getEstimatedDeliverTime())
+                .shippingFee(BigDecimal.valueOf(orderRequest.getOrderFee()))
+                .createdAt(LocalDateTime.now())
+                .build();
+        deliveryRepository.save(delivery);
         return ghtkOrderResponse;
     }
 
@@ -104,7 +129,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                 .district(addressUser.getDistrict())
                 .ward(addressUser.getWard())
                 .tel(addressUser.getReceiverPhone())
-                .value(300000)
+                .value(gthh)
                 .pickMoney(50000)
                 .transport("fly")
                 .pickOption("cod")

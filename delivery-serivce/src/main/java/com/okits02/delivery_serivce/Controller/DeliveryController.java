@@ -19,9 +19,6 @@ public class DeliveryController {
             @RequestParam String toAddress,
             @RequestParam String toProvince,
             @RequestParam String toDistrict,
-            @RequestParam String fromProvince,
-            @RequestParam String fromDistrict,
-            @RequestParam Integer weight,
             @RequestParam Long orderValue
     ) {
         return ApiResponse.<ShippingFeeResponse>builder()
@@ -29,9 +26,6 @@ public class DeliveryController {
                         toAddress,
                         toProvince,
                         toDistrict,
-                        fromProvince,
-                        fromDistrict,
-                        weight,
                         orderValue
                 ))
                 .build();

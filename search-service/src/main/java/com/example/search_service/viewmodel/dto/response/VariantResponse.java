@@ -26,6 +26,7 @@ public class VariantResponse {
     Integer sold;
     String thumbnail;
     Boolean inStock;
+    Integer quantity;
     LocalDate createAt;
     LocalDate updateAt;
 }

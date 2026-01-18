@@ -8,6 +8,7 @@
     import com.example.search_service.enums.MediaOwnerType;
     import com.example.search_service.enums.PromotionKind;
     import com.example.search_service.exceptions.SearchErrorCode;
+    import com.example.search_service.mapper.ProductVariantMapper;
     import com.example.search_service.model.ProductVariants;
     import com.example.search_service.repository.httpClient.InventoryClient;
     import com.example.search_service.repository.httpClient.MediaClient;
@@ -15,6 +16,7 @@
     import com.example.search_service.viewmodel.dto.request.FlashSaleRangeRequest;
     import com.example.search_service.viewmodel.dto.response.InventoryResponse;
     import com.example.search_service.viewmodel.dto.response.MediaResponse;
+    import com.example.search_service.viewmodel.dto.response.VariantResponse;
     import com.okits02.common_lib.exception.AppException;
     import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregation;
 
@@ -46,6 +48,7 @@
         private final CategoryService categoryService;
         private final MediaClient mediaClient;
         private final InventoryClient inventoryClient;
+        private final ProductVariantMapper productVariantMapper;
 
         public ProductGetListVM searchProductAdvance(String keyword,
                                                      Integer page,
@@ -300,6 +303,19 @@
             var invenResponse = inventoryClient.getListQuantity(skus);
             Map<String, InventoryResponse> inventoryResponseMap = invenResponse.stream()
                     .collect(Collectors.toMap(InventoryResponse::getSku, Function.identity()));
+
+            List<VariantResponse> variantResponses = product.getProductVariants().stream()
+                    .map(p -> {
+                        VariantResponse variantResponse = productVariantMapper.toResponse(p);
+
+                        InventoryResponse inventory = inventoryResponseMap.get(p.getSku());
+                        variantResponse.setQuantity(
+                                inventory != null ? inventory.getQuantity() : 0
+                        );
+
+                        return variantResponse;
+                    })
+                    .toList();
             var responses = mediaClient.getMedia(product.getId(), MediaOwnerType.PRODUCT).getBody();
             List<MediaResponse> listMedia = new ArrayList<>();
             if(responses.getResult() != null){
@@ -309,6 +325,7 @@
                     categoryService.getCategoryByIds(new HashSet<>(product.getCategoriesId()));
             ProductGetVM response = ProductGetVM.fromEntity(product, categoryMap);
             response.setImageList(listMedia.stream().map(MediaResponse::getUrl).toList());
+            response.setVariants(variantResponses);
             return response;
         }
 
@@ -328,6 +345,23 @@
 
             SearchHits<Products> hits = elasticsearchOperations.search(queryBuilder.build(), Products.class);
             Products product = hits.getSearchHit(0).getContent();
+            List<String> skus = product.getProductVariants().stream().map(ProductVariants::getSku).toList();
+            var invenResponse = inventoryClient.getListQuantity(skus);
+            Map<String, InventoryResponse> inventoryResponseMap = invenResponse.stream()
+                    .collect(Collectors.toMap(InventoryResponse::getSku, Function.identity()));
+
+            List<VariantResponse> variantResponses = product.getProductVariants().stream()
+                    .map(p -> {
+                        VariantResponse variantResponse = productVariantMapper.toResponse(p);
+
+                        InventoryResponse inventory = inventoryResponseMap.get(p.getSku());
+                        variantResponse.setQuantity(
+                                inventory != null ? inventory.getQuantity() : 0
+                        );
+
+                        return variantResponse;
+                    })
+                    .toList();
             var responses = mediaClient.getMedia(product.getId(), MediaOwnerType.PRODUCT).getBody();
             List<MediaResponse> listMedia = new ArrayList<>();
             if(responses.getResult() != null){
@@ -337,6 +371,7 @@
                     categoryService.getCategoryByIds(new HashSet<>(product.getCategoriesId()));
             ProductGetVM response = ProductGetVM.fromEntity(product, categoryMap);
             response.setImageList(listMedia.stream().map(MediaResponse::getUrl).toList());
+            response.setVariants(variantResponses);
             return response;
         }
 

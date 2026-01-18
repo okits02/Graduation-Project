@@ -3,6 +3,7 @@ package com.okits02.delivery_serivce.model;
 import com.okits02.delivery_serivce.enums.DeliveryStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "deliveries")
 @Data
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Delivery {
     @Id

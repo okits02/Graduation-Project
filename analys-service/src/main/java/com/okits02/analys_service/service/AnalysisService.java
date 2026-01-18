@@ -749,7 +749,7 @@ public class AnalysisService {
                 ))
                 .withAggregation("by_sku",
                         Aggregation.of(a -> a
-                                .terms(t -> t.field("sku").size(skus.size()))
+                                .terms(t -> t.field("sku"))
                                 .aggregations("total_revenue",
                                         Aggregation.of(sa -> sa
                                                 .sum(s -> s
@@ -761,6 +761,7 @@ public class AnalysisService {
                                 )
                         )
                 )
+                .withMaxResults(100)
                 .build();
 
         SearchHits<OrderItem> hits =

@@ -356,6 +356,10 @@ public class CategoryService {
                 .build();
     }
 
+    public CategoryDetailsVM getByParentCate(String categoryId){
+
+    }
+
     public void updateParentCategory(String parentId, String categoryId) throws IOException {
         GetResponse<Category> getResponse = elasticsearchClient.get(
                 g -> g

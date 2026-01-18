@@ -8,9 +8,6 @@ public interface DeliveryService {
             String toAddress,
             String toProvince,
             String toDistrict,
-            String fromProvince,
-            String fromDistrict,
-            Integer weight,
             Long orderValue
     );
 

@@ -14,5 +14,6 @@ public class OrderRequest {
     String addressId;
     String userId;
     Integer totalCost;
+    Integer orderFee;
     List<OrderItemRequest> items;
 }
