@@ -110,12 +110,17 @@ spring:
             - Path=${app.api-prefix}/rating-service/**
           filters:
             - StripPrefix=2
+
         - id: analysis-service
           uri: lb://analysis-service
           predicates:
             - Path=${app.api-prefix}/analysis-service/**
           filters:
             - StripPrefix=2
+        - id: delivery-service
+          uri: lb://delivery-service
+          predicates:
+            - Path=${app.api-prefix}/delivery-service/**
 
 springdoc:
   swagger-ui:

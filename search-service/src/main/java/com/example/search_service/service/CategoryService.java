@@ -7,6 +7,7 @@ import co.elastic.clients.elasticsearch.core.DeleteByQueryResponse;
 import co.elastic.clients.elasticsearch.core.GetResponse;
 import com.example.search_service.exceptions.SearchErrorCode;
 import com.example.search_service.model.Category;
+import com.example.search_service.repository.CategoryRepository;
 import com.example.search_service.viewmodel.CategoryDetailsVM;
 import com.example.search_service.viewmodel.CategoryGetListVM;
 import com.example.search_service.viewmodel.CategoryGetVM;
@@ -32,6 +33,7 @@ import java.util.stream.Collectors;
 public class CategoryService {
     private final ElasticsearchOperations elasticsearchOperations;
     private final ElasticsearchClient elasticsearchClient;
+    private final CategoryRepository categoryRepository;
 
     public Map<String, CategoryGetVM> getCategoryByIds(Set<String> categoryIds){
         if(categoryIds == null || categoryIds.isEmpty()){
@@ -356,8 +358,28 @@ public class CategoryService {
                 .build();
     }
 
-    public CategoryDetailsVM getByParentCate(String categoryId){
+    public CategoryGetListVM getByParentCate(String categoryId){
+        Category category = categoryRepository.findById(categoryId).orElseThrow(()
+                -> new AppException(SearchErrorCode.CATEGORY_NOT_EXISTS));
+        List<CategoryGetVM> categoryGetVMS = new ArrayList<>();
+        pathToRoot(category, categoryGetVMS);
+        Collections.reverse(categoryGetVMS);
+        return CategoryGetListVM.builder()
+                .CategoryGetVM(categoryGetVMS)
+                .build();
+    }
 
+    private void pathToRoot(Category category, List<CategoryGetVM> categoryGetVMS){
+        if(category.getParentId() == null) return;
+        categoryGetVMS.add(CategoryGetVM.fromEntity(category));
+        if (category.getParentId() == null) {
+            return;
+        }
+
+        Category parentCate = categoryRepository.findById(category.getParentId())
+                .orElseThrow(() -> new AppException(SearchErrorCode.CATEGORY_NOT_EXISTS));
+
+        pathToRoot(parentCate, categoryGetVMS);
     }
 
     public void updateParentCategory(String parentId, String categoryId) throws IOException {

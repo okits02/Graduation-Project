@@ -9,6 +9,7 @@ import com.example.search_service.viewmodel.dto.AutoCompletedResponse;
 import com.example.search_service.viewmodel.dto.request.CategoryGetByListIdRequest;
 import com.example.search_service.viewmodel.dto.request.SearchCateRequest;
 import lombok.RequiredArgsConstructor;
+import org.apache.kafka.shaded.com.google.protobuf.Api;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -48,6 +49,15 @@ public class CategoryController {
                 .code(200)
                 .message("get category by id")
                 .result(categoryService.getCategoryTreeById(categoryId))
+                .build();
+    }
+
+    @GetMapping("/pathToRoot")
+    public ApiResponse<CategoryGetListVM> getListVMApiResponse(@RequestParam String categoryId){
+        return ApiResponse.<CategoryGetListVM>builder()
+                .code(200)
+                .message("get path to root successfully")
+                .result(categoryService.getByParentCate(categoryId))
                 .build();
     }
 

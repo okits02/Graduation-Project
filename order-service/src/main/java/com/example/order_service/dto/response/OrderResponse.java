@@ -35,8 +35,8 @@ public class OrderResponse implements Serializable {
     String addressId;
     String deliveryId;
     String voucherCode;
-    BigDecimal totalPrice;
-    private BigDecimal discount;
-    private BigDecimal beforePrice;
+    BigDecimal totalPrice; // gia sau khi tru discount
+    BigDecimal discount;
+    BigDecimal beforePrice; // gia truoc khi tru discount
     List<OrderItemResponse> items;
 }
