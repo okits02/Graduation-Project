@@ -40,29 +40,38 @@ public interface PromotionRepository extends JpaRepository<Promotion, String> {
             """)
     List<Promotion> findExpireToday(LocalDate today);
     @Query(value = """
-    SELECT p.*
-    FROM promotion p
-    LEFT JOIN promotion_apply_to pa
-        ON pa.promotion_id = p.id
-    LEFT JOIN promotion_usage pu
-        ON pu.promotion_id = p.id
-       AND pu.user_id = :userId
-    WHERE p.active = true
-      AND p.start_date <= :today
-      AND p.end_date >= :today
-      AND p.minimum_order_purchase_amount <= :totalAmount
-      AND p.usage_count < p.usage_limited
-      AND (
-            p.apply_to = 'ALL'
-            OR (p.apply_to = 'PRODUCT' AND pa.product_id IN (:productIds))
-            OR (p.apply_to = 'CATEGORY' AND pa.category_id IN (:categoryIds))
-          )
-    GROUP BY p.id
-    HAVING (
-        p.usage_limit_per_user IS NULL
-        OR p.usage_limit_per_user = 0
-        OR COUNT(pu.id) < p.usage_limit_per_user
-    )
+            SELECT p.*
+             FROM promotion p
+             WHERE p.active = true
+               AND p.start_date <= :today
+               AND p.end_date >= :today
+               AND p.minimum_order_purchase_amount <= :totalAmount
+               AND (
+                     p.usage_limited IS NULL
+                     OR p.usage_limited = 0
+                     OR p.usage_count < p.usage_limited
+                   )
+               AND (
+                     UPPER(p.apply_to) = 'ALL'
+                     OR (
+                         UPPER(p.apply_to) = 'PRODUCT'
+                         AND EXISTS (
+                             SELECT 1
+                             FROM promotion_apply_to pa
+                             WHERE pa.promotion_id = p.id
+                               AND pa.product_id IN (:productIds)
+                         )
+                     )
+                     OR (
+                         UPPER(p.apply_to) = 'CATEGORY'
+                         AND EXISTS (
+                             SELECT 1
+                             FROM promotion_apply_to pa
+                             WHERE pa.promotion_id = p.id
+                               AND pa.category_id IN (:categoryIds)
+                         )
+                     )
+                   )
     """, nativeQuery = true)
     List<Promotion> findApplicablePromotions(
             @Param("today") LocalDate today,
