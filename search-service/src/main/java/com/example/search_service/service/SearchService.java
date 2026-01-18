@@ -9,9 +9,11 @@
     import com.example.search_service.enums.PromotionKind;
     import com.example.search_service.exceptions.SearchErrorCode;
     import com.example.search_service.model.ProductVariants;
+    import com.example.search_service.repository.httpClient.InventoryClient;
     import com.example.search_service.repository.httpClient.MediaClient;
     import com.example.search_service.viewmodel.dto.AutoCompletedResponse;
     import com.example.search_service.viewmodel.dto.request.FlashSaleRangeRequest;
+    import com.example.search_service.viewmodel.dto.response.InventoryResponse;
     import com.example.search_service.viewmodel.dto.response.MediaResponse;
     import com.okits02.common_lib.exception.AppException;
     import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregation;
@@ -33,6 +35,7 @@
     import org.springframework.stereotype.Service;
 
     import java.util.*;
+    import java.util.function.Function;
     import java.util.stream.Collectors;
 
     @Service
@@ -42,6 +45,7 @@
         private final ElasticsearchOperations elasticsearchOperations;
         private final CategoryService categoryService;
         private final MediaClient mediaClient;
+        private final InventoryClient inventoryClient;
 
         public ProductGetListVM searchProductAdvance(String keyword,
                                                      Integer page,
@@ -292,6 +296,10 @@
                 throw new AppException(SearchErrorCode.PRODUCT_NOT_EXISTS);
             }
             Products product = hits.getSearchHit(0).getContent();
+            List<String> skus = product.getProductVariants().stream().map(ProductVariants::getSku).toList();
+            var invenResponse = inventoryClient.getListQuantity(skus);
+            Map<String, InventoryResponse> inventoryResponseMap = invenResponse.stream()
+                    .collect(Collectors.toMap(InventoryResponse::getSku, Function.identity()));
             var responses = mediaClient.getMedia(product.getId(), MediaOwnerType.PRODUCT).getBody();
             List<MediaResponse> listMedia = new ArrayList<>();
             if(responses.getResult() != null){

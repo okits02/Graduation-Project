@@ -92,4 +92,11 @@ public class InventoryController {
         return inventoryService.getTransactionHistory(sku, page-1, size);
     }
 
+    @GetMapping("/internal/quantity")
+    public List<Inventory> getListQuantity(
+            @RequestParam(value = "skus") List<String> skus
+    ){
+        return inventoryService.getQuantityByListSkus(skus);
+    }
+
 }

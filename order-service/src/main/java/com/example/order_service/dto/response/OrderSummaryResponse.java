@@ -12,6 +12,7 @@ public record OrderSummaryResponse(
         String lastName,
         LocalDateTime orderDate,
         BigDecimal totalPrice,
+        String Status,
         List<ItemSummaryResponse> items
 ) {
 }

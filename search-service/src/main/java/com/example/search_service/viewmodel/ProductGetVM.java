@@ -3,6 +3,7 @@ package com.example.search_service.viewmodel;
 import com.example.search_service.model.ProductVariants;
 import com.example.search_service.model.Products;
 import com.example.search_service.model.Specification;
+import com.example.search_service.viewmodel.dto.response.VariantResponse;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -27,7 +28,7 @@ public class ProductGetVM {
     String thumbnailUrl;
     Integer warranty;
     List<String> imageList;
-    List<ProductVariants> variants;
+    List<VariantResponse> variants;
     List<CategoryGetVM> categories;
     List<Specification> specifications;
     @JsonFormat(pattern = "yyyy-MM-dd")
@@ -47,7 +48,6 @@ public class ProductGetVM {
                         .filter(Objects::nonNull)
                         .toList())
                 .videoUrl(products.getVideoUrl())
-                .variants(products.getProductVariants())
                 .specifications(products.getSpecifications())
                 .createAt(products.getCreateAt())
                 .updateAt(products.getUpdateAt())

@@ -21,6 +21,7 @@ public interface InventoryService {
     public InventoryResponse getByProductIdAndSku(String sku);
     public Inventory decreaseStock(String sku, int quantity, String orderId);
     public Inventory increaseStock(String sku, int quantity, String orderId);
+    public List<Inventory> getQuantityByListSkus(List<String> skus);
     public PageResponse<InventoryResponse> getAll(int page, int size);
     PageResponse<InventoryTransactionResponse> getTransactionHistory(String sku, int page, int size);
 }

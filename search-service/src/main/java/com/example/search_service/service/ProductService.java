@@ -413,7 +413,6 @@ public class ProductService {
                         if (!exists) {
                                 throw new AppException(SearchErrorCode.PRODUCT_NOT_EXISTS);
                         }
-
                         elasticsearchClient.update(u -> u
                                         .index("product")
                                         .id(request.getProductId())

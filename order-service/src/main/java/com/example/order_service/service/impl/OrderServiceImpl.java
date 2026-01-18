@@ -212,6 +212,7 @@
                             "",
                             order.getOrderDate(),
                             order.getTotalPrice(),
+                            order.getOrderStatus().toString(),
                             order.getItems().stream()
                                     .map(i -> {
                                         ProductSkuVM product = productMap.get(i.getSku());
@@ -278,6 +279,7 @@
                             "",
                             order.getOrderDate(),
                             order.getTotalPrice(),
+                            order.getOrderStatus().toString(),
                             order.getItems().stream()
                                     .map(i -> {
                                         ProductSkuVM product = productMap.get(i.getSku());
@@ -629,6 +631,7 @@
                                 profile != null ? profile.getLastName() : null,
                                 order.getOrderDate(),
                                 order.getTotalPrice(),
+                                order.getOrderStatus().toString(),
                                 order.getItems().stream()
                                         .map(i -> {
                                             ProductSkuVM product = productMap.get(i.getSku());

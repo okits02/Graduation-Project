@@ -187,6 +187,13 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
+    public List<Inventory> getQuantityByListSkus(List<String> skus) {
+        List<Inventory> inventories = inventoryRepository.findBySkus(skus);
+        if(inventories == null) return List.of();
+        return inventories;
+    }
+
+    @Override
     public Inventory decreaseStock(String sku, int quantity, String orderId) {
 
         Inventory inventory = inventoryRepository.findBySku(sku).orElseThrow(() ->
