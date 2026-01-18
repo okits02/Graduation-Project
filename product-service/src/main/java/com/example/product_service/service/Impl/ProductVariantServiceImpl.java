@@ -10,6 +10,7 @@ import com.example.product_service.mapper.ProductVariantsMapper;
 import com.example.product_service.model.ProductVariants;
 import com.example.product_service.model.Specifications;
 import com.example.product_service.repository.ProductVariantsRepository;
+import com.example.product_service.repository.httpsClient.SearchClient;
 import com.example.product_service.service.ProductVariantsService;
 import com.example.product_service.utils.SkuGenerator;
 import com.okits02.common_lib.exception.AppException;
@@ -24,6 +25,7 @@ import java.util.List;
 public class ProductVariantServiceImpl implements ProductVariantsService {
     private final ProductVariantsRepository productVariantsRepository;
     private final ProductVariantsMapper productVariantsMapper;
+    private final SearchClient searchClient;
     @Override
     public List<String> save(List<ProductVariantsRequest> request, String productId) {
 
@@ -137,6 +139,7 @@ public class ProductVariantServiceImpl implements ProductVariantsService {
     @Override
     public void changeStock(String sku, Boolean inStock) {
         ProductVariants variant = productVariantsRepository.findBySku(sku);
+        searchClient.changStock(sku, inStock);
         if(variant == null){
             throw new AppException(ProductErrorCode.PRODUCT_VARIANTS_NOT_FOUND);
         }

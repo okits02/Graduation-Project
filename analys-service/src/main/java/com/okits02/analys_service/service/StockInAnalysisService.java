@@ -45,9 +45,8 @@ public class StockInAnalysisService {
                 .id(request.getId())
                 .supplierName(request.getSupplierName())
                 .referenceCode(request.getReferenceCode())
-                .createdAt(request.getCreatedAt())
+                .createdAt(request.getCreatedAt().withNano(0))
                 .totalAmount(totalAmount)
-                .items(items)
                 .build();
 
         elasticsearchClient.index(i -> i

@@ -26,7 +26,7 @@ public class OrderAnalysisService {
                 .orderStatus(request.getOrderStatus())
                 .orderFee(request.getOrderFee())
                 .totalPrice(request.getTotalPrice())
-                .orderDate(request.getOrderDate())
+                .orderDate(request.getOrderDate().withNano(0))
                 .build();
 
         elasticsearchClient.index(i -> i
@@ -46,7 +46,7 @@ public class OrderAnalysisService {
                     .quantity(item.getQuantity())
                     .listPrice(item.getListPrice())
                     .sellPrice(item.getSellPrice())
-                    .addAt(item.getAddAt())
+                    .addAt(item.getAddAt().withNano(0))
                     .build();
 
             elasticsearchClient.index(i -> i

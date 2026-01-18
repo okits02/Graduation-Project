@@ -474,6 +474,7 @@
                     .map(OrderItem::getSku)
                     .toList();
             var productResponse = searchClient.getProductDetails(skus);
+
             if (productResponse == null || productResponse.getCode() != 200) {
                 throw new RuntimeException("Cannot fetch product info");
             }

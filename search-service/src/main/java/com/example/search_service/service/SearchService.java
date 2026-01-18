@@ -11,6 +11,7 @@
     import com.example.search_service.model.ProductVariants;
     import com.example.search_service.repository.httpClient.MediaClient;
     import com.example.search_service.viewmodel.dto.AutoCompletedResponse;
+    import com.example.search_service.viewmodel.dto.request.FlashSaleRangeRequest;
     import com.example.search_service.viewmodel.dto.response.MediaResponse;
     import com.okits02.common_lib.exception.AppException;
     import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregation;
@@ -131,17 +132,44 @@
                     .build();
         }
 
-        public ProductGetListVM getProductFlashSale(int page, int size){
-            NativeQuery query = NativeQuery.builder()
+        public ProductGetListVM getProductFlashSale(int page, int size, FlashSaleRangeRequest request){
+            NativeQueryBuilder query = NativeQuery.builder()
                     .withQuery(q -> q
                             .term(t -> t
                                     .field("promotions.promotionKind.keyword")
                                     .value("FLASH_SALE")
                             )
-                    )
-                    .withPageable(PageRequest.of(page, size))
-                    .build();
-            SearchHits<Products> hits = elasticsearchOperations.search(query, Products.class);
+                    ).withPageable(PageRequest.of(page, size));
+            query.withFilter(f -> f.bool(b -> {
+                extractRange(request.getMinPrice(), request.getMaxPrice(), b);
+                return b;
+            }));
+            switch (request.getSortType()){
+                case DEFAULT -> {
+                    break;
+                }
+                case PRICE_ASC -> {
+                    query.withSort(s -> s
+                            .field(f -> f
+                                    .field("productVariants.sellPrice")
+                                    .order(SortOrder.Asc)
+                                    .nested(n -> n.path("productVariants"))
+                                    .mode(SortMode.Min)
+                            )
+                    );
+                }
+                case PRICE_DESC -> {
+                    query.withSort(s -> s
+                            .field(f -> f
+                                    .field("productVariants.sellPrice")
+                                    .order(SortOrder.Desc)
+                                    .nested(n -> n.path("productVariants"))
+                                    .mode(SortMode.Max)
+                            )
+                    );
+                }
+            }
+            SearchHits<Products> hits = elasticsearchOperations.search(query.build(), Products.class);
             SearchPage<Products> productsSearchPage = SearchHitSupport.searchPageFor(
                     hits, query.getPageable());
             List<ProductSummariseVM> productGetVMList = productsSearchPage.stream().map(i -> ProductSummariseVM
@@ -155,7 +183,9 @@
                     .build();
         }
 
-        public ProductGetListVM getProductForBanner(int page, int size, String ownerId, String ownerType){
+        public ProductGetListVM getProductForBanner(
+                int page, int size, String ownerId, String ownerType,
+                Double minPrice, Double maxPrice, SortType sortType){
             NativeQueryBuilder queryBuilder = NativeQuery.builder();
             switch (ownerType){
                 case "CATEGORY" -> {
@@ -165,6 +195,35 @@
                                     .value(ownerId)
                             )
                     );
+                    queryBuilder.withFilter(f -> f.bool(b -> {
+                        extractRange(minPrice, maxPrice, b);
+                        return b;
+                    }));
+                    switch (sortType){
+                        case DEFAULT -> {
+                            break;
+                        }
+                        case PRICE_ASC -> {
+                            queryBuilder.withSort(s -> s
+                                    .field(f -> f
+                                            .field("productVariants.sellPrice")
+                                            .order(SortOrder.Asc)
+                                            .nested(n -> n.path("productVariants"))
+                                            .mode(SortMode.Min)
+                                    )
+                            );
+                        }
+                        case PRICE_DESC -> {
+                            queryBuilder.withSort(s -> s
+                                    .field(f -> f
+                                            .field("productVariants.sellPrice")
+                                            .order(SortOrder.Desc)
+                                            .nested(n -> n.path("productVariants"))
+                                            .mode(SortMode.Max)
+                                    )
+                            );
+                        }
+                    }
                 }
 
                 case "PROMOTION" -> {
@@ -174,6 +233,35 @@
                                     .value(ownerId)
                             )
                     );
+                    queryBuilder.withFilter(f -> f.bool(b -> {
+                        extractRange(minPrice, maxPrice, b);
+                        return b;
+                    }));
+                    switch (sortType){
+                        case DEFAULT -> {
+                            break;
+                        }
+                        case PRICE_ASC -> {
+                            queryBuilder.withSort(s -> s
+                                    .field(f -> f
+                                            .field("productVariants.sellPrice")
+                                            .order(SortOrder.Asc)
+                                            .nested(n -> n.path("productVariants"))
+                                            .mode(SortMode.Min)
+                                    )
+                            );
+                        }
+                        case PRICE_DESC -> {
+                            queryBuilder.withSort(s -> s
+                                    .field(f -> f
+                                            .field("productVariants.sellPrice")
+                                            .order(SortOrder.Desc)
+                                            .nested(n -> n.path("productVariants"))
+                                            .mode(SortMode.Max)
+                                    )
+                            );
+                        }
+                    }
                 }
             }
             queryBuilder.withPageable(PageRequest.of(page, size));

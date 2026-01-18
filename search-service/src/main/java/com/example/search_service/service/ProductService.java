@@ -605,4 +605,33 @@ public class ProductService {
         }
         elasticsearchOperations.save(product);
     }
+
+    public void changeStockRequest(String sku, Boolean isStock) throws IOException {
+        elasticsearchClient.updateByQuery(u -> u
+                .index("products")
+                .query(q -> q
+                        .nested(n -> n
+                                .path("productVariants")
+                                .query(nq -> nq
+                                        .term(t -> t
+                                                .field("productVariants.sku")
+                                                .value(sku)
+                                        )
+                                )
+                        )
+                )
+                .script(s -> s
+                        .lang("painless")
+                        .source(
+                                "for (variant in ctx._source.productVariants) {" +
+                                        " if (variant.sku == params.sku) {" +
+                                        "   variant.isStock = params.isStock;" +
+                                        " }" +
+                                        "}"
+                        )
+                        .params("sku", JsonData.of(sku))
+                        .params("isStock", JsonData.of(isStock))
+                )
+        );
+    }
 }

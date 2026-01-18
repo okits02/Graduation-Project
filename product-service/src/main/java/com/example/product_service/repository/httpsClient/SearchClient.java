@@ -7,6 +7,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @FeignClient(name = "search-service")
 public interface SearchClient {
@@ -14,4 +15,10 @@ public interface SearchClient {
     ResponseEntity<ApiResponse<Long>> removeCate(
             @RequestBody RemoveCategoryRequest request
             );
+
+    @PutMapping(value = "/search-service/search/internal/stock", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse<?> changStock(
+            @RequestParam(value = "sku") String sku,
+            @RequestParam(value = "isStock") Boolean isStock
+    );
 }

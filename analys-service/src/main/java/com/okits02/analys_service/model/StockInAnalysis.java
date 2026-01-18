@@ -26,6 +26,4 @@ public class StockInAnalysis {
     BigDecimal totalAmount;
     @Field(type = FieldType.Date, format = DateFormat.date_time,pattern = "yyyy-MM-dd'T'HH:mm:ss")
     LocalDateTime createdAt;
-    @Field(type = FieldType.Keyword)
-    List<StockInItem> items;
 }

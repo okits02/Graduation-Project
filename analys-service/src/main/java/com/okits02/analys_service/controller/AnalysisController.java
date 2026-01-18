@@ -1,6 +1,7 @@
 package com.okits02.analys_service.controller;
 
 import com.okits02.analys_service.viewmodel.OrderStatusChartPoint;
+import com.okits02.analys_service.viewmodel.StockProductTable;
 import com.okits02.analys_service.viewmodel.dto.request.ChartQueryRequest;
 import com.okits02.analys_service.service.AnalysisService;
 import com.okits02.analys_service.viewmodel.RevenueStockChartPoint;
@@ -22,17 +23,34 @@ public class AnalysisController {
             ){
         return ApiResponse.<List<RevenueStockChartPoint>>builder()
                 .code(200)
-                .result(analysisService.revenueStockChartPoints(request))
+                .result(analysisService.statisticDashboard(request))
                 .build();
     }
 
-    @PostMapping("/order")
+    @PostMapping("/statitis")
     public ApiResponse<List<OrderStatusChartPoint>> getOrderStatusChartPoint(
             @RequestBody ChartQueryRequest request
     ){
         return ApiResponse.<List<OrderStatusChartPoint>>builder()
                 .code(200)
-                .result(analysisService.orderStatusChart(request))
+                .result(analysisService.getOrderStatusCharPoint(request))
                 .build();
     }
+
+    @GetMapping("/bestSelling")
+    public ApiResponse<List<StockProductTable>> get10BestSelling(){
+        return ApiResponse.<List<StockProductTable>>builder()
+                .code(200)
+                .result(analysisService.getTop10BestSellingProducts())
+                .build();
+    }
+
+    @GetMapping("/slowSelling")
+    public ApiResponse<List<StockProductTable>> get10SlowSelling(){
+        return ApiResponse.<List<StockProductTable>>builder()
+                .code(200)
+                .result(analysisService.getTop10SlowSellingProducts())
+                .build();
+    }
+
 }

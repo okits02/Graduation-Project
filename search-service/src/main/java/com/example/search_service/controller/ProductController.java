@@ -3,11 +3,8 @@ package com.example.search_service.controller;
 import com.example.search_service.service.ProductService;
 import com.example.search_service.viewmodel.*;
 import com.example.search_service.viewmodel.dto.AutoCompletedResponse;
-import com.example.search_service.viewmodel.dto.request.AdminSearchRequest;
-import com.example.search_service.viewmodel.dto.request.ProductGetByListIdRequest;
+import com.example.search_service.viewmodel.dto.request.*;
 import com.okits02.common_lib.dto.ApiResponse;
-import com.example.search_service.viewmodel.dto.request.RemoveCategoryIdsRequest;
-import com.example.search_service.viewmodel.dto.request.SearchRequest;
 import com.okits02.common_lib.dto.PageResponse;
 import lombok.RequiredArgsConstructor;
 
@@ -15,6 +12,7 @@ import com.example.search_service.service.SearchService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -42,13 +40,13 @@ public class ProductController {
     public ApiResponse<ProductGetListVM> getProductByBanner(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size,
-            @RequestParam(value = "ownerId") String ownerId,
-            @RequestParam(value = "ownerType") String ownerType
-    ){
+            @RequestBody BannerSearchRequest request
+            ){
         return ApiResponse.<ProductGetListVM>builder()
                 .code(200)
                 .message("get product by banner successfully")
-                .result(searchService.getProductForBanner(page - 1, size, ownerId, ownerType))
+                .result(searchService.getProductForBanner(page - 1, size, request.getOwnerId(),
+                        request.getOwnerType(), request.getMaxPrice(), request.getMinPrice(), request.getSortType()))
                 .build();
     }
 
@@ -65,15 +63,16 @@ public class ProductController {
                 .build();
     }
 
-    @GetMapping("/flashSale")
+    @PostMapping("/flashSale")
     public ApiResponse<ProductGetListVM> getProductFlashSale(
             @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "10") Integer size
+            @RequestParam(defaultValue = "10") Integer size,
+            @RequestBody FlashSaleRangeRequest request
     ){
         return ApiResponse.<ProductGetListVM>builder()
                 .code(200)
                 .message("get product by banner successfully")
-                .result(searchService.getProductFlashSale(page - 1, size))
+                .result(searchService.getProductFlashSale(page - 1, size, request))
                 .build();
     }
 
@@ -182,6 +181,17 @@ public class ProductController {
             @RequestParam(value = "transaction") String transaction
     ){
         productService.changeSold(sku, transaction, quantity);
+        return ApiResponse.builder()
+                .code(200)
+                .build();
+    }
+
+    @PutMapping("/internal/stock")
+    public ApiResponse<?> changStock(
+            @RequestParam(value = "sku") String sku,
+            @RequestParam(value = "isStock") Boolean isStock
+    ) throws IOException {
+        productService.changeStockRequest(sku, isStock);
         return ApiResponse.builder()
                 .code(200)
                 .build();

@@ -34,10 +34,10 @@ public class InventoryTransactionAnalysis {
     @Column(nullable = false)
     Integer quantity;
 
-    @Field(type = FieldType.Integer)
+    @Field(type = FieldType.Keyword)
     String referenceId;
 
-    @Field(type = FieldType.Integer)
+    @Field(type = FieldType.Keyword)
     @Enumerated(EnumType.STRING)
     ReferenceType referenceType;
 

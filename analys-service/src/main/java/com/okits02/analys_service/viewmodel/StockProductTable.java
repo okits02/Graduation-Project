@@ -4,13 +4,16 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
-import org.springframework.data.elasticsearch.annotations.Field;
+
+import java.math.BigDecimal;
 
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class OrderStatusChartPoint {
-    String label;
-    long completed;
-    long cancelled;
+public class StockProductTable {
+    String sku;
+    String variantName;
+    String thumbnail;
+    long totalSold;
+    BigDecimal totalRevenue;
 }

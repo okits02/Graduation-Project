@@ -24,7 +24,7 @@ public class InventoryTransactionService {
                 .variantName(request.getVariantName())
                 .thumbnail(request.getThumbnail())
                 .referenceType(request.getReferenceType())
-                .createdAt(request.getCreatedAt())
+                .createdAt(request.getCreatedAt().withNano(0))
                 .build();
 
         elasticsearchClient.index(i -> i

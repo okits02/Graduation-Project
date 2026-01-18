@@ -31,5 +31,4 @@ public class OrderAnalysis {
     private BigDecimal totalPrice;
     @Field(type = FieldType.Date, format = DateFormat.date_time,pattern = "yyyy-MM-dd'T'HH:mm:ss")
     LocalDateTime orderDate;
-    private List<OrderItem> items;
 }

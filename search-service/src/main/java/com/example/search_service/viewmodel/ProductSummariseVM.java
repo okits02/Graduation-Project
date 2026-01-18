@@ -26,6 +26,7 @@ public class ProductSummariseVM {
     String listPrice;
     Double avgRating;
     Double discountPercent;
+    Boolean isStock;
     Long sold;
     List<Specification> specifications;
     @JsonFormat(pattern = "yyyy-MM-dd")
@@ -35,6 +36,7 @@ public class ProductSummariseVM {
 
     public static ProductSummariseVM fromEntity(Products products){
         ProductVariants bestVariant = getBestSellingVariants(products);
+        Boolean inStock = isProductInStock(products);
         if (bestVariant == null) {
             return ProductSummariseVM.builder()
                     .id(products.getId())
@@ -55,6 +57,7 @@ public class ProductSummariseVM {
                 .listPrice(bestVariant.getSellPrice() != null
                         ? bestVariant.getSellPrice().toString()
                         : null)
+                .isStock(inStock)
                 .specifications(products.getSpecifications())
                 .avgRating(products.getAvgRating())
                 .createAt(products.getCreateAt())
@@ -73,5 +76,16 @@ public class ProductSummariseVM {
                 .max(Comparator.comparing(ProductVariants::getSold));
 
         return bestSoldVariant.orElse(products.getProductVariants().get(0));
+    }
+
+    private static Boolean isProductInStock(Products products) {
+        if (products.getProductVariants() == null || products.getProductVariants().isEmpty()) {
+            return false;
+        }
+
+        // true nếu CÒN ÍT NHẤT 1 variant có hàng
+        return products.getProductVariants()
+                .stream()
+                .anyMatch(v -> Boolean.TRUE.equals(v.getInStock()));
     }
 }
