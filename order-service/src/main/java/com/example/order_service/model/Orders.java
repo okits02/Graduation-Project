@@ -56,6 +56,10 @@ public class Orders extends AbstractMappedEntity{
     private String addressId;
     @Column(name = "total_price")
     private BigDecimal totalPrice;
+    @Column(name = "discount")
+    private BigDecimal discount;
+    @Column(name = "before_price")
+    private BigDecimal beforePrice;
     @Column(name = "canceled_at")
     private LocalDateTime cancelledAt;
     @Column(name = "completed_at")

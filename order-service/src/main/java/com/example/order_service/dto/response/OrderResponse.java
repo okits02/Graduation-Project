@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
+import jakarta.persistence.Column;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -35,5 +36,7 @@ public class OrderResponse implements Serializable {
     String deliveryId;
     String voucherCode;
     BigDecimal totalPrice;
+    private BigDecimal discount;
+    private BigDecimal beforePrice;
     List<OrderItemResponse> items;
 }

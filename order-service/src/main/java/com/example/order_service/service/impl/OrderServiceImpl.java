@@ -23,6 +23,7 @@
     import io.micrometer.common.util.StringUtils;
     import lombok.RequiredArgsConstructor;
     import lombok.extern.slf4j.Slf4j;
+    import org.springframework.data.domain.Page;
     import org.springframework.data.domain.PageRequest;
     import org.springframework.data.domain.Pageable;
     import org.springframework.kafka.core.KafkaTemplate;
@@ -124,7 +125,8 @@
             BigDecimal finalTotal =
                     totalPrice.subtract(discountAmount)
                             .max(BigDecimal.ZERO);
-
+            orders.setDiscount(discountAmount);
+            orders.setBeforePrice(totalPrice);
             orders.setTotalPrice(finalTotal);
             orders.setOrderStatus(Status.PENDING);
             decreaseInventory(orders);
@@ -239,7 +241,9 @@
             Pageable pageable = PageRequest.of(page, size);
             var pageData = orderRepository.findAllByUserIdAndStatus(userId, status, pageable);
             List<Orders> orders = pageData.getContent();
-
+            if(status.equals(Status.ALL)){
+                return getByUserId(page, size);
+            }
             if(orders == null){
                 return PageResponse.<OrderSummaryResponse>builder()
                         .currentPage(page)
@@ -434,7 +438,9 @@
             }
             BigDecimal finalTotal = totalPrice.subtract(discountAmount).max(BigDecimal.ZERO);
 
-
+            order.setDiscount(discountAmount);
+            order.setBeforePrice(totalPrice);
+            order.setTotalPrice(finalTotal);
             order.setTotalPrice(finalTotal);
             if(!order.getAddressId().equals(request.getAddressId())){
                 order.setAddressId(request.getAddressId());
@@ -562,10 +568,18 @@
         @Override
         public PageResponse<OrderSummaryResponse> getAllByStatus(int page, int size, Status status) {
             Pageable pageable = PageRequest.of(page, size);
-            var pageData = orderRepository.findAllByStatus(status, pageable);
+
+            Page<Orders> pageData;
+
+            if (status == Status.ALL) {
+                pageData = orderRepository.findAll(pageable);
+            } else {
+                pageData = orderRepository.findAllByStatus(status, pageable);
+            }
+
             List<Orders> orders = pageData.getContent();
 
-            if(orders == null){
+            if (orders == null || orders.isEmpty()) {
                 return PageResponse.<OrderSummaryResponse>builder()
                         .currentPage(page)
                         .totalElements(0L)
@@ -574,21 +588,22 @@
                         .build();
             }
 
-            List<String> userIds = orders.stream().map(Orders::getUserId).toList();
+            List<String> userIds = orders.stream()
+                    .map(Orders::getUserId)
+                    .toList();
+
             ServletRequestAttributes servletRequestAttributes =
                     (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
             var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
+
             var profileResponse = profileClient.getProfileForOrder(authHeader, userIds);
             if (profileResponse == null || profileResponse.getCode() != 200) {
-                throw new RuntimeException("Cannot fetch product info");
+                throw new RuntimeException("Cannot fetch profile info");
             }
-            Map<String, ProfileResponse> profileMap = profileResponse
-                    .getResult()
+
+            Map<String, ProfileResponse> profileMap = profileResponse.getResult()
                     .stream()
-                    .collect(Collectors.toMap(ProfileResponse::getUserId,
-                                    Function.identity()
-                            )
-                    );
+                    .collect(Collectors.toMap(ProfileResponse::getUserId, Function.identity()));
 
             List<String> skus = orders.stream()
                     .flatMap(o -> o.getItems().stream())
@@ -600,17 +615,13 @@
                 throw new RuntimeException("Cannot fetch product info");
             }
 
-            Map<String, ProductSkuVM> productMap = productResponse.getResult().stream()
-                    .collect(Collectors.toMap(
-                            ProductSkuVM::getSku,
-                            Function.identity()
-                    ));
+            Map<String, ProductSkuVM> productMap = productResponse.getResult()
+                    .stream()
+                    .collect(Collectors.toMap(ProductSkuVM::getSku, Function.identity()));
 
             List<OrderSummaryResponse> orderSummaries = orders.stream()
                     .map(order -> {
-
                         ProfileResponse profile = profileMap.get(order.getUserId());
-
                         return new OrderSummaryResponse(
                                 order.getOrderId(),
                                 order.getUserId(),
@@ -633,6 +644,7 @@
                         );
                     })
                     .toList();
+
             return PageResponse.<OrderSummaryResponse>builder()
                     .currentPage(page)
                     .totalElements(pageData.getTotalElements())

@@ -171,7 +171,7 @@ public class InventoryServiceImpl implements InventoryService {
         InventoryTransaction tx = buildTransaction(
                 inventory,
                 sku,
-                TransactionType.RETURN,
+                TransactionType.IN,
                 quantity,
                 orderId,
                 ReferenceType.ORDER,

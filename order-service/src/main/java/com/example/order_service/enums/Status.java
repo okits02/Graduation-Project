@@ -7,5 +7,6 @@ public enum Status {
     CANCELLED,
     RETURNED,
     COMPLETED,
-    REFUNDED
+    REFUNDED,
+    ALL
 }

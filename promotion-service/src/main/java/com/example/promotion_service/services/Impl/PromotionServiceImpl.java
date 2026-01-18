@@ -65,9 +65,9 @@ public class PromotionServiceImpl implements PromotionService {
         {
             throw new AppException(PromotionErrorCode.PROMOTION_EXISTS);
         }
-        if (request.getStartDate().isBefore(LocalDateTime.now())) {
+        /*if (request.getStartDate().isBefore(LocalDateTime.now())) {
             throw new AppException(PROMOTION_CAN_NOT_CREATE);
-        }
+        }*/
         PromotionCampaign promotionCampaign = promotionCampaignRepository.findById(request.getCampaignId())
                 .orElseThrow(() -> new AppException(CAMPAIGN_NOT_EXISTS));
         Promotion promotion = promotionMapper.toPromotion(request);
@@ -255,9 +255,9 @@ public class PromotionServiceImpl implements PromotionService {
     public List<PromotionResponse> createPromotionFlashSale(FlashSaleCreationRequest request) {
         PromotionCampaign promotionCampaign = promotionCampaignRepository.findById(request.getCampaignId())
                 .orElseThrow(() -> new AppException(CAMPAIGN_NOT_EXISTS));
-        if (request.getStartDate().isBefore(LocalDateTime.now())) {
-            throw new AppException(PROMOTION_CAN_NOT_CREATE);
-        }
+       // if (request.getStartDate().isBefore(LocalDateTime.now())) {
+          //  throw new AppException(PROMOTION_CAN_NOT_CREATE);
+        //}
         Promotion promotion = promotionMapper.toPromotionFlashSale(request);
         promotion.setActive(false);
         promotion.setCampaign(promotionCampaign);

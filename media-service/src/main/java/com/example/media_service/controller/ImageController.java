@@ -107,7 +107,7 @@ public class ImageController {
     }
 
 
-    @PostMapping("/thumbnail")
+    @PostMapping(value = "/thumbnail",  consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<MediaResponse>> uploadImage(
             @ModelAttribute ImageUploadRequest request
