@@ -393,13 +393,21 @@
             SearchPage<Products> productsSearchPage = SearchHitSupport.searchPageFor(
                     searchHits, nativeQueryBuilder.getPageable());
             List<Products> products = searchHits.stream().map(SearchHit::getContent).toList();
+
             Set<String> categoryIds = products.stream()
                     .flatMap(p -> p.getCategoriesId().stream())
                     .collect(Collectors.toSet());
             Map<String, CategoryGetVM> categoryMap =
                     categoryService.getCategoryByIds(categoryIds);
-            List<ProductGetVM> productGetVMList = searchHits.stream().map(i -> ProductGetVM
-                    .fromEntity(i.getContent(), categoryMap)).toList();
+            List<ProductGetVM> productGetVMList = searchHits.stream().map(i -> {
+                Products product = i.getContent();
+                ProductGetVM vm = ProductGetVM.fromEntity(product, categoryMap);
+
+                vm.setVariants(
+                        product.getProductVariants().stream().map(productVariantMapper::toResponse).toList()
+                );
+                return vm;
+            }).toList();
             return ProductGetListVM.<ProductGetVM>builder()
                     .productGetVMList(productGetVMList)
                     .currentPages(productsSearchPage.getNumber())

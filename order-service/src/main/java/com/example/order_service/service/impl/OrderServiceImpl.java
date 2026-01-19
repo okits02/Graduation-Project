@@ -53,6 +53,7 @@
         private final InventoryClient inventoryClient;
         private final PaymentClient paymentClient;
         private final ProfileClient profileClient;
+        private final CartClient cartClient;
         private final KafkaTemplate<String, Object> kafkaTemplate;
 
 
@@ -132,7 +133,7 @@
             decreaseInventory(orders);
             Orders savedOrder = orderRepository.save(orders);
             applyVoucherToOrder(request.getVoucher(), savedOrder.getOrderId(), authHeader);
-
+            cartClient.returnItem(skus, orders.getUserId());
             var response = orderMapper.toOrderResponse(savedOrder);
             var paymentResponse = paymentClient.createPayment(authHeader, orders.getOrderId(),
                     orders.getTotalPrice(), request.getPaymentMethod());

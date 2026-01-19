@@ -265,13 +265,14 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public void removeItemByUserId(String userId, String sku) {
+    public void removeItemByUserId(String userId, List<String> skus) {
         Cart cart = cartRepository.findByUserId(userId);
         if (cart == null) {
             throw new AppException(CartErrorCode.USER_DOES_NOT_HAVE_CART);
         }
+
         boolean removed = cart.getItems()
-                .removeIf(item -> sku.equals(item.getSku()));
+                .removeIf(item -> skus.contains(item.getSku()));
 
         if (!removed) {
             throw new AppException(CartErrorCode.CART_ITEM_NOT_EXISTS);

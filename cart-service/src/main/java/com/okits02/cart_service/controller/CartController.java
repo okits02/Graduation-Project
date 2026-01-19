@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @RestController
@@ -69,10 +70,10 @@ public class CartController {
 
     @PutMapping("/internal/remove")
     public ApiResponse<?> returnItem(
-            @RequestParam String sku,
+            @RequestParam List<String> skus,
             @RequestParam String userId
     ){
-        cartService.removeItemByUserId(userId, sku);
+        cartService.removeItemByUserId(userId, skus);
         return ApiResponse.builder()
                 .code(200)
                 .build();

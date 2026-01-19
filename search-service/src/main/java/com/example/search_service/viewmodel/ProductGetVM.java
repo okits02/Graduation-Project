@@ -25,7 +25,6 @@ public class ProductGetVM {
     double avgRating;
     Integer sold;
     String videoUrl;
-    String thumbnailUrl;
     Integer warranty;
     List<String> imageList;
     List<VariantResponse> variants;
