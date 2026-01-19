@@ -607,7 +607,7 @@ public class ProductService {
 
     public void changeStockRequest(String sku, Boolean isStock) throws IOException {
         elasticsearchClient.updateByQuery(u -> u
-                .index("products")
+                .index("product")
                 .query(q -> q
                         .nested(n -> n
                                 .path("productVariants")

@@ -93,10 +93,13 @@ public class InventoryController {
     }
 
     @GetMapping("/internal/quantity")
-    public List<Inventory> getListQuantity(
+    public ApiResponse<List<Inventory>> getListQuantity(
             @RequestParam(value = "skus") List<String> skus
     ){
-        return inventoryService.getQuantityByListSkus(skus);
+        return ApiResponse.<List<Inventory>>builder()
+                .code(200)
+                .result(inventoryService.getQuantityByListSkus(skus))
+                .build();
     }
 
 }

@@ -301,7 +301,7 @@
             Products product = hits.getSearchHit(0).getContent();
             List<String> skus = product.getProductVariants().stream().map(ProductVariants::getSku).toList();
             var invenResponse = inventoryClient.getListQuantity(skus);
-            Map<String, InventoryResponse> inventoryResponseMap = invenResponse.stream()
+            Map<String, InventoryResponse> inventoryResponseMap = invenResponse.getResult().stream()
                     .collect(Collectors.toMap(InventoryResponse::getSku, Function.identity()));
 
             List<VariantResponse> variantResponses = product.getProductVariants().stream()
@@ -347,7 +347,7 @@
             Products product = hits.getSearchHit(0).getContent();
             List<String> skus = product.getProductVariants().stream().map(ProductVariants::getSku).toList();
             var invenResponse = inventoryClient.getListQuantity(skus);
-            Map<String, InventoryResponse> inventoryResponseMap = invenResponse.stream()
+            Map<String, InventoryResponse> inventoryResponseMap = invenResponse.getResult().stream()
                     .collect(Collectors.toMap(InventoryResponse::getSku, Function.identity()));
 
             List<VariantResponse> variantResponses = product.getProductVariants().stream()

@@ -740,6 +740,8 @@
                     .orderStatus(orders.getOrderStatus())
                     .orderDate(orders.getOrderDate())
                     .totalPrice(totalPrice)
+                    .beforePrice(orders.getBeforePrice())
+                    .discount(orders.getDiscount())
                     .voucherCode(voucher)
                     .orderFee(orders.getOrderFee())
                     .orderDesc(orders.getOrderDesc())

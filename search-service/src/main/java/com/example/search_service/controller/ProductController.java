@@ -36,7 +36,7 @@ public class ProductController {
                         request.getSortType()));
     }
 
-    @GetMapping("/banner")
+    @PostMapping("/banner")
     public ApiResponse<ProductGetListVM> getProductByBanner(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size,
