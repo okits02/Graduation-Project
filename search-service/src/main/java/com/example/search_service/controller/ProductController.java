@@ -107,6 +107,19 @@ public class ProductController {
                 .build();
     }
 
+    @PostMapping("/product/suggest")
+    public ApiResponse<ProductGetListVM> getProductSuggest(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestBody ProductSuggestRequest request
+    ){
+        return ApiResponse.<ProductGetListVM>builder()
+                .code(200)
+                .message("Get product suggest successfully!")
+                .result(searchService.getListProductSuggest(request.getProductIds(),
+                        request.getRecomentedType(), page, size))
+                .build();
+    }
 
     @PostMapping("/admin")
     public ApiResponse<ProductGetListVM> searchAdmin(

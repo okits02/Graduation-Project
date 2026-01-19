@@ -257,6 +257,34 @@
                     .build();
         }
 
+        public ProductGetListVM getListProductSuggest(List<String> productIds, String recommendType, int page, int size){
+            NativeQueryBuilder nativeQueryBuilder = NativeQuery.builder()
+                    .withQuery(q -> q.terms(t -> t
+                            .field("id")
+                            .terms(tf -> tf
+                                    .value(productIds.stream()
+                                            .map(FieldValue::of)
+                                            .toList()
+                                    )
+                            )
+                    )
+                    );
+            nativeQueryBuilder.withPageable(PageRequest.of(page, size));
+            SearchHits<Products> hits = elasticsearchOperations.search(nativeQueryBuilder.build(), Products.class);
+            SearchPage<Products> productsSearchPage = SearchHitSupport.searchPageFor(
+                    hits, nativeQueryBuilder.getPageable());
+            List<ProductSuggestVM> productSuggestVMS = productsSearchPage.stream().map(i
+                    -> ProductSuggestVM.fromEntity(i.getContent(), recommendType)).toList();
+
+            return ProductGetListVM.<ProductSuggestVM>builder()
+                    .productGetVMList(productSuggestVMS)
+                    .currentPages(productsSearchPage.getNumber())
+                    .totalPage(productsSearchPage.getTotalPages())
+                    .totalElements(productsSearchPage.getTotalElements())
+                    .pageSize(productsSearchPage.getSize())
+                    .build();
+        }
+
         public ProductGetVM getProductById(String id){
             NativeQueryBuilder query = NativeQuery.builder()
                     .withQuery(q -> q
