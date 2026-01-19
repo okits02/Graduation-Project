@@ -70,12 +70,18 @@ public class ProductSummariseVM {
             return null;
         }
 
-        Optional<ProductVariants> bestSoldVariant = products.getProductVariants()
-                .stream()
-                .filter(v -> v.getSold() != null)
-                .max(Comparator.comparing(ProductVariants::getSold));
-
-        return bestSoldVariant.orElse(products.getProductVariants().get(0));
+        return products.getProductVariants().stream()
+                .filter(v ->
+                        v.getSold() != null &&
+                                v.getThumbnail() != null &&
+                                !v.getThumbnail().isBlank()
+                )
+                .max(Comparator.comparing(ProductVariants::getSold))
+                .orElseGet(() -> products.getProductVariants().stream()
+                        .filter(v -> v.getThumbnail() != null && !v.getThumbnail().isBlank())
+                        .findFirst()
+                        .orElse(null)
+                );
     }
 
     private static Boolean isProductInStock(Products products) {
