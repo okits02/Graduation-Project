@@ -132,7 +132,6 @@
             decreaseInventory(orders);
             Orders savedOrder = orderRepository.save(orders);
             applyVoucherToOrder(request.getVoucher(), savedOrder.getOrderId(), authHeader);
-            cartClient.returnItem(skus, orders.getUserId());
             var response = orderMapper.toOrderResponse(savedOrder);
             var paymentResponse = paymentClient.createPayment(authHeader, orders.getOrderId(),
                     orders.getTotalPrice(), request.getPaymentMethod());
@@ -553,6 +552,7 @@
                 orders.setOrderStatus(status);
                 orders.setPaymentId(paymentId);
                 sendNotificationEvent(orders);
+                cartClient.returnItem(orders.getItems().stream().map(OrderItem::getSku).toList(), orders.getUserId());
                 orderRepository.save(orders);
             }else if(Status.PENDING.equals(status)){
                 Orders orders = orderRepository.findById(orderId).orElseThrow(()
