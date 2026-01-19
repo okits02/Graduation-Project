@@ -45,6 +45,7 @@ public class ProductVariantServiceImpl implements ProductVariantsService {
                     ProductVariants productVariants = productVariantsMapper.toProductVariants(m);
                     productVariants.setProductId(productId);
                     productVariants.setSku(SkuGenerator.generateSku());
+                    productVariants.setInStock(false);
                     ProductVariants save = productVariantsRepository.save(productVariants);
                     return save.getSku();
                 })
@@ -144,5 +145,6 @@ public class ProductVariantServiceImpl implements ProductVariantsService {
             throw new AppException(ProductErrorCode.PRODUCT_VARIANTS_NOT_FOUND);
         }
         variant.setInStock(inStock);
+        productVariantsRepository.save(variant);
     }
 }

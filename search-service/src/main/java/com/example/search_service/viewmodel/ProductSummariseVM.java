@@ -88,8 +88,6 @@ public class ProductSummariseVM {
         if (products.getProductVariants() == null || products.getProductVariants().isEmpty()) {
             return false;
         }
-
-        // true nếu CÒN ÍT NHẤT 1 variant có hàng
         return products.getProductVariants()
                 .stream()
                 .anyMatch(v -> Boolean.TRUE.equals(v.getInStock()));
