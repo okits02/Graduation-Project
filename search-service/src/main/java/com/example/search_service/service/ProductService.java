@@ -24,15 +24,11 @@ import com.example.search_service.viewmodel.dto.request.ApplyThumbnailRequest;
 import lombok.RequiredArgsConstructor;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.validator.constraints.LuhnCheck;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
-import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
 import org.springframework.data.elasticsearch.core.*;
 import org.springframework.stereotype.Service;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -116,7 +112,25 @@ public class ProductService {
                 product.getId(), e);
             }
           }
+            if (product.getProductVariants() != null && request.getProductVariants() != null) {
 
+                Map<String, String> oldThumbnailBySku =
+                        product.getProductVariants().stream()
+                                .filter(v -> v.getSku() != null)
+                                .collect(Collectors.toMap(
+                                        ProductVariants::getSku,
+                                        ProductVariants::getThumbnail,
+                                        (a, b) -> a
+                                ));
+
+                for (ProductVariants reqVar : request.getProductVariants()) {
+                    String oldThumbnail = oldThumbnailBySku.get(reqVar.getSku());
+
+                    if (oldThumbnail != null) {
+                        reqVar.setThumbnail(oldThumbnail);
+                    }
+                }
+            }
           productsMapper.updateProduct(product, request);
             List<String> newCategoryIds = request.getCategories() == null
                     ? List.of()

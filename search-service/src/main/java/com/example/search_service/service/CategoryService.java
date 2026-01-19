@@ -242,7 +242,6 @@ public class CategoryService {
     }
 
     public CategoryDetailsVM getCategoryTreeById(String categoryId) {
-
         Category root = findById(categoryId);
         return buildTreeByChildrenId(root, new HashSet<>());
     }

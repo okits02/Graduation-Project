@@ -66,13 +66,12 @@ public class ProductController {
     @PostMapping("/flashSale")
     public ApiResponse<ProductGetListVM> getProductFlashSale(
             @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "10") Integer size,
-            @RequestBody FlashSaleRangeRequest request
+            @RequestParam(defaultValue = "10") Integer size
     ){
         return ApiResponse.<ProductGetListVM>builder()
                 .code(200)
                 .message("get product by banner successfully")
-                .result(searchService.getProductFlashSale(page - 1, size, request))
+                .result(searchService.getProductFlashSale(page - 1, size))
                 .build();
     }
 

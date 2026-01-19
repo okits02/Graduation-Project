@@ -139,7 +139,7 @@
                     .build();
         }
 
-        public ProductGetListVM getProductFlashSale(int page, int size, FlashSaleRangeRequest request){
+        public ProductGetListVM getProductFlashSale(int page, int size){
             NativeQueryBuilder query = NativeQuery.builder()
                     .withQuery(q -> q
                             .term(t -> t
@@ -147,35 +147,6 @@
                                     .value("FLASH_SALE")
                             )
                     ).withPageable(PageRequest.of(page, size));
-            query.withFilter(f -> f.bool(b -> {
-                extractRange(request.getMinPrice(), request.getMaxPrice(), b);
-                return b;
-            }));
-            switch (request.getSortType()){
-                case DEFAULT -> {
-                    break;
-                }
-                case PRICE_ASC -> {
-                    query.withSort(s -> s
-                            .field(f -> f
-                                    .field("productVariants.sellPrice")
-                                    .order(SortOrder.Asc)
-                                    .nested(n -> n.path("productVariants"))
-                                    .mode(SortMode.Min)
-                            )
-                    );
-                }
-                case PRICE_DESC -> {
-                    query.withSort(s -> s
-                            .field(f -> f
-                                    .field("productVariants.sellPrice")
-                                    .order(SortOrder.Desc)
-                                    .nested(n -> n.path("productVariants"))
-                                    .mode(SortMode.Max)
-                            )
-                    );
-                }
-            }
             SearchHits<Products> hits = elasticsearchOperations.search(query.build(), Products.class);
             SearchPage<Products> productsSearchPage = SearchHitSupport.searchPageFor(
                     hits, query.getPageable());
@@ -312,7 +283,6 @@
                         variantResponse.setQuantity(
                                 inventory != null ? inventory.getQuantity() : 0
                         );
-
                         return variantResponse;
                     })
                     .toList();

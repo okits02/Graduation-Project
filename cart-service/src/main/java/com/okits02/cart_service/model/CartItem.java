@@ -29,12 +29,6 @@ public class CartItem {
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
-    @Column(name = "list_price", nullable = false)
-    private BigDecimal listPrice;
-
-    @Column(name = "sell_price", nullable = false)
-    private BigDecimal sellPrice;
-
     @Column(name = "added_at", nullable = false)
     private LocalDateTime addedAt;
 

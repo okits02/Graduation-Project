@@ -48,7 +48,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public List<CategoryResponse> finAll() {
         var categoryList = categoryRepository.findAll();
-        return categoryList.stream().map(categoryMapper::toCategoryResponse).toList();
+        return categoryList.stream().map(categoryMappingHelper::map).toList();
     }
 
     @Override
@@ -121,7 +121,7 @@ public class CategoryServiceImpl implements CategoryService {
         Category saved = categoryRepository.save(category);
 
         sendKafKaEvent(saved, "CATEGORY_UPDATED");
-        return categoryMapper.toCategoryResponse(saved);
+        return categoryMappingHelper.map(saved);
     }
 
     @Override
