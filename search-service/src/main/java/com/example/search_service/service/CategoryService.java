@@ -307,55 +307,67 @@ public class CategoryService {
             Category category,
             Set<String> visited
     ) {
-
         if (!visited.add(category.getId())) {
             return null;
         }
 
-        List<CategoryDetailsVM> childrenVM = new ArrayList<>();
-
-        if (category.getChildrenId() != null && !category.getChildrenId().isEmpty()) {
-            NativeQuery childrenQuery = NativeQuery.builder()
-                    .withQuery(q -> q
-                            .terms(t -> t
-                                    .field("_id")
-                                    .terms(v -> v.value(
-                                            category.getChildrenId()
-                                                    .stream()
-                                                    .map(FieldValue::of)
-                                                    .toList()
-                                    ))
-                            )
-                    )
-                    .withSort(s -> s
-                            .field(f -> f
-                                    .field("name.keyword")
-                                    .order(SortOrder.Asc)
-                            )
-                    )
-                    .withMaxResults(100)
+        if (category.getChildrenId() == null || category.getChildrenId().isEmpty()) {
+            return CategoryDetailsVM.builder()
+                    .id(category.getId())
+                    .name(category.getName())
+                    .description(category.getDescription())
+                    .imageUrl(category.getImageUrl())
+                    .childrenId(null)
                     .build();
-
-            SearchHits<Category> childrenHits =
-                    elasticsearchOperations.search(childrenQuery, Category.class);
-
-            for (SearchHit<Category> hit : childrenHits) {
-                CategoryDetailsVM child =
-                        buildTreeByChildrenId(hit.getContent(), visited);
-                if (child != null) {
-                    childrenVM.add(child);
-                }
-            }
         }
+
+        List<String> childrenIds = category.getChildrenId().stream()
+                .filter(Objects::nonNull)
+                .filter(id -> !id.isBlank())
+                .toList();
+
+        if (childrenIds.isEmpty()) {
+            return CategoryDetailsVM.builder()
+                    .id(category.getId())
+                    .name(category.getName())
+                    .description(category.getDescription())
+                    .imageUrl(category.getImageUrl())
+                    .childrenId(null)
+                    .build();
+        }
+
+        NativeQuery query = NativeQuery.builder()
+                .withQuery(q -> q
+                        .terms(t -> t
+                                .field("_id")
+                                .terms(v -> v.value(
+                                        childrenIds.stream()
+                                                .map(FieldValue::of)
+                                                .toList()
+                                ))
+                        )
+                )
+                .withMaxResults(100)
+                .build();
+
+        SearchHits<Category> hits =
+                elasticsearchOperations.search(query, Category.class);
+
+        List<CategoryDetailsVM> children = hits.getSearchHits().stream()
+                .map(hit -> buildTreeByChildrenId(hit.getContent(), visited))
+                .filter(Objects::nonNull)
+                .sorted(Comparator.comparing(CategoryDetailsVM::getName))
+                .toList();
 
         return CategoryDetailsVM.builder()
                 .id(category.getId())
                 .name(category.getName())
                 .description(category.getDescription())
                 .imageUrl(category.getImageUrl())
-                .childrenId(childrenVM)
+                .childrenId(children.isEmpty() ? null : children)
                 .build();
     }
+
 
     public CategoryGetListVM getByParentCate(String categoryId){
         Category category = categoryRepository.findById(categoryId).orElseThrow(()
