@@ -631,12 +631,12 @@ public class ProductService {
                         .source(
                                 "for (variant in ctx._source.productVariants) {" +
                                         " if (variant.sku == params.sku) {" +
-                                        "   variant.isStock = params.isStock;" +
+                                        "   variant.inStock = params.inStock;" +
                                         " }" +
                                         "}"
                         )
                         .params("sku", JsonData.of(sku))
-                        .params("isStock", JsonData.of(isStock))
+                        .params("inStock", JsonData.of(isStock))
                 )
         );
     }
