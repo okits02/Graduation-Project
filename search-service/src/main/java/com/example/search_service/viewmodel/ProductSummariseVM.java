@@ -70,18 +70,30 @@ public class ProductSummariseVM {
             return null;
         }
 
-        return products.getProductVariants().stream()
+        // Try to find variant with both sold and thumbnail
+        Optional<ProductVariants> withSoldAndThumbnail = products.getProductVariants().stream()
                 .filter(v ->
                         v.getSold() != null &&
                                 v.getThumbnail() != null &&
                                 !v.getThumbnail().isBlank()
                 )
-                .max(Comparator.comparing(ProductVariants::getSold))
-                .orElseGet(() -> products.getProductVariants().stream()
-                        .filter(v -> v.getThumbnail() != null && !v.getThumbnail().isBlank())
-                        .findFirst()
-                        .orElse(null)
-                );
+                .max(Comparator.comparing(ProductVariants::getSold));
+
+        if (withSoldAndThumbnail.isPresent()) {
+            return withSoldAndThumbnail.get();
+        }
+
+        // Try to find variant with thumbnail only
+        Optional<ProductVariants> withThumbnail = products.getProductVariants().stream()
+                .filter(v -> v.getThumbnail() != null && !v.getThumbnail().isBlank())
+                .findFirst();
+
+        if (withThumbnail.isPresent()) {
+            return withThumbnail.get();
+        }
+
+        // Return first variant if no thumbnail available
+        return products.getProductVariants().stream().findFirst().orElse(null);
     }
 
     private static Boolean isProductInStock(Products products) {

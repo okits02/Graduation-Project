@@ -70,8 +70,8 @@ public class CartController {
 
     @PutMapping("/internal/remove")
     public ApiResponse<?> returnItem(
-            @RequestParam List<String> skus,
-            @RequestParam String userId
+            @RequestParam(name = "skus") List<String> skus,
+            @RequestParam(name = "userId") String userId
     ){
         cartService.removeItemByUserId(userId, skus);
         return ApiResponse.builder()

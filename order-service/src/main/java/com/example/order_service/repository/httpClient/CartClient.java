@@ -13,7 +13,7 @@ public interface CartClient {
 
     @PutMapping(value = "/cart-service/cart/internal/remove", produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse<?> returnItem(
-            @RequestParam List<String> skus,
-            @RequestParam String userId
+            @RequestParam(value = "skus") List<String> skus,
+            @RequestParam(value = "userId") String userId
     );
 }

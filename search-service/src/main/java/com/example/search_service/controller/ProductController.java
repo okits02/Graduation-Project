@@ -63,7 +63,7 @@ public class ProductController {
                 .build();
     }
 
-    @PostMapping("/flashSale")
+    @GetMapping("/flashSale")
     public ApiResponse<ProductGetListVM> getProductFlashSale(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size
