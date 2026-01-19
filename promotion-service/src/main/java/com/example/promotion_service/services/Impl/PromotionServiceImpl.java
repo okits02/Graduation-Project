@@ -6,6 +6,7 @@ import com.example.promotion_service.dto.response.PromotionEndingSoonResponse;
 import com.example.promotion_service.enums.ApplyTo;
 import com.example.promotion_service.enums.DiscountType;
 import com.example.promotion_service.enums.PromotionKind;
+import com.example.promotion_service.enums.UsageType;
 import com.example.promotion_service.kafka.PromotionEvent;
 import com.example.promotion_service.kafka.StatusEvent;
 import com.example.promotion_service.kafka.UpdatePromotionEvent;
@@ -479,15 +480,18 @@ public class PromotionServiceImpl implements PromotionService {
                                     promotion.getId(), userId
                             );
 
+        if (promotion.getUsageType() == UsageType.LIMITED) {
+
             if (promotion.getUsageLimitPerUser() > 0
                     && userUsage >= promotion.getUsageLimitPerUser()) {
                 throw new AppException(PromotionErrorCode.PROMOTION_USED_LIMIT);
             }
-
-            if (promotion.getUsageCount()
-                    >= promotion.getUsageLimited()) {
+            if (promotion.getUsageCount() > 0
+                    && promotion.getUsageLimited() > 0
+                    && promotion.getUsageCount() >= promotion.getUsageLimited()) {
                 throw new AppException(PromotionErrorCode.PROMOTION_OUT_OF_QUOTA);
             }
+        }
 
             return PromotionResponse.builder()
                     .fixedAmount(promotion.getFixedAmount())
@@ -518,8 +522,9 @@ public class PromotionServiceImpl implements PromotionService {
             return;
         }
 
-        if (promotion.getUsageCount()
-                >= promotion.getUsageLimited()) {
+        if (promotion.getUsageType() == UsageType.LIMITED
+                && promotion.getUsageLimited() > 0
+                && promotion.getUsageCount() >= promotion.getUsageLimited()) {
             throw new AppException(PromotionErrorCode.PROMOTION_OUT_OF_QUOTA);
         }
 

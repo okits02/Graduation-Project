@@ -118,6 +118,13 @@ public class ProductService {
           }
 
           productsMapper.updateProduct(product, request);
+            List<String> newCategoryIds = request.getCategories() == null
+                    ? List.of()
+                    : request.getCategories()
+                    .stream()
+                    .map(CateItemDTO::getId)
+                    .toList();
+            product.setCategoriesId(new ArrayList<>(newCategoryIds));
           product.setProductVariants(request.getProductVariants());
           calculatorListPrice(product);
 

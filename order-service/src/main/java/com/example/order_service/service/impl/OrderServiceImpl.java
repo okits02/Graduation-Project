@@ -118,7 +118,6 @@
                 if (promotionResponse != null
                         && promotionResponse.getResult() != null) {
                     var promo = promotionResponse.getResult();
-
                     discountAmount = calculateDiscount(totalPrice, promo);
                 }
             }
@@ -155,16 +154,19 @@
         }
         private BigDecimal calculateDiscount(BigDecimal totalPrice, PromotionResponse promo) {
             BigDecimal discount = BigDecimal.ZERO;
-            if(promo.getDiscountPercent() != null && promo.getDiscountPercent() > 0){
-                discount = totalPrice.multiply(
-                        BigDecimal.valueOf(promo.getDiscountPercent())
-                ).divide(BigDecimal.valueOf(100), 0, RoundingMode.HALF_UP);
-                if (promo.getMaxDiscountAmount() != null) {
+            if (promo.getDiscountPercent() != null && promo.getDiscountPercent() > 0) {
+                discount = totalPrice
+                        .multiply(BigDecimal.valueOf(promo.getDiscountPercent()))
+                        .divide(BigDecimal.valueOf(100), 0, RoundingMode.HALF_UP);
+
+                if (promo.getMaxDiscountAmount() != null
+                        && promo.getMaxDiscountAmount() > 0) {
                     discount = discount.min(
                             BigDecimal.valueOf(promo.getMaxDiscountAmount())
                     );
                 }
             }
+
             if (promo.getFixedAmount() != null && promo.getFixedAmount() > 0) {
                 discount = BigDecimal.valueOf(promo.getFixedAmount())
                         .min(totalPrice);

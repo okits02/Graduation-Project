@@ -31,12 +31,10 @@ public class OrderResponse implements Serializable {
     BigDecimal orderFee;
     Status orderStatus;
     String userId;
-    String paymentId;
-    String addressId;
     String deliveryId;
     String voucherCode;
-    BigDecimal totalPrice; // gia sau khi tru discount
+    BigDecimal totalPrice;
     BigDecimal discount;
-    BigDecimal beforePrice; // gia truoc khi tru discount
+    BigDecimal beforePrice;
     List<OrderItemResponse> items;
 }
