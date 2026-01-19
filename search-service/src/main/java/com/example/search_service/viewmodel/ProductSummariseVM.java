@@ -51,11 +51,11 @@ public class ProductSummariseVM {
                 .variantName(bestVariant.getVariantName())
                 .thumbnailUrl(bestVariant.getThumbnail())
                 .sold(products.getSold())
-                .price(bestVariant.getPrice() != null
-                        ? bestVariant.getPrice().toString()
-                        : null)
-                .listPrice(bestVariant.getSellPrice() != null
+                .price(bestVariant.getSellPrice() != null
                         ? bestVariant.getSellPrice().toString()
+                        : null)
+                .listPrice(bestVariant.getPrice() != null
+                        ? bestVariant.getPrice().toString()
                         : null)
                 .isStock(inStock)
                 .specifications(products.getSpecifications())
