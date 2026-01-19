@@ -116,18 +116,38 @@ public class DeliveryServiceImpl implements DeliveryService {
         if (pickName == null || pickName.isBlank()) {
             throw new IllegalStateException("Store pickName is missing");
         }
+        String userFullAddress = String.join(", ",
+                addressUser.getAddressLine(),
+                addressUser.getStreet(),
+                addressUser.getWard(),
+                addressUser.getDistrict(),
+                addressUser.getCity()
+        );
+        String pickFullAddress = String.join(", ",
+                storeInfo.getPickAddress(),
+                storeInfo.getPickWar(),
+                storeInfo.getPickDistrict(),
+                storeInfo.getPickProvince()
+        );
         OrderDTO orderDTO = OrderDTO.builder()
                 .id(orderRequest.getOrderId())
+
+                // PICK
                 .pickName(storeInfo.getPickName())
-                .pickAddress(storeInfo.getPickAddress())
+                .pickAddress(pickFullAddress)
                 .pickProvince(storeInfo.getPickProvince())
                 .pickDistrict(storeInfo.getPickDistrict())
+                .pickWard(storeInfo.getPickWar())
                 .pickTel(storeInfo.getPickTell())
+
+                // RECEIVE
                 .name(addressUser.getReceiverName())
-                .address(addressUser.getAddressLine())
+                .address(userFullAddress)
                 .province(addressUser.getCity())
                 .district(addressUser.getDistrict())
                 .ward(addressUser.getWard())
+                .hamlet("Khác")   // ⭐ BẮT BUỘC
+
                 .tel(addressUser.getReceiverPhone())
                 .value(gthh)
                 .pickMoney(50000)

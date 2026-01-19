@@ -9,7 +9,7 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<groupId>com.okits02</groupId>
-	<artifactId>delivery-serivce</artifactId>
+	<artifactId>delivery-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>delivery-serivce</name>
 	<description>delivvery-service</description>

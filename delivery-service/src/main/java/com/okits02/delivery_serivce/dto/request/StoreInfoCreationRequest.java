@@ -10,6 +10,7 @@ public class StoreInfoCreationRequest {
     String pickName;
     String pickAddress;
     String pickProvince;
+    String pickWard;
     String pickDistrict;
     String pickTell;
 }

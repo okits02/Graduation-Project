@@ -24,6 +24,8 @@ public class OrderDTO {
 
     @JsonProperty("pick_district")
     private String pickDistrict;
+    @JsonProperty("pick_ward")
+    private String pickWard;
 
     @JsonProperty("pick_tel")
     private String pickTel;
@@ -42,6 +44,9 @@ public class OrderDTO {
 
     @JsonProperty("ward")
     private String ward;
+
+    @JsonProperty("hamlet")
+    private String hamlet;
 
     @JsonProperty("tel")
     private String tel;
