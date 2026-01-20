@@ -117,7 +117,7 @@ public class ProductController {
                 .code(200)
                 .message("Get product suggest successfully!")
                 .result(searchService.getListProductSuggest(request.getProductIds(),
-                        request.getRecomentedType(), page, size))
+                        request.getRecomentedType(), page - 1 , size))
                 .build();
     }
 
