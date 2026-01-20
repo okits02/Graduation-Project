@@ -1,6 +1,7 @@
-package com.okits02.delivery_serivce.dto.request;
+package com.example.order_service.dto.request;
 
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
@@ -8,12 +9,13 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Data
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class OrderRequest {
+public class OrderDeliveryRequest {
     String orderId;
     String addressId;
     String userId;
     BigDecimal totalCost;
     BigDecimal orderFee;
-    List<OrderItemRequest> items;
+    List<ItemDeliveryRequest> items;
 }

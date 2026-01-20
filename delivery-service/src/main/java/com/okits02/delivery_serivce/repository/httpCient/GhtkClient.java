@@ -32,5 +32,10 @@ public interface GhtkClient {
             @RequestBody GhtkCreateOrderRequest request
     );
 
-
+    @PostMapping(value = "/services/shipment/cancel/{TRACKING_ORDER}", produces = MediaType.APPLICATION_JSON_VALUE)
+    GhtkOrderResponse deleteOrder(
+            @RequestHeader("Token") String token,
+            @RequestHeader("X-Client-Source") String clientSource,
+            @RequestPart("TRACKING_ORDER") long trackingOrders
+    );
 }

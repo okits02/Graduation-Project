@@ -40,4 +40,13 @@ public class DeliveryController {
                 .result(shippingFeeService.createDeleteShipment(orderRequest))
                 .build();
     }
+
+    @DeleteMapping("/delete")
+    public ApiResponse<?> deleteDelivery(
+            @RequestParam(value = "orderId") String orderId
+    ){
+        return ApiResponse.builder()
+                .code(200)
+                .build();
+    }
 }

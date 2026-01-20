@@ -23,7 +23,7 @@ public class Delivery {
     String orderId;
     String userId;
     String addressId;
-    String ghtkOrderCode;
+    Long ghtkOrderCode;
     @Enumerated(EnumType.STRING)
     private DeliveryStatus status;
 

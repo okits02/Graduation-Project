@@ -1,19 +1,17 @@
 package com.example.order_service.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 
 @Data
-@Setter
-@Getter
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class OrderItemRequest {
+public class ItemDeliveryRequest {
     String sku;
+    String variantName;
     Integer quantity;
-    BigDecimal listPrice;
-    BigDecimal sellPrice;
 }

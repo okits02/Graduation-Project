@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -91,7 +92,8 @@ public class DeliveryServiceImpl implements DeliveryService {
                 .receiverPhone(addressUser.getResult().getReceiverPhone())
                 .receiverAddress(addressUser.getResult().getAddressLine())
                 .expectedDeliveryTime(ghtkOrderResponse.getOrder().getEstimatedDeliverTime())
-                .shippingFee(BigDecimal.valueOf(orderRequest.getOrderFee()))
+                .ghtkOrderCode(ghtkOrderResponse.getOrder().getTrackingId())
+                .shippingFee(orderRequest.getOrderFee())
                 .createdAt(LocalDateTime.now())
                 .build();
         deliveryRepository.save(delivery);
@@ -129,8 +131,9 @@ public class DeliveryServiceImpl implements DeliveryService {
                 storeInfo.getPickDistrict(),
                 storeInfo.getPickProvince()
         );
+        String orderId = UUID.randomUUID().toString();
         OrderDTO orderDTO = OrderDTO.builder()
-                .id(orderRequest.getOrderId())
+                .id(orderId)
 
                 // PICK
                 .pickName(storeInfo.getPickName())
@@ -159,6 +162,15 @@ public class DeliveryServiceImpl implements DeliveryService {
                 .order(orderDTO)
                 .products(productDTOs)
                 .build();
+    }
+
+    private void deleteOrderDelivery(String orderId){
+        Delivery delivery = deliveryRepository.findByOrderId(orderId);
+        if(delivery == null){
+            throw new AppException(DeliveryErrorCode.DELIVERY_NOT_EXISTS);
+        }
+
+        var response = ghtkClient.deleteOrder(ghtkToken, ghtkPartnerCode, delivery.getGhtkOrderCode());
     }
 
     private StoreInfo getStoreInfo(){

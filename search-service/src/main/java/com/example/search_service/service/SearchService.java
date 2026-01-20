@@ -143,7 +143,7 @@
             NativeQueryBuilder query = NativeQuery.builder()
                     .withQuery(q -> q
                             .term(t -> t
-                                    .field("promotions.promotionKind.keyword")
+                                    .field("promotions.promotionKind")
                                     .value("FLASH_SALE")
                             )
                     ).withPageable(PageRequest.of(page, size));

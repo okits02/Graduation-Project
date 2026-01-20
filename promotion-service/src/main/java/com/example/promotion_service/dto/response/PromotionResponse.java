@@ -27,6 +27,7 @@ public class PromotionResponse {
     String name;
     DiscountType discountType;
     ApplyTo applyTo;
+    String campaignId;
     UsageType usageType;
     String voucherCode;
     String descriptions;

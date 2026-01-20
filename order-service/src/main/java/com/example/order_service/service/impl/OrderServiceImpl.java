@@ -54,6 +54,7 @@
         private final PaymentClient paymentClient;
         private final ProfileClient profileClient;
         private final CartClient cartClient;
+        private final DeliveryClient deliveryClient;
         private final KafkaTemplate<String, Object> kafkaTemplate;
 
 
@@ -322,7 +323,12 @@
             if (orders.getOrderStatus() != Status.PROCESSING) {
                 throw new AppException(OrderErrorCode.ORDER_CANNOT_CANCEL);
             }
-
+            BigDecimal totalPrice = orders.getTotalPrice();
+            if (totalPrice != null
+                    && totalPrice.compareTo(BigDecimal.ONE) > 0
+                    && totalPrice.compareTo(new BigDecimal("20000000")) < 0){
+                deliveryClient.deleteDelivery(orderId);
+            }
             var refundResponse = paymentClient.refundPayment(authHeader, orders.getPaymentId());
             orders.setOrderStatus(Status.CANCELLED);
             orders.setCancelledAt(LocalDateTime.now());
@@ -552,6 +558,14 @@
                 orders.setOrderStatus(status);
                 orders.setPaymentId(paymentId);
                 sendNotificationEvent(orders);
+                BigDecimal totalPrice = orders.getTotalPrice();
+
+                if (totalPrice != null
+                        && totalPrice.compareTo(BigDecimal.ONE) > 0
+                        && totalPrice.compareTo(new BigDecimal("20000000")) < 0){
+                    OrderDeliveryRequest request = createOrderRequestForDelivery(orders);
+                    deliveryClient.createShipment(request);
+                }
                 cartClient.returnItem(orders.getItems().stream().map(OrderItem::getSku).toList(), orders.getUserId());
                 orderRepository.save(orders);
             }else if(Status.PENDING.equals(status)){
@@ -914,6 +928,40 @@
                                 .build()
                 );
             }
+        }
+
+        private OrderDeliveryRequest createOrderRequestForDelivery(Orders orders){
+            List<String> skus = orders.getItems()
+                    .stream()
+                    .map(OrderItem::getSku)
+                    .toList();
+
+            var productResponse = searchClient.getProductDetails(skus);
+            if (productResponse == null || productResponse.getCode() != 200) {
+                throw new RuntimeException("Cannot fetch product info");
+            }
+
+            Map<String, ProductSkuVM> productMap = productResponse.getResult().stream()
+                    .collect(Collectors.toMap(
+                            ProductSkuVM::getSku,
+                            Function.identity()
+                    ));
+            List<ItemDeliveryRequest> orderItemRequests = orders.getItems().stream().map(i -> {
+                ProductSkuVM productSku = productMap.get(i.getSku());
+                return ItemDeliveryRequest.builder()
+                        .sku(i.getSku())
+                        .quantity(i.getQuantity())
+                        .variantName(productSku.getVariantName())
+                        .build();
+            }).toList();
+            return OrderDeliveryRequest.builder()
+                    .orderId(orders.getOrderId())
+                    .userId(orders.getUserId())
+                    .addressId(orders.getAddressId())
+                    .totalCost(orders.getTotalPrice())
+                    .orderFee(orders.getOrderFee())
+                    .items(orderItemRequests)
+                    .build();
         }
 
 

@@ -21,7 +21,7 @@ public class PromotionUpdateRequest {
     String id;
     String name;
     String campaignId;
-    String description;
+    String descriptions;
     DiscountType discountType;
     UsageType usageType;
     ApplyTo applyTo;
