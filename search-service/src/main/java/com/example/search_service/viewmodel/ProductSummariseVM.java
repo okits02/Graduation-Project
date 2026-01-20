@@ -59,6 +59,7 @@ public class ProductSummariseVM {
                         : null)
                 .isStock(inStock)
                 .specifications(products.getSpecifications())
+                .discountPercent(calculateDiscountPercent(bestVariant))
                 .avgRating(products.getAvgRating())
                 .createAt(products.getCreateAt())
                 .updateAt(products.getUpdateAt())
@@ -70,7 +71,6 @@ public class ProductSummariseVM {
             return null;
         }
 
-        // Try to find variant with both sold and thumbnail
         Optional<ProductVariants> withSoldAndThumbnail = products.getProductVariants().stream()
                 .filter(v ->
                         v.getSold() != null &&
@@ -83,7 +83,6 @@ public class ProductSummariseVM {
             return withSoldAndThumbnail.get();
         }
 
-        // Try to find variant with thumbnail only
         Optional<ProductVariants> withThumbnail = products.getProductVariants().stream()
                 .filter(v -> v.getThumbnail() != null && !v.getThumbnail().isBlank())
                 .findFirst();
@@ -92,7 +91,6 @@ public class ProductSummariseVM {
             return withThumbnail.get();
         }
 
-        // Return first variant if no thumbnail available
         return products.getProductVariants().stream().findFirst().orElse(null);
     }
 
@@ -104,4 +102,24 @@ public class ProductSummariseVM {
                 .stream()
                 .anyMatch(v -> Boolean.TRUE.equals(v.getInStock()));
     }
+
+    private static Double calculateDiscountPercent(ProductVariants variant) {
+        if (variant.getPrice() == null || variant.getSellPrice() == null) {
+            return null;
+        }
+
+        if (variant.getPrice().compareTo(variant.getSellPrice()) == 0) {
+            return null;
+        }
+
+        if (variant.getPrice().doubleValue() == 0) {
+            return null;
+        }
+
+        double discount = (variant.getPrice().doubleValue() - variant.getSellPrice().doubleValue())
+                / variant.getPrice().doubleValue() * 100;
+
+        return Math.round(discount * 100.0) / 100.0;
+    }
+
 }
