@@ -55,4 +55,4 @@ It is recommended to run services in the following order:
 
 ## Access Points
 - **Eureka Dashboard**: [http://localhost:8761](http://localhost:8761) (Default port)
-- **API Gateway**: [http://localhost:8080](http://localhost:8080) (Default port, check `application.yml` if different)
+- **API Gateway**: [http://localhost:8888](http://localhost:8888) (Default port, check `application.yml` if different)
