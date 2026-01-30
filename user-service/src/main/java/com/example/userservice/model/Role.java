@@ -10,6 +10,7 @@ import java.util.Set;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Data
+@Builder
 @Entity
 public class Role {
     @Id

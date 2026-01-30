@@ -47,18 +47,6 @@ public class AuthenticationController {
                 .build();
     }
 
-    @Operation(summary = "login",
-            description = "API login for user")
-    @PostMapping("/admin/login")
-    ApiResponse<AuthenticationResponse> authenticatedForAdmin(@RequestBody AuthenticationRequest request)
-    {
-        var result = authenticationService.authenticateForAdmin(request);
-        return ApiResponse.<AuthenticationResponse>builder()
-                .result(result)
-                .build();
-    }
-
-
     @Operation(summary = "introspect",
     description = "API check JWT token")
     @PostMapping("/introspect")

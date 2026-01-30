@@ -55,7 +55,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             "/product-service/brand/get-all",
             "/media-service/media/banner/get",
             "/search-service/search/catalog-search",
-            "/search-service/search/search_suggest",
+            "/search-service/search/product/suggest",
             "/search-service/search/autocomplete/quick",
             "/search-service/search/autocomplete/full",
             "/search-service/search/product",

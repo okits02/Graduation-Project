@@ -95,6 +95,7 @@ public class AuthenticationService {
         return AuthenticationResponse.builder()
                 .token(token)
                 .authenticated(true)
+                .role(users.getRole())
                 .build();
     }
 
@@ -165,7 +166,7 @@ public class AuthenticationService {
         JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS512);
 
         Date issueTime =new Date();
-        Date expirationTime = Date.from(Instant.now().plus(1, ChronoUnit.HOURS));
+        Date expirationTime = Date.from(Instant.now().plus(1, ChronoUnit.DAYS));
 
         JWTClaimsSet jwtClaimNames = new JWTClaimsSet.Builder()
                 .subject(users.getUsername())

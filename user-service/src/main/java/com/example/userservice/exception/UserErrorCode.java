@@ -8,6 +8,8 @@ import org.springframework.http.HttpStatus;
 public enum UserErrorCode implements ErrorCode {
     USER_EXISTS(2002, "User Exist", HttpStatus.CONFLICT),
     USER_NOT_EXISTS(2004, "User Not Exist", HttpStatus.NOT_FOUND),
+    ROLE_EXISTS(2005, "Role Exist", HttpStatus.CONFLICT),
+    ROLE_NOT_EXISTS(2006, "Role Not Exist", HttpStatus.NOT_FOUND),
     PROFILE_NOT_EXISTS(2011, "Profile for user not exists", HttpStatus.NOT_FOUND),
     PASSWORD_NOT_MATCH(2005, "Password Not Match", HttpStatus.BAD_REQUEST),
     OTP_NOT_EXISTS(2007, "OTP Not Exist", HttpStatus.NOT_FOUND),
