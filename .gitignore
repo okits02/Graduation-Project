@@ -4,6 +4,19 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+### === java / Maven === ###
+target/
+*/target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+
+### ===== Maven Wrapper =====
+.mvn/wrapper/maven-wrapper.jar
+
+
 ### STS ###
 .apt_generated
 .classpath
@@ -13,11 +26,24 @@ target/
 .springBeans
 .sts4-cache
 
-### IntelliJ IDEA ###
-.idea
-*.iws
+### ===== IntelliJ IDEA =====
+.idea/
 *.iml
+*.iws
 *.ipr
+out/
+
+### ===== Docker =====
+**/docker-data/
+**/volume/
+**/data/
+
+### ===== Database / Tools =====
+mongodb-database-tools*
+*.dump
+*.bson
+*.ndjson
+
 
 ### NetBeans ###
 /nbproject/private/
@@ -31,3 +57,21 @@ build/
 
 ### VS Code ###
 .vscode/
+
+
+### ===== Temporary / Backup =====
+*.tmp
+*.bak
+*.swp
+*.old
+
+### ===== Env / Secret =====
+.env
+.env.*
+application-*.yml
+application-*.properties
+
+### ===== OS =====
+.DS_Store
+Thumbs.db
+
