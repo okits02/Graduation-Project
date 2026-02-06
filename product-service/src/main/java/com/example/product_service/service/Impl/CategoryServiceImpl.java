@@ -1,5 +1,6 @@
 package com.example.product_service.service.Impl;
 
+import com.example.product_service.dto.response.CateListResponse;
 import com.example.product_service.dto.response.CategoryLevelValidateResponse;
 import com.example.product_service.kafka.CateItem;
 import com.example.product_service.kafka.CategoryEvent;
@@ -46,9 +47,24 @@ public class CategoryServiceImpl implements CategoryService {
 
 
     @Override
-    public List<CategoryResponse> finAll() {
+    public List<CateListResponse> finAll() {
         var categoryList = categoryRepository.findAll();
-        return categoryList.stream().map(categoryMappingHelper::map).toList();
+        Map<String, CateListResponse> cateListResponseMap = new HashMap<>();
+        for(Category cate : categoryList) {
+            cateListResponseMap.put(cate.getId(), categoryMappingHelper.mapToCateListRes(cate));
+        }
+        List<CateListResponse> cateListResponseList = new ArrayList<>();
+        for(CateListResponse node : cateListResponseMap.values()){
+            if(node.getParentId() != null){
+                cateListResponseList.add(node);
+            }else{
+                CateListResponse parent = cateListResponseMap.get(node.getParentId());
+                if(parent != null){
+                    parent.getChildren().add(node);
+                }
+            }
+        }
+        return cateListResponseList;
     }
 
     @Override

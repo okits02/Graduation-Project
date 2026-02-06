@@ -24,6 +24,5 @@ public interface UserService {
     public String getEmailByUserId(String userId);
     public UserInfoResponse getMyInfo();
     public PageResponse<UserResponse> getAll(int page, int size);
-
     public ListEmailResponse getListEmailByListUserId(List<String> userIds);
 }

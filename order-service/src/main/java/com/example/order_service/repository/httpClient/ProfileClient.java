@@ -13,7 +13,7 @@ import java.util.List;
 
 @FeignClient(name = "profile-service")
 public interface ProfileClient {
-    @GetMapping(value = "/profile-service/profile/internal/order/getProfile", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/profile-service/profile/internal/getProfiles", produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse<java.util.List<ProfileResponse>> getProfileForOrder(
             @RequestHeader("Authorization") String token,
             @RequestParam(value = "userIds") List<String> userIds

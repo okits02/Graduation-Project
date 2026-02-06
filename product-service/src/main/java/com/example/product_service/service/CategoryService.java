@@ -1,5 +1,6 @@
 package com.example.product_service.service;
 
+import com.example.product_service.dto.response.CateListResponse;
 import com.example.product_service.dto.response.CategoryLevelValidateResponse;
 import com.example.product_service.kafka.CateItem;
 import com.okits02.common_lib.dto.PageResponse;
@@ -13,7 +14,7 @@ import java.util.List;
 import java.util.Set;
 
 public interface CategoryService {
-    public List<CategoryResponse> finAll();
+    public List<CateListResponse> finAll();
     public CategoryResponse findById(String categoryId);
     public Category createCate(CategoryRequest request);
     public CategoryResponse updateCate(CategoryRequest request);

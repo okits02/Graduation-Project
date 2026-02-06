@@ -22,6 +22,7 @@ public class ProductSummariseVM {
     String name;
     String variantName;
     String thumbnailUrl;
+    String
     String price;
     String listPrice;
     Double avgRating;

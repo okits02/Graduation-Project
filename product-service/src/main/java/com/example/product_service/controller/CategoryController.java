@@ -1,6 +1,7 @@
 package com.example.product_service.controller;
 
 import com.example.product_service.dto.request.CategoryLevelValidateRequest;
+import com.example.product_service.dto.response.CateListResponse;
 import com.example.product_service.dto.response.CategoryLevelValidateResponse;
 import com.example.product_service.kafka.CategoryEvent;
 import com.okits02.common_lib.dto.PageResponse;
@@ -63,10 +64,10 @@ public class CategoryController {
 
     @Operation(summary = "get all category")
     @GetMapping("/getAll")
-    ResponseEntity<ApiResponse<List<CategoryResponse>>> getAllCate()
+    ResponseEntity<ApiResponse<List<CateListResponse>>> getAllCate()
     {
         return ResponseEntity.ok(
-                ApiResponse.<List<CategoryResponse>>builder()
+                ApiResponse.<List<CateListResponse>>builder()
                         .code(200)
                         .result(categoryService.finAll())
                         .build());

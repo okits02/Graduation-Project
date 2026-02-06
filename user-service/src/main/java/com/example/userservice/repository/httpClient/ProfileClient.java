@@ -24,4 +24,10 @@ public interface ProfileClient {
             @RequestHeader("Authorization") String token
     );
 
+    @GetMapping(value = "/profile-service/profile/internal/getProfiles", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse<java.util.List<ProfileResponse>> getProfileForGetAll(
+            @RequestHeader("Authorization") String token,
+            @RequestParam(value = "userIds") List<String> userIds
+    );
+
 }

@@ -30,9 +30,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -244,12 +246,24 @@ public class UserServiceImpl implements UserService {
     @Override
     public PageResponse<UserResponse> getAll(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
+        ServletRequestAttributes servletRequestAttributes =
+                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
         var pageData = userRepository.getAll(pageable);
+        List<String> userIds = pageData.getContent().stream().map(Users::getId).toList();
+        var profilesResponse = profileClient.getProfileForGetAll(authHeader, userIds);
+        if(profilesResponse == null){
+            throw new RuntimeException("Failed to find profile");
+        }
+        Map<String, ProfileResponse> profileResponseMap = profilesResponse.getResult().stream()
+                .collect(Collectors.toMap(ProfileResponse::getUserId, Function.identity()));
+
         return PageResponse.<UserResponse>builder()
                 .currentPage(page)
                 .pageSize(size)
                 .totalElements(pageData.getTotalElements())
-                .data(pageData.getContent().stream().map(userMapper::toUserResponse).toList())
+                .data(buildListUserResponse(pageData.getContent().stream()
+                        .map(userMapper::toUserResponse).toList(), profileResponseMap))
                 .build();
     }
 
@@ -272,4 +286,27 @@ public class UserServiceImpl implements UserService {
                 .build();
     }
 
+
+    private List<UserResponse> buildListUserResponse (List<UserResponse> userResponses,
+                                                      Map<String, ProfileResponse> profileResponseMap){
+        if(userResponses == null || userResponses.isEmpty()
+                || profileResponseMap == null || profileResponseMap.isEmpty()){
+            return List.of();
+        }
+        List<UserResponse> userResponseList = new ArrayList<>();
+        for(UserResponse userResponse : userResponses){
+            ProfileResponse profileResponse = profileResponseMap.get(userResponse.getId());
+            if(profileResponse == null){
+                throw new AppException(UserErrorCode.PROFILE_NOT_EXISTS);
+            }
+            userResponse.setFirstName(profileResponse.getFirstName());
+            userResponse.setLastName(profileResponse.getLastName());
+            userResponse.setDob(String.valueOf(profileResponse.getDob()));
+            userResponse.setAvatarUrl(profileResponse.getUserId());
+            userResponse.setSex(profileResponse.getSex());
+            userResponse.setPhone(profileResponse.getPhone());
+            userResponseList.add(userResponse);
+        }
+        return userResponseList;
+    }
 }

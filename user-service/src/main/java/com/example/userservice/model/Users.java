@@ -14,13 +14,21 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 @Entity
+@Table( name = "users",
+        indexes = {
+            @Index(name = "idx_username", columnList = "username"),
+                @Index(name = "idx_email", columnList = "email")
+        })
 public class Users {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
+    @Column(nullable = false, unique = true)
     String username;
-    String password;
+
+    @Column(nullable = false, unique = true)
     String email;
+    String password;
     Boolean isActive;
     Boolean isVerified;
     @ManyToOne

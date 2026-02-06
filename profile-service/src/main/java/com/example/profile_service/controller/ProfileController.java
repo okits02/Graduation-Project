@@ -134,7 +134,7 @@ public class ProfileController {
                 .build());
     }
 
-    @GetMapping("/internal/order/getProfile")
+    @GetMapping("/internal/getProfiles")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<List<ProfileResponse>> getProfileForOrder(
             @RequestParam(value = "userIds") List<String> userIds
