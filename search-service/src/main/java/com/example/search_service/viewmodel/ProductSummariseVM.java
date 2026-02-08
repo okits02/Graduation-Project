@@ -22,7 +22,7 @@ public class ProductSummariseVM {
     String name;
     String variantName;
     String thumbnailUrl;
-    String
+    String sku;
     String price;
     String listPrice;
     Double avgRating;
@@ -52,6 +52,7 @@ public class ProductSummariseVM {
                 .variantName(bestVariant.getVariantName())
                 .thumbnailUrl(bestVariant.getThumbnail())
                 .sold(products.getSold())
+                .sku(bestVariant.getSku())
                 .price(bestVariant.getSellPrice() != null
                         ? bestVariant.getSellPrice().toString()
                         : null)

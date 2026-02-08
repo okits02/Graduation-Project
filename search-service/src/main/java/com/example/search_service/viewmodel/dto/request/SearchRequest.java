@@ -15,9 +15,12 @@ import java.util.Map;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SearchRequest {
     String keyword;
-    String brandName;
+    List<String> brandName;
     String category;
     List<SpecificationFilterDTO> attributes;
+    String ownerId;
+    String ownerType;
+    Boolean flashSale;
     Double minPrice;
     Double maxPrice;
     SortType sortType;

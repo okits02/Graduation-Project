@@ -25,4 +25,6 @@ public interface UserService {
     public UserInfoResponse getMyInfo();
     public PageResponse<UserResponse> getAll(int page, int size);
     public ListEmailResponse getListEmailByListUserId(List<String> userIds);
+    public List<UserAutocompletedResponse> autocompleted(String keyword);
+    public PageResponse<UserResponse> searchUserByKeyword(String email, String userName, int page, int size);
 }

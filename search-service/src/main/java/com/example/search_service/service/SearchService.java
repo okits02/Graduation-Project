@@ -53,12 +53,15 @@
         public ProductGetListVM searchProductAdvance(String keyword,
                                                      Integer page,
                                                      Integer size,
-                                                     String brandName,
+                                                     List<String> brandName,
                                                      String category,
                                                      List<SpecificationFilterDTO> attributes,
                                                      Double minPrice,
                                                      Double maxPrice,
-                                                     SortType sortType)
+                                                     SortType sortType,
+                                                     String ownerId,
+                                                     String ownerType,
+                                                     Boolean flashSale)
         {
             NativeQueryBuilder nativeQueryBuilder = NativeQuery.builder();
             nativeQueryBuilder.withQuery(q -> q.bool(b -> {
@@ -75,6 +78,8 @@
                 extractAttributes(attributes, "specifications", b);
                 extractRange(minPrice, maxPrice, b);
                 extractBrandName(brandName, "brand", b);
+                extractBanner(ownerId, ownerType, b);
+                extractFlashSale("promotions.promotionKind", b);
                 return b;
             }));
             switch (sortType)
@@ -107,9 +112,19 @@
                     break;
                 }
                 case YEAR_ASC -> {
-                    nativeQueryBuilder.withSort(s -> s.field(
-                            f -> f.field("createAt").order(SortOrder.Asc)
-                    ));
+                    nativeQueryBuilder.withFilter(f -> f
+                                    .range(r -> r
+                                            .date(d -> d
+                                                    .field("createAt")
+                                                    .gte("now - 3M")
+                                            )
+                                    )
+                            ).withSort(s -> s
+                                    .field(f -> f
+                                            .field("createAt")
+                                            .order(SortOrder.Asc)
+                                    )
+                            );
                 }
                 case YEAR_DESC -> {
                     nativeQueryBuilder.withSort(s -> s.field(
@@ -139,125 +154,42 @@
                     .build();
         }
 
-        public ProductGetListVM getProductFlashSale(int page, int size){
-            NativeQueryBuilder query = NativeQuery.builder()
-                    .withQuery(q -> q
-                            .term(t -> t
-                                    .field("promotions.promotionKind")
-                                    .value("FLASH_SALE")
+        public void extractFlashSale(String productField, BoolQuery.Builder b){
+            b.must(m -> m
+                    .term(t -> t
+                            .field(productField)
+                            .value(PromotionKind.FLASH_SALE.toString()
                             )
-                    ).withPageable(PageRequest.of(page, size));
-            SearchHits<Products> hits = elasticsearchOperations.search(query.build(), Products.class);
-            SearchPage<Products> productsSearchPage = SearchHitSupport.searchPageFor(
-                    hits, query.getPageable());
-            List<ProductSummariseVM> productGetVMList = productsSearchPage.stream().map(i -> ProductSummariseVM
-                    .fromEntity(i.getContent())).toList();
-            return ProductGetListVM.<ProductSummariseVM>builder()
-                    .productGetVMList(productGetVMList)
-                    .currentPages(productsSearchPage.getNumber())
-                    .totalPage(productsSearchPage.getTotalPages())
-                    .pageSize(productsSearchPage.getSize())
-                    .totalElements(productsSearchPage.getTotalElements())
-                    .build();
+                    )
+            );
         }
 
-        public ProductGetListVM getProductForBanner(
-                int page, int size, String ownerId, String ownerType,
-                Double minPrice, Double maxPrice, SortType sortType){
-            NativeQueryBuilder queryBuilder = NativeQuery.builder();
+        public void extractBanner(String ownerId, String ownerType, BoolQuery.Builder b){
             switch (ownerType){
                 case "CATEGORY" -> {
-                    queryBuilder.withQuery(q -> q
+                    b.must(m -> m
                             .term(t -> t
                                     .field("categoriesId")
                                     .value(ownerId)
                             )
                     );
-                    queryBuilder.withFilter(f -> f.bool(b -> {
-                        extractRange(minPrice, maxPrice, b);
-                        return b;
-                    }));
-                    switch (sortType){
-                        case DEFAULT -> {
-                            break;
-                        }
-                        case PRICE_ASC -> {
-                            queryBuilder.withSort(s -> s
-                                    .field(f -> f
-                                            .field("productVariants.sellPrice")
-                                            .order(SortOrder.Asc)
-                                            .nested(n -> n.path("productVariants"))
-                                            .mode(SortMode.Min)
-                                    )
-                            );
-                        }
-                        case PRICE_DESC -> {
-                            queryBuilder.withSort(s -> s
-                                    .field(f -> f
-                                            .field("productVariants.sellPrice")
-                                            .order(SortOrder.Desc)
-                                            .nested(n -> n.path("productVariants"))
-                                            .mode(SortMode.Max)
-                                    )
-                            );
-                        }
-                    }
                 }
 
                 case "PROMOTION" -> {
-                    queryBuilder.withQuery(q -> q
-                            .term(t -> t
-                                    .field("promotions.campaignId")
+                    b.must(m -> m.term(
+                            t -> t.field("promotions.campaignId")
                                     .value(ownerId)
-                            )
+                    )
                     );
-                    queryBuilder.withFilter(f -> f.bool(b -> {
-                        extractRange(minPrice, maxPrice, b);
-                        return b;
-                    }));
-                    switch (sortType){
-                        case DEFAULT -> {
-                            break;
-                        }
-                        case PRICE_ASC -> {
-                            queryBuilder.withSort(s -> s
-                                    .field(f -> f
-                                            .field("productVariants.sellPrice")
-                                            .order(SortOrder.Asc)
-                                            .nested(n -> n.path("productVariants"))
-                                            .mode(SortMode.Min)
-                                    )
-                            );
-                        }
-                        case PRICE_DESC -> {
-                            queryBuilder.withSort(s -> s
-                                    .field(f -> f
-                                            .field("productVariants.sellPrice")
-                                            .order(SortOrder.Desc)
-                                            .nested(n -> n.path("productVariants"))
-                                            .mode(SortMode.Max)
-                                    )
-                            );
-                        }
-                    }
+                }
+                default -> {
+                    return;
                 }
             }
-            queryBuilder.withPageable(PageRequest.of(page, size));
-            SearchHits<Products> hits = elasticsearchOperations.search(queryBuilder.build(), Products.class);
-            SearchPage<Products> productsSearchPage = SearchHitSupport.searchPageFor(
-                    hits, queryBuilder.getPageable());
-            List<ProductSummariseVM> productGetVMList = productsSearchPage.stream().map(i -> ProductSummariseVM
-                    .fromEntity(i.getContent())).toList();
-            return ProductGetListVM.<ProductSummariseVM>builder()
-                    .productGetVMList(productGetVMList)
-                    .currentPages(productsSearchPage.getNumber())
-                    .totalPage(productsSearchPage.getTotalPages())
-                    .pageSize(productsSearchPage.getSize())
-                    .totalElements(productsSearchPage.getTotalElements())
-                    .build();
         }
 
-        public ProductGetListVM getListProductSuggest(List<String> productIds, String recommendType, int page, int size){
+        public ProductGetListVM getListProductSuggest(List<String> productIds, String recommendType, int page, int size)
+        {
             NativeQueryBuilder nativeQueryBuilder = NativeQuery.builder()
                     .withQuery(q -> q.terms(t -> t
                             .field("id")
@@ -539,13 +471,11 @@
             ));
         }
 
-        private void extractBrandName(String strField, String productField, BoolQuery.Builder b){
-            if (strField == null || strField.isBlank()) return;
-
-            String[] strFields = strField.split(",");
+        private void extractBrandName(List<String> strField, String productField, BoolQuery.Builder b){
+            if (strField == null || strField.isEmpty()) return;
 
             b.must(m -> m.bool(bb -> {
-                for (String str : strFields) {
+                for (String str : strField) {
                     bb.should(s -> s
                             .term(t -> t
                                     .field(productField)

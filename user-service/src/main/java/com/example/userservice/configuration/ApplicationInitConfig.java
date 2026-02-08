@@ -28,6 +28,9 @@ public class ApplicationInitConfig {
                 Users user = Users.builder()
                         .username("admin")
                         .password(passwordEncoder.encode("admin"))
+                        .email("admin@gmail.com")
+                        .isActive(true)
+                        .isVerified(true)
                         .role(role)
                         .build();
                 userRepository.save(user);

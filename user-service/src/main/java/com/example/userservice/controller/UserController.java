@@ -1,13 +1,10 @@
 package com.example.userservice.controller;
 
-import com.example.userservice.dto.response.ListEmailResponse;
-import com.example.userservice.dto.response.UserInfoResponse;
+import com.example.userservice.dto.response.*;
 import com.example.userservice.exception.UserErrorCode;
 import com.okits02.common_lib.dto.PageResponse;
 import com.example.userservice.dto.request.*;
 import com.okits02.common_lib.dto.ApiResponse;
-import com.example.userservice.dto.response.UserIdResponse;
-import com.example.userservice.dto.response.UserResponse;
 import com.okits02.common_lib.exception.AppException;
 import com.okits02.common_lib.exception.GlobalErrorCode;
 import com.example.userservice.kafka.CreateProfileEvent;
@@ -21,6 +18,7 @@ import com.example.userservice.service.ForgotPasswordService;
 import com.example.userservice.service.UserService;
 import com.example.userservice.service.VerificationService;
 import com.example.userservice.utils.OtpUtils;
+import feign.Request;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -345,6 +343,33 @@ public class UserController {
                 .result(userService.getAll(page - 1
                         , size))
                 .build());
+    }
+
+    @GetMapping("/admin/autocompleted")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<List<UserAutocompletedResponse>> autoCompletedNameAndEmail(
+            @RequestParam(value = "keyword") String keyword
+    ){
+        return ApiResponse.<List<UserAutocompletedResponse>>builder()
+                .code(200)
+                .message("Get autocompleted for userName and email successfully")
+                .result(userService.autocompleted(keyword))
+                .build();
+    }
+
+    @PostMapping("/admin/search")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<PageResponse<UserResponse>> searchUser(
+            @RequestBody SearchUserRequest request,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size
+    ){
+        return ApiResponse.<PageResponse<UserResponse>>builder()
+                .code(200)
+                .message("search user successfully")
+                .result(userService.searchUserByKeyword(request.getUserName(), request.getEmail()
+                        , page - 1 , size))
+                .build();
     }
 
     @GetMapping("/internal/emails")

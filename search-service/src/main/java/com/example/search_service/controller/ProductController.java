@@ -33,23 +33,8 @@ public class ProductController {
         return ResponseEntity.ok(searchService
                 .searchProductAdvance(request.getKeyword(), page - 1, size, request.getBrandName(),
                         request.getCategory(), request.getAttributes(), request.getMinPrice(), request.getMaxPrice(),
-                        request.getSortType()));
+                        request.getSortType(), request.getOwnerId(), request.getOwnerType(), request.getFlashSale()));
     }
-
-    @PostMapping("/banner")
-    public ApiResponse<ProductGetListVM> getProductByBanner(
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "10") Integer size,
-            @RequestBody BannerSearchRequest request
-            ){
-        return ApiResponse.<ProductGetListVM>builder()
-                .code(200)
-                .message("get product by banner successfully")
-                .result(searchService.getProductForBanner(page - 1, size, request.getOwnerId(),
-                        request.getOwnerType(), request.getMaxPrice(), request.getMinPrice(), request.getSortType()))
-                .build();
-    }
-
 
     @GetMapping("/autocomplete/quick")
     public ApiResponse<List<AutoCompletedResponse>> autocompleteQuick(
@@ -63,22 +48,9 @@ public class ProductController {
                 .build();
     }
 
-    @GetMapping("/flashSale")
-    public ApiResponse<ProductGetListVM> getProductFlashSale(
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "10") Integer size
-    ){
-        return ApiResponse.<ProductGetListVM>builder()
-                .code(200)
-                .message("get product by banner successfully")
-                .result(searchService.getProductFlashSale(page - 1, size))
-                .build();
-    }
-
-
     @GetMapping("/autocomplete/full")
     public ApiResponse<List<AutoCompletedResponse>> autocompleteFull(
-            @RequestParam("q") String keyword
+            @RequestParam(value = "keyword") String keyword
     ) {
         return ApiResponse.<List<AutoCompletedResponse>>builder()
                 .code(200)

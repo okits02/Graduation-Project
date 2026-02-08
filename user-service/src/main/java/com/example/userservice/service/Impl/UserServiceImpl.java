@@ -22,6 +22,7 @@ import com.example.userservice.service.VerificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.User;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -283,6 +284,53 @@ public class UserServiceImpl implements UserService {
         }
         return ListEmailResponse.builder()
                 .emails(emails)
+                .build();
+    }
+
+    @Override
+    public List<UserAutocompletedResponse> autocompleted(String keyword) {
+        List<UserAutocompletedResponse> result = new ArrayList<>();
+
+        List<String> userName = userRepository.findUsernameAutocomplete(keyword);
+        List<String> email = userRepository.findEmailAutocomplete(keyword);
+
+        userName.forEach(u ->
+                result.add(new UserAutocompletedResponse(u, "USERNAME"))
+        );
+        email.forEach(e ->
+                result.add(new UserAutocompletedResponse(e, "EMAIL"))
+        );
+
+        return result.stream().limit(20).toList();
+    }
+
+    @Override
+    public PageResponse<UserResponse> searchUserByKeyword(String email, String userName, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Users> pageData = null;
+        if(email != null){
+            pageData = userRepository.searchByEmail(email, pageable);
+        }
+        if(userName != null){
+            pageData = userRepository.searchByUserName(userName, pageable);
+        }
+        ServletRequestAttributes servletRequestAttributes =
+                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        var authHeader = servletRequestAttributes.getRequest().getHeader("Authorization");
+        if(pageData == null || pageData.getContent().isEmpty()){
+            throw new AppException(UserErrorCode.CAN_NOT_FIND_USERS);
+        }
+        List<String> userIds = pageData.getContent().stream().map(Users::getId).toList();
+        var profileResponse = profileClient.getProfileForGetAll(authHeader, userIds);
+        Map<String, ProfileResponse> profileResponseMap = profileResponse.getResult().stream()
+                .collect(Collectors.toMap(ProfileResponse::getUserId, Function.identity()));
+
+        return PageResponse.<UserResponse>builder()
+                .currentPage(page)
+                .pageSize(size)
+                .totalElements(pageData.getTotalElements())
+                .data(buildListUserResponse(pageData.getContent().stream()
+                        .map(userMapper::toUserResponse).toList(), profileResponseMap))
                 .build();
     }
 
