@@ -79,7 +79,7 @@ public interface OrderRepository extends JpaRepository<Orders, String> {
         FROM Orders o
         WHERE o.orderStatus IN :statuses
         GROUP BY o.userId
-        ORDER BY COUNT(o.id) DESC
+        ORDER BY COUNT(o.orderId) DESC
     """)
     List<String> findUserIdsOrderByOrderCountDesc(
             @Param("statuses") List<Status> statuses

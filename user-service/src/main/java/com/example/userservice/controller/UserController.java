@@ -56,6 +56,7 @@ public class UserController {
                 .userId(users.getId())
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
+                .sex(request.getSex())
                 .phone(request.getPhone())
                 .dob(request.getDob())
                 .build();

@@ -33,8 +33,7 @@ public class ProductVariantValidator implements ConstraintValidator<ValidProduct
                     return false;
                 }
 
-                if(request.getVariantName() == null || request.getVariantName().isBlank()
-                        || request.getColor() == null || request.getColor().isBlank() || request.getPrice() == null){
+                if(request.getVariantName() == null || request.getVariantName().isBlank() || request.getPrice() == null){
                     constraintValidatorContext.buildConstraintViolationWithTemplate(
                             "variantName, color and price are required when action is Create"
                     ).addConstraintViolation();

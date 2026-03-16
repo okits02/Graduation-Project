@@ -1,11 +1,8 @@
 package com.example.notification_service.repository;
 
 import com.example.notification_service.model.Notification;
-import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
-@Repository
-public interface NotificationRepository extends JpaRepository<Notification, String> {
+public interface NotificationRepository extends MongoRepository<Notification, String> {
 
 }

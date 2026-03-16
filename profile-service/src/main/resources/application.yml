@@ -6,21 +6,20 @@ server:
 spring:
   application:
     name: profile-service
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
-      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
-      - org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
-  neo4j:
-    uri: bolt://localhost:7687
-    authentication:
-      username: neo4j
-      password: admin123
-    connection:
-      pool:
-        max-connection-lifetime: 1h
-        max-connection-pool-size: 50
-        min-connection-pool-size: 10
+  datasource:
+    url: jdbc:postgresql://localhost:5432/profile_db
+    username: admin
+    password: admin123
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
   kafka:
     bootstrap-servers: localhost:9094
     consumer:

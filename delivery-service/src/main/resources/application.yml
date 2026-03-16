@@ -6,10 +6,10 @@ spring:
   application:
     name: delivery-service
   datasource:
-    url: "jdbc:mysql://localhost:3306/delivery_db?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC"
-    username: "root"
-    password: "root"
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:postgresql://localhost:5432/delivery_db
+    username: admin
+    password: admin123
+    driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
       minimum-idle: 5
@@ -22,7 +22,6 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.MySQL8Dialect
 
 springdoc:
   swagger-ui:

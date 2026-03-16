@@ -31,6 +31,7 @@
     import lombok.extern.slf4j.Slf4j;
     import org.springframework.data.domain.PageRequest;
     import org.springframework.data.domain.Sort;
+    import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregations;
     import org.springframework.data.elasticsearch.client.elc.NativeQuery;
     import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
     import org.springframework.data.elasticsearch.core.*;
@@ -142,6 +143,9 @@
             List<ProductSummariseVM> productGetVMList = productsSearchHits.stream().map(i -> ProductSummariseVM
                     .fromEntity(i.getContent())).toList();
             Map<String, Map<String, Map<String, Long>>> techAggregations = getAggregationTech(productsSearchHits);
+            Map<String, Map<String, Map<String, Long>>> variantAggregations = getAggregationVariant(productsSearchHits);
+            Map<String, Map<String, Map<String, Long>>> specificationAggregations = mergeSpecAggregation(
+                    techAggregations, variantAggregations);
             Map<String, Long> categoriesAggregations = getAggregationsCategories(productsSearchHits);
             return ProductGetListVM.<ProductSummariseVM>builder()
                     .productGetVMList(productGetVMList)
@@ -149,7 +153,7 @@
                     .totalPage(productsSearchPage.getTotalPages())
                     .pageSize(productsSearchPage.getSize())
                     .totalElements(productsSearchPage.getTotalElements())
-                    .specificationAggregations(techAggregations)
+                    .specificationAggregations(specificationAggregations)
                     .categoriesAggregations(categoriesAggregations)
                     .build();
         }
@@ -422,6 +426,48 @@
             return result;
         }
 
+        public Map<String, Map<String, Map<String, Long>>> getAggregationVariant(SearchHits<Products> hits){
+            Map<String, Map<String, Map<String, Long>>> result = new HashMap<>();
+            AggregationsContainer<?> container = hits.getAggregations();
+            if(container == null) return result;
+            List<ElasticsearchAggregation> aggs = (List<ElasticsearchAggregation>) container.aggregations();
+
+            ElasticsearchAggregation variantAggWrapper = aggs.stream()
+                    .filter(a -> "variant_spec".equals(a.aggregation().getName()))
+                    .findFirst()
+                    .orElse(null);
+
+            if(variantAggWrapper == null) return result;
+
+            NestedAggregate variantNested = variantAggWrapper.aggregation().getAggregate().nested();
+
+            NestedAggregate bestSpecNested = variantNested.aggregations().get("best_spec").nested();
+
+            StringTermsAggregate byGroup = variantNested.aggregations().get("only_variant").sterms();
+
+            for (StringTermsBucket groupBucket : byGroup.buckets().array()) {
+                String group = groupBucket.key().stringValue();
+                Map<String, Map<String, Long>> keyMap = new HashMap<>();
+                StringTermsAggregate byKey = groupBucket.aggregations().get("by_key").sterms();
+
+                for (StringTermsBucket keyBucket : byKey.buckets().array()) {
+                    String key = keyBucket.key().stringValue();
+                    Map<String, Long> valueMap = new HashMap<>();
+                    StringTermsAggregate byValue = keyBucket.aggregations().get("by_value").sterms();
+
+                    for (StringTermsBucket valueBucket : byValue.buckets().array()) {
+                        valueMap.put(
+                                valueBucket.key().stringValue(),
+                                valueBucket.docCount()
+                        );
+                    }
+                    keyMap.put(key, valueMap);
+                }
+                result.put(group, keyMap);
+            }
+            return result;
+        }
+
         public Map<String, Long> getAggregationsCategories(SearchHits<Products> hits){
             Map<String, Long> result = new HashMap<>();
             AggregationsContainer<?> container = hits.getAggregations();
@@ -664,5 +710,26 @@
                     );
             SearchHits<Products> searchHits = elasticsearchOperations.search(query.build(), Products.class);
             return GetListSkuVM.fromEntity(searchHits.getSearchHit(0).getContent());
+        }
+
+        public Map<String, Map<String, Map<String, Long>>> mergeSpecAggregation(
+                Map<String, Map<String, Map<String, Long>>> techSpec,
+                Map<String, Map<String, Map<String, Long>>> variantSpec
+        ){
+            Map<String, Map<String, Map<String, Long>>> result = new HashMap<>();
+
+            if(techSpec != null){
+                result.putAll(techSpec);
+            }
+
+            if(variantSpec != null){
+                variantSpec.forEach((group, keyMap) -> {
+                    if(result.containsKey(group)) {
+                        throw new IllegalStateException("Duplicate group detected when merging: " + group);
+                    }
+                    result.put(group, keyMap);
+                });
+            }
+            return result;
         }
     }

@@ -24,8 +24,6 @@ public class ProductVariants {
     String productId;
     @Field("variant_name")
     String variantName;
-    @Field("color")
-    String color;
     @Field("sku")
     String sku;
     @Field("price")
@@ -36,6 +34,7 @@ public class ProductVariants {
     String thumbnail;
     @Field("in_stock")
     Boolean inStock;
+    List<Specifications> bestSpecifications;
     @CreatedDate
     @Field("create_at")
     LocalDate createAt;

@@ -18,15 +18,13 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductVariants {
+public class    ProductVariants {
     @Id
     String id;
     @Field(type = FieldType.Text)
     String variantName;
     @Field(type = FieldType.Keyword)
     String sku;
-    @Field(type = FieldType.Keyword)
-    String color;
     @Field(type = FieldType.Scaled_Float, scalingFactor = 100)
     BigDecimal price;
     @Field(type = FieldType.Scaled_Float, scalingFactor = 100)
@@ -37,6 +35,8 @@ public class ProductVariants {
     String thumbnail;
     @Field(type = FieldType.Boolean)
     Boolean inStock;
+    @Field(type = FieldType.Nested)
+    List<Specification> bestSpecifications;
     @CreatedDate
     @Field("create_at")
     LocalDate createAt;

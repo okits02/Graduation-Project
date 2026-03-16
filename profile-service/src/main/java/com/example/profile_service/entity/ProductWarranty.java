@@ -1,26 +1,23 @@
 package com.example.profile_service.entity;
 
 import com.example.profile_service.enums.WarrantyStatus;
+import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.neo4j.core.schema.GeneratedValue;
-import org.springframework.data.neo4j.core.schema.Id;
-import org.springframework.data.neo4j.core.schema.Node;
-import org.springframework.data.neo4j.core.schema.Property;
-import org.springframework.data.neo4j.core.support.UUIDStringGenerator;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-@Node("product_warranty")
+
+@Entity
+@Table(name = "warranty")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductWarranty {
-
     @Id
-    @GeneratedValue(generatorClass = UUIDStringGenerator.class)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     private String productId;
@@ -32,8 +29,11 @@ public class ProductWarranty {
     private LocalDate warrantyEndDate;
     private Integer warrantyMonths;
 
-    @Property("status")
     private WarrantyStatus status;
 
     private LocalDateTime createdAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "profile_id")
+    UserProfile userProfile;
 }

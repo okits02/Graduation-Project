@@ -1,23 +1,21 @@
 package com.example.profile_service.entity;
 
-import com.example.profile_service.validator.UserPhoneConstraint;
+import jakarta.persistence.*;
+import jakarta.ws.rs.ext.ParamConverter;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.springframework.data.neo4j.core.schema.GeneratedValue;
-import org.springframework.data.neo4j.core.schema.Id;
-import org.springframework.data.neo4j.core.schema.Node;
-import org.springframework.data.neo4j.core.support.UUIDStringGenerator;
 
+@Entity
+@Table(name = "address")
 @Setter
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Node("user_address")
 public class UserAddress {
     @Id
-    @GeneratedValue(generatorClass = UUIDStringGenerator.class)
+    @GeneratedValue(strategy = GenerationType.UUID)
     String id;
     String receiverName;
     String receiverPhone;
@@ -28,4 +26,7 @@ public class UserAddress {
     String city;
     String postalCode;
     String addressType;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "profile_id")
+    UserProfile userProfile;
 }

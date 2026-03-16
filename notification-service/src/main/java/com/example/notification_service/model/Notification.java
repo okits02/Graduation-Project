@@ -4,6 +4,7 @@ import com.example.notification_service.enums.NotificationType;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -12,7 +13,7 @@ import java.util.Map;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity
+@Document(collection = "notifications")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Notification {
     @Id
@@ -20,18 +21,12 @@ public class Notification {
     String id;
     String userId;
     String channel;
-    @Enumerated(EnumType.STRING)
     NotificationType type;
-
     String referenceId;
     String recipient;
     String subject;
     boolean isRead;
     LocalDateTime readAt;
-    @ElementCollection
-    @CollectionTable(name = "notification_metadata", joinColumns = @JoinColumn(name = "notification_id"))
-    @MapKeyColumn(name = "meta_key")
-    @Column(name = "meta_value")
     Map<String, String> param;
     String content;
 }

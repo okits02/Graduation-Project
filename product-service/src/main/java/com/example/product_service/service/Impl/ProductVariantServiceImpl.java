@@ -1,6 +1,7 @@
 package com.example.product_service.service.Impl;
 
 import com.example.product_service.dto.request.ProductVariantsRequest;
+import com.example.product_service.dto.request.SpecificationRequest;
 import com.example.product_service.dto.response.ProductVariantsResponse;
 import com.example.product_service.enums.SpecGroup;
 import com.example.product_service.enums.SpecType;
@@ -9,8 +10,10 @@ import com.example.product_service.exceptions.ProductErrorCode;
 import com.example.product_service.mapper.ProductVariantsMapper;
 import com.example.product_service.model.ProductVariants;
 import com.example.product_service.model.Specifications;
+import com.example.product_service.repository.ProductRepository;
 import com.example.product_service.repository.ProductVariantsRepository;
 import com.example.product_service.repository.httpsClient.SearchClient;
+import com.example.product_service.service.ProductService;
 import com.example.product_service.service.ProductVariantsService;
 import com.example.product_service.utils.SkuGenerator;
 import com.okits02.common_lib.exception.AppException;
@@ -24,6 +27,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductVariantServiceImpl implements ProductVariantsService {
     private final ProductVariantsRepository productVariantsRepository;
+    private final ProductRepository productRepository;
     private final ProductVariantsMapper productVariantsMapper;
     private final SearchClient searchClient;
     @Override
@@ -35,12 +39,18 @@ public class ProductVariantServiceImpl implements ProductVariantsService {
 
         List<String> responses = request.stream()
                 .map(m -> {
-                    if (productVariantsRepository.existsByProductIdAndNameAndColor(
-                            productId,
-                            m.getVariantName(),
-                            m.getColor()
-                    )) {
-                        throw new AppException(ProductErrorCode.PRODUCT_VARIANTS_EXISTS);
+                    if(productVariantsRepository.existsByProductId(productId)) {
+                        for(SpecificationRequest spec : m.getBestSpecifications()) {
+                            if (productVariantsRepository.existsByProductIdAndNameAndSpec(
+                                    productId,
+                                    m.getVariantName(),
+                                    spec.getKey(),
+                                    spec.getValue()
+                            )) {
+                                productRepository.deleteById(productId);
+                                throw new AppException(ProductErrorCode.PRODUCT_VARIANTS_EXISTS);
+                            }
+                        }
                     }
                     ProductVariants productVariants = productVariantsMapper.toProductVariants(m);
                     productVariants.setProductId(productId);
@@ -64,12 +74,15 @@ public class ProductVariantServiceImpl implements ProductVariantsService {
         for(ProductVariantsRequest v : request){
             switch (v.getAction()){
                 case CREATE -> {
-                    if (productVariantsRepository.existsByProductIdAndNameAndColor(
-                            productId,
-                            v.getVariantName(),
-                            v.getColor()
-                    )) {
-                        throw new AppException(ProductErrorCode.PRODUCT_VARIANTS_EXISTS);
+                    for(SpecificationRequest spec : v.getBestSpecifications()) {
+                        if (productVariantsRepository.existsByProductIdAndNameAndSpec(
+                                productId,
+                                v.getVariantName(),
+                                spec.getKey(),
+                                spec.getValue()
+                        )) {
+                            throw new AppException(ProductErrorCode.PRODUCT_VARIANTS_EXISTS);
+                        }
                     }
                     ProductVariants productVariants = productVariantsMapper.toProductVariants(v);
                     productVariants.setProductId(productId);
@@ -78,12 +91,15 @@ public class ProductVariantServiceImpl implements ProductVariantsService {
                     skuResult.add(save.getSku());
                 }
                 case UPDATE -> {
-                    if (productVariantsRepository.existsByProductIdAndNameAndColor(
-                            productId,
-                            v.getVariantName(),
-                            v.getColor()
-                    )){
-                        throw new AppException(ProductErrorCode.PRODUCT_VARIANTS_EXISTS);
+                    for(SpecificationRequest spec : v.getBestSpecifications()) {
+                        if (productVariantsRepository.existsByProductIdAndNameAndSpec(
+                                productId,
+                                v.getVariantName(),
+                                spec.getKey(),
+                                spec.getValue()
+                        )) {
+                            throw new AppException(ProductErrorCode.PRODUCT_VARIANTS_EXISTS);
+                        }
                     }
                     ProductVariants variants = productVariantsRepository.findBySku(v.getSku());
                     productVariantsMapper.updateProduct(variants, v);
@@ -147,4 +163,5 @@ public class ProductVariantServiceImpl implements ProductVariantsService {
         variant.setInStock(inStock);
         productVariantsRepository.save(variant);
     }
+
 }

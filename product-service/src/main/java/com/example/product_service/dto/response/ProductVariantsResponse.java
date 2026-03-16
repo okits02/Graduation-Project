@@ -19,11 +19,11 @@ import java.util.List;
 public class ProductVariantsResponse {
     String variantName;
     String sku;
-    String color;
     BigDecimal price;
     Integer sold;
     String thumbnail;
     Boolean inStock;
+    List<Specifications> bestSpecifications;
     LocalDate createAt;
     LocalDate updateAt;
 }

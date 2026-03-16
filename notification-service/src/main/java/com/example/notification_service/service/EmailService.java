@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class EmailService {
+public class    EmailService {
     private final NotificationRepository notificationRepository;
     private final JavaMailSender mailSender;
     private final OrderClient orderClient;

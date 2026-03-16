@@ -6,11 +6,16 @@ import com.example.product_service.dto.response.MediaResponse;
 import com.example.product_service.dto.response.ProductResponse;
 import com.example.product_service.dto.response.ProductVariantsResponse;
 import com.example.product_service.enums.MediaOwnerType;
+import com.example.product_service.exceptions.ProductErrorCode;
 import com.example.product_service.mapper.CategoryMapper;
+import com.example.product_service.mapper.ProductVariantsMapper;
+import com.example.product_service.model.ProductVariants;
 import com.example.product_service.model.Products;
 import com.example.product_service.repository.CategoryRepository;
+import com.example.product_service.repository.ProductVariantsRepository;
 import com.example.product_service.repository.httpsClient.MediaClient;
 import com.example.product_service.service.ProductVariantsService;
+import com.okits02.common_lib.exception.AppException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -22,7 +27,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ProductMappingHelper {
     private final CategoryRepository categoryRepository;
-    private final ProductVariantsService productVariantsService;
+    private final ProductVariantsRepository productVariantsRepository;
+    private final ProductVariantsMapper productVariantsMapper;
     private final CategoryMapper categoryMapper;
     private final MediaClient mediaClient;
     public ProductResponse map(final Products products) {
@@ -36,7 +42,12 @@ public class ProductMappingHelper {
         if(responses.getResult() != null){
             listMedia = responses.getResult().getMediaResponseList();
         }
-        List<ProductVariantsResponse> variantsResponses = productVariantsService.getListByProductId(products.getId());
+        List<ProductVariants> productVariants = productVariantsRepository.findByProductId(products.getId());
+        if(productVariants == null || productVariants.isEmpty()){
+            throw new AppException(ProductErrorCode.PRODUCT_VARIANTS_NOT_FOUND);
+        }
+        List<ProductVariantsResponse> variantsResponses = productVariants.stream()
+                .map(productVariantsMapper::toProductVariantsResponse).toList();
         variantsResponses.forEach(variant -> {
             var variantMediaResponse =
                     mediaClient.getMedia(variant.getSku(), MediaOwnerType.PRODUCT_VARIANT).getBody();

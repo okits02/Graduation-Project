@@ -30,9 +30,9 @@ public class AddressServiceImpl implements AddressService {
         String userId = profileService.getUserId();
         UserProfile userProfile = profileRepository.findByUserId(userId);
         UserAddress userAddress = addressMapper.toAddress(request);
-        List<UserAddress> userAddressList = userProfile.getAddress();
+        List<UserAddress> userAddressList = userProfile.getAddresses();
         userAddressList.add(userAddress);
-        userProfile.setAddress(userAddressList);
+        userProfile.setAddresses(userAddressList);
         profileRepository.save(userProfile);
         addressRepository.save(userAddress);
         return addressMapper.toAddressResponse(userAddress);
@@ -46,7 +46,7 @@ public class AddressServiceImpl implements AddressService {
         {
             throw new AppException(ProfileErrorCode.PROFILE_NOT_EXITS);
         }
-        List<UserAddress> userAddressList = userProfile.getAddress();
+        List<UserAddress> userAddressList = userProfile.getAddresses();
         return addressMapper.toListAddress(userAddressList);
     }
 
@@ -58,7 +58,7 @@ public class AddressServiceImpl implements AddressService {
             throw new AppException(ProfileErrorCode.PROFILE_NOT_EXITS);
         }
 
-        List<UserAddress> userAddressList = userProfile.getAddress();
+        List<UserAddress> userAddressList = userProfile.getAddresses();
         UserAddress updatedAddress = null;
 
         for (UserAddress address : userAddressList) {

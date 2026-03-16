@@ -21,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -39,14 +40,10 @@ public class ImageController {
     @PostMapping("/product/image")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ListMediaResponse>> uploadImage(
-            @ModelAttribute ImageProductPostRequest request) throws IOException {
+            @ModelAttribute ImageProductPostRequest request
+            ) throws IOException {
         ListMediaResponse listMediaResponse = imageService
                 .imageProduct(request.getImageProducts(), request.getProductId());
-        MediaResponse mediaResponse =
-                listMediaResponse.getMediaResponseList().stream()
-                        .filter(m -> m.getMediaPurpose() == MediaPurpose.THUMBNAIL)
-                        .findFirst()
-                        .orElse(null);
         return ResponseEntity.ok(ApiResponse.<ListMediaResponse>builder()
                 .code(200)
                 .message("upload file successfully")

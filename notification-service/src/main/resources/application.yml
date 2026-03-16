@@ -5,24 +5,20 @@ server:
 spring:
   application:
     name: notification-service
-  datasource:
-    url: "jdbc:mysql://localhost:3306/db_notification?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC"
-    username: "root"
-    password: "root"
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    hikari:
-      maximum-pool-size: 10
-      minimum-idle: 5
-      idle-timeout: 300000
-      connection-timeout: 20000
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-        dialect: org.hibernate.dialect.MySQL8Dialect
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
+  data:
+    mongodb:
+      database: notification_db
+      username: root
+      password: root
+      host: localhost
+      port: 27017
+      authentication-database: admin
+      auto-index-creation: true
   kafka:
     bootstrap-servers: localhost:9094
     consumer:

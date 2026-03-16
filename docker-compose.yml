@@ -1,17 +1,4 @@
 services:
-  db:
-    image: mysql:8.0.40
-    restart: always
-    environment:
-      - MYSQL_DATABASE=user_db
-      - MYSQL_ROOT_PASSWORD=root
-    ports:
-      - '3306:3306'
-    volumes:
-      - db-data:/var/lib/mysql
-    mem_limit: 1g
-    cpus: 1
-
   broker:
     image: apache/kafka:latest
     container_name: broker
@@ -36,23 +23,6 @@ services:
 
     mem_limit: 2g
     cpus: 1.5
-
-
-  neo4j:
-    image: neo4j:latest
-    ports:
-      - "7474:7474"
-      - "7687:7687"
-    volumes:
-      - neo4j_data:/data
-      - neo4j_logs:/logs
-      - neo4j_import:/import
-      - neo4j_plugins:/plugins
-    environment:
-      NEO4J_AUTH: neo4j/admin123
-      NEO4J_dbms_memory_heap_initial__size: 512m
-      NEO4J_dbms_memory_heap_max__size: 1G
-      NEO4J_dbms_default__listen__address: 0.0.0.0
 
   mongodb:
     image: mongo
@@ -146,10 +116,6 @@ networks:
     driver: bridge
 volumes:
   pgdata:
-  neo4j_data:
-  neo4j_logs:
-  neo4j_import:
-  neo4j_plugins:
   mongo:
   db-data:
     driver: local

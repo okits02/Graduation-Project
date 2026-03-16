@@ -5,6 +5,7 @@ import com.example.product_service.kafka.CateItem;
 import com.example.product_service.kafka.ProductEvent;
 import com.example.product_service.kafka.DeleteProductEvent;
 import com.example.product_service.model.Specifications;
+import com.example.product_service.repository.httpsClient.MediaClient;
 import com.example.product_service.service.CategoryService;
 import com.example.product_service.service.ProductVariantsService;
 import com.okits02.common_lib.dto.PageResponse;
@@ -25,6 +26,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -245,11 +249,16 @@ public class ProductServiceImpl implements ProductService {
                         .orElse(Set.of());
 
         if (!currentCateId.isEmpty()) {
-            categoryList = new ArrayList<>(
-                    new LinkedHashSet<>(
-                            categoryService.getCategoryHierarchy(currentCateId)
-                    )
-            );
+            try {
+                categoryList = new ArrayList<>(
+                        new LinkedHashSet<>(
+                                categoryService.getCategoryHierarchy(currentCateId)
+                        )
+                );
+            } catch (Exception e){
+                DeleteProduct(product.getId());
+                throw new RuntimeException("get category hierarchy failed" + product.getId(), e);
+            }
         }
 
         return ProductEvent.builder()
@@ -259,7 +268,7 @@ public class ProductServiceImpl implements ProductService {
                 .brand(product.getBrandName())
                 .description(product.getDescription())
                 .videoUrl(product.getVideoUrl())
-                .categories(categoryList) // 👈 List<CateItem>
+                .categories(categoryList)
                 .specifications(product.getSpecifications())
                 .warranty(product.getWarranty())
                 .productVariants(

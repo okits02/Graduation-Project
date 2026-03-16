@@ -10,8 +10,11 @@ public enum GlobalErrorCode implements ErrorCode {
     UNAUTHORIZED(40300, "Unauthorized!", HttpStatus.FORBIDDEN),
     SERVICE_TIMEOUT(5001, "Request timeout", HttpStatus.REQUEST_TIMEOUT),
     SERVICE_UNAVAILABLE(5002, "Service unavailable", HttpStatus.SERVICE_UNAVAILABLE),
-    INTERNAL_ERROR(5000, "Internal system error", HttpStatus.INTERNAL_SERVER_ERROR);
-    ;
+    INTERNAL_ERROR(5000, "Internal system error", HttpStatus.INTERNAL_SERVER_ERROR),
+    FEIGN_BAD_REQUEST(1001, "Bad request", HttpStatus.BAD_REQUEST),
+    FEIGN_UNAUTHORIZED(1002, "Unauthorized", HttpStatus.UNAUTHORIZED),
+    FEIGN_NOT_FOUND(1003, "Media not found", HttpStatus.FORBIDDEN),
+    FEIGN_INTERNAL_ERROR(1004, "Internal error", HttpStatus.INTERNAL_SERVER_ERROR);
 
     GlobalErrorCode(int code, String message, HttpStatusCode httpStatusCode) {
         this.code = code;

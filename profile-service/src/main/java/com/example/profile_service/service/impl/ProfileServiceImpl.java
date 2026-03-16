@@ -6,16 +6,13 @@ import com.example.profile_service.dto.response.*;
 import com.example.profile_service.entity.UserAddress;
 import com.example.profile_service.entity.UserProfile;
 import com.okits02.common_lib.exception.AppException;
-import com.okits02.common_lib.exception.GlobalErrorCode;
 import com.example.profile_service.exception.ProfileErrorCode;
 import com.example.profile_service.mapper.ProfileMapper;
 import com.example.profile_service.repository.AddressRepository;
 import com.example.profile_service.repository.ProfileRepository;
 import com.example.profile_service.repository.httpClient.UserServiceClient;
 import com.example.profile_service.service.ProfileService;
-import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,12 +27,11 @@ import java.util.List;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProfileServiceImpl implements ProfileService {
-    ProfileRepository profileRepository;
-    ProfileMapper profileMapper;
-    UserServiceClient userServiceClient;
-    AddressRepository addressRepository;
+    private final ProfileRepository profileRepository;
+    private final ProfileMapper profileMapper;
+    private final UserServiceClient userServiceClient;
+    private final AddressRepository addressRepository;
 
 
     @Override
@@ -112,7 +108,7 @@ public class ProfileServiceImpl implements ProfileService {
                 userIds == null ? 0 : userIds.size(),
                 userIds);
 
-        List<UserProfile> userProfiles = profileRepository.findByUserIds(userIds);
+        List<UserProfile> userProfiles = profileRepository.findByUserIdIn(userIds);
 
         log.info("[getByListIds] userProfiles size = {}",
                 userProfiles == null ? 0 : userProfiles.size());
@@ -149,13 +145,13 @@ public class ProfileServiceImpl implements ProfileService {
             throw new AppException(ProfileErrorCode.PROFILE_NOT_EXITS);
         }
 
-        List<UserAddress> addressList = userProfile.getAddress();
+        List<UserAddress> addressList = userProfile.getAddresses();
         if(addressList != null || !addressList.isEmpty()) {
             for (UserAddress address : addressList) {
                 addressRepository.deleteById(address.getId());
             }
         }
-        userProfile.setAddress(null);
+        userProfile.setAddresses(null);
         profileRepository.deleteById(userProfile.getId());
     }
 

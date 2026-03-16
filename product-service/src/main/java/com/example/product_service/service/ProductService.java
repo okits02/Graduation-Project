@@ -5,6 +5,7 @@ import com.example.product_service.dto.request.ProductRequest;
 import com.example.product_service.dto.request.ProductUpdateRequest;
 import com.example.product_service.dto.response.ProductResponse;
 import com.example.product_service.model.Products;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 

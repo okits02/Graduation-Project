@@ -94,7 +94,7 @@ public class CategoryServiceImpl implements CategoryService {
                 parentCate.setChildrenId(childCate);
                 categoryRepository.save(parentCate);
             } else {
-                throw new IllegalArgumentException("Parent category with ID " + newCategory.getParentId() + " not found");
+                throw new IllegalArgumentException("Parent category with ID " + newCategory.getParentId() + "not found");
             }
         }
         sendKafKaEvent(newCategory, "CATEGORY_CREATED");
@@ -150,7 +150,8 @@ public class CategoryServiceImpl implements CategoryService {
 
         for (String id : categoryIds) {
             Category category = categoryRepository.findById(id)
-                    .orElseThrow(() -> new AppException(ProductErrorCode.PRODUCT_NOT_EXISTS));
+                    .orElseThrow(() -> new AppException(ProductErrorCode.CATE_NOT_EXISTS));
+
             String currentId = category.getId();
             while (currentId != null && !currentId.isEmpty()) {
 

@@ -1,5 +1,6 @@
 package com.example.userservice.kafka;
 
+import com.example.userservice.enums.Sex;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,6 +16,7 @@ public class CreateProfileEvent {
     private String userId;
     private String firstName;
     private String lastName;
+    private Sex sex;
     private String phone;
     private Date dob;
 }
